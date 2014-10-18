@@ -1,6 +1,6 @@
 ﻿/**
  * 
- * source/crated/controller/base.d
+ * source/crated/view/adminTable.d
  * 
  * Author:
  * Szabo Bogdan <szabobogdan@yahoo.com>
@@ -22,36 +22,48 @@
  * IN THE SOFTWARE.
  * 
  */
-module crated.controller.base;
+module crated.view.adminTable;
 
-/**
- * 
- */
-struct HttpRequest {
-	string method;
-	string path;
-	void* cb;
+import std.conv;
+public import crated.view.base;
 
-	this(string method, string path) 
-		in {
-			assert(
-					method == "ANY" ||
-					method == "GET" ||
-					method == "DELETE" ||
-					method == "MATCH" ||
-					method == "PATCH" ||
-					method == "POST" ||
-					method == "PUT", 
-				"Allowed methods are: `ANY`, `GET`, `DELETE`, `MATCH`, `PATCH`, `POST`, `PUT`");
+
+private string renderTableLine(string[] fields, string idField) {
+	string a;
+
+	string glue = "";
+	foreach(field; fields) {
+		if(field != idField){ 
+			a ~= glue ~ `"<td>" ~ item.`~field~`.to!string ~ "</td>"`;
+			glue = "~";
 		}
-
-		body {
-			this.method = method;
-			this.path = path;
-		}
-
-	//TODO: this is a strange warkaround
-	this(string method, string path, void* cb) {
-		this(method, path);
 	}
+
+	a ~= ` ~ "<td><a href='" ~ base ~ "edit/" ~ item.` ~ idField ~ `.to!string ~ "'>Edit</a> <a href='" ~ base ~ "delete/" ~ item.` ~ idField ~ `.to!string ~ "'>Delete</a></td>"`;
+
+	return a;
+}
+
+string adminTable(ITEM, string idField, string base, T)(T data) {
+
+	enum fields = ITEM.modelFields;
+
+	string a;
+
+	a  = "<table><thead><tr>";
+
+	foreach(field; ITEM.modelFields) {
+		a ~= "<th>" ~ field ~ "</th>";
+	}
+
+	a ~= "<th></th></tr></thead><tbody>";
+
+	foreach(item; data) {
+		a ~= "<tr>" ~ mixin( renderTableLine(fields, idField) ) ~ "</tr>";
+	}
+
+	a ~= "</tbody></table>";
+	a ~= `<a href='` ~ base ~ `add'>Add</a>`;
+
+	return a;
 }

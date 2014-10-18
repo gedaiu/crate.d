@@ -13,5 +13,5 @@ for d in tests/*/ ; do
 
 	dub;
 
-	cd ../../;
+	cd ..ß/../;
 done

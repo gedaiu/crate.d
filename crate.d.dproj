@@ -56,12 +56,13 @@
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="source\app.d" />
     <Compile Include="source\crated\controller\base.d" />
     <Compile Include="source\crated\controller\vibed.d" />
     <Compile Include="source\crated\model\base.d" />
     <Compile Include="source\crated\model\mongo.d" />
     <Compile Include="source\crated\view\base.d" />
+    <Compile Include="source\crate.d" />
+    <Compile Include="source\crated\view\adminTable.d" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dub.json" />

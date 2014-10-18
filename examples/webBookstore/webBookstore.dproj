@@ -21,7 +21,8 @@
     <DebugLevel>0</DebugLevel>
     <CustomCommands>
       <CustomCommands>
-        <Command type="Build" command="dub" workingdir="${ProjectDir}" externalConsole="True" />
+        <Command type="Build" command="dub --force" workingdir="${ProjectDir}" externalConsole="True" />
+        <Command type="Clean" command="dub clean" workingdir="${ProjectDir}" />
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>
@@ -49,7 +50,6 @@
   <ItemGroup>
     <None Include="dub.json" />
     <None Include="source\list.dh" />
-    <None Include="source\index.dt" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="source\app.d" />

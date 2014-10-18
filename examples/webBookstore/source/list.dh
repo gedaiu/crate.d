@@ -6,10 +6,16 @@
     </head>
     <body>
         This is the index! Welcome!
+        <br/>
+        <br/>
 
         <?
-
+        	//writeln(__traits(allMembers, T));
+        	writeln("=>", data[0]._id);
         	writeln("this is some script");
+
+
+
 
         ?>
 

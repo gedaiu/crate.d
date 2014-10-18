@@ -1,7 +1,7 @@
 import vibe.d;
-import crate.d.mongoModel;
-import crate.d.vibedController;
-import crate.d.view;
+import crated.model.mongo;
+import crated.controller.vibed;
+import crated.view.adminTable;
 import std.stdio;
 
 /**
@@ -45,7 +45,13 @@ class BookController {
 	 */
 	@HttpRequest("GET", "/")
 	static void index(HTTPServerRequest req, HTTPServerResponse res) {
-		res.writeBody( renderDh!"list.dh" , "text/html; charset=UTF-8");
+
+
+		MongoClient client = connectMongoDB("127.0.0.1");
+		auto books = new BookModel(client);
+
+		auto items = books.allItems;
+		res.writeBody( adminTable!(BookItem, "_id", "/")(items) , "text/html; charset=UTF-8");
 	}
 
 	/**
