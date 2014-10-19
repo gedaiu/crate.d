@@ -44,16 +44,19 @@ private string renderTableLine(string[] fields, string idField) {
 	return a;
 }
 
-string adminTable(ITEM, string idField, string base, T)(T data) {
+string adminTable(ITEM, string base, T)(T data) {
 
 	enum fields = ITEM.modelFields;
+	enum idField = ITEM.idField;
 
 	string a;
 
 	a  = "<table><thead><tr>";
 
 	foreach(field; ITEM.modelFields) {
-		a ~= "<th>" ~ field ~ "</th>";
+		if(field != idField) { 
+			a ~= "<th>" ~ field ~ "</th>";
+		}
 	}
 
 	a ~= "<th></th></tr></thead><tbody>";

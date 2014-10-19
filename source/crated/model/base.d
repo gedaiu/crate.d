@@ -33,9 +33,17 @@ public  import std.typetuple;
 struct FieldAttribute {}
 
 /**
- *	Attribute marking an item field
+ *	Attribute marking a property field
  */
 @property FieldAttribute field()
+{
+	return FieldAttribute();
+}
+
+/**
+ *	Attribute marking a property id field
+ */
+@property FieldAttribute id()
 {
 	return FieldAttribute();
 }
@@ -88,11 +96,42 @@ public mixin template MixItem(Prototype, Model) {
 		} else alias ItemFields = TypeTuple!();
 	}
 
+	/** 
+	 * Get all the metods that have @field attribute
+	 */
+	template IdFields(FIELDS...) {
+		static if (FIELDS.length > 1) {
+			alias IdFields = TypeTuple!(
+				IdFields!(FIELDS[0 .. $/2]),
+				IdFields!(FIELDS[$/2 .. $])
+				); 
+		} else static if (FIELDS.length == 1 && FIELDS[0] != "modelFields") {
+
+			static if(__traits(hasMember, Prototype, FIELDS[0])) {
+				static if(staticIndexOf!(id, __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0]))) >= 0) {
+					alias IdFields = TypeTuple!(FIELDS[0]);
+				} else {
+					alias IdFields = TypeTuple!();
+				}
+			} else {
+				alias IdFields = TypeTuple!();
+			}
+			
+		} else alias IdFields = TypeTuple!();
+	}
+
 	/**
 	 * Return all the model fields
 	 */
 	enum modelFields = [ ItemFields!(__traits(allMembers, Prototype)) ];
 
+
+
+	@property
+	static string idField() {
+		enum idFields = [ IdFields!(__traits(allMembers, Prototype)) ];
+		return idFields[0];
+	}
 
 	/**
 	 * Get Json body for all the item fields

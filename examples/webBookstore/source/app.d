@@ -8,7 +8,7 @@ import std.stdio;
  * The project modelZ
  */
 class BookItem {
-	@field BsonObjectID _id;
+	@field @id BsonObjectID _id;
 	@field string name = "unknown";
 	@field string author = "unknown";
 	
@@ -51,7 +51,7 @@ class BookController {
 		auto books = new BookModel(client);
 
 		auto items = books.allItems;
-		res.writeBody( adminTable!(BookItem, "_id", "/")(items) , "text/html; charset=UTF-8");
+		res.writeBody( adminTable!(BookItem, "/")(items) , "text/html; charset=UTF-8");
 	}
 
 	/**

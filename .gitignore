@@ -5,3 +5,5 @@ __dummy.html
 *.obj
 *.userprefs
 *dub.selections.json
+
+examples/webBookstore/dub.selections.json
