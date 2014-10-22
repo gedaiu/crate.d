@@ -49,9 +49,8 @@ private template ItemProperty(item, string method) {
 string generateEntryPoints(Controller)() {
 	string a = "HttpRequest tmp;";
 
-
+	pragma(msg, __traits(allMembers, Controller));
 	foreach (method; __traits(allMembers, Controller)) {
-		pragma(msg, method);
 		enum attrList = __traits(getAttributes, ItemProperty!(Controller, method));
 
 		foreach (i, T; attrList) {
@@ -77,6 +76,8 @@ public mixin template MixVibedController(Controller) {
 	}
 
 	static void route(void function(HTTPServerRequest, HTTPServerResponse) cb, string method, string path, ref URLRouter router) {
+		writeln(method, " ", path);
+
 		if(method == "ANY") router.any(path, cb);
 		if(method == "GET") router.get(path, cb);
 		if(method == "DELETE") router.delete_(path, cb);

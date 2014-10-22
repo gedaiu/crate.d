@@ -72,8 +72,6 @@ public mixin template MixMongoModel(Prototype, Model) {
 	 * Return all the items that match the query
 	 */
 	Prototype[] findBy(string field, U)(U value) {
-		Prototype[] list;
-
 		Bson q = Bson.emptyObject;
 		q[field] = value;
 
@@ -89,7 +87,7 @@ public mixin template MixMongoModel(Prototype, Model) {
 		auto result = collection.find(data, Bson(), QueryFlags.None, skip, length);
 
 		while (!result.empty) {
-			Prototype item = Prototype.FromJson(this, result.front.toJson);
+			Prototype item = Prototype.From( result.front.toJson, this);
 
 			result.popFront();
 			list ~= item;

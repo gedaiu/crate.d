@@ -22,19 +22,19 @@
  * IN THE SOFTWARE.
  * 
  */
-module crated.view.adminTable;
+module crated.view.web.adminTable;
 
 import std.conv;
 public import crated.view.base;
 
 
-private string renderTableLine(string[] fields, string idField) {
+private string renderTableLine(string[][] fields, const string idField) {
 	string a;
 
 	string glue = "";
 	foreach(field; fields) {
-		if(field != idField){ 
-			a ~= glue ~ `"<td>" ~ item.`~field~`.to!string ~ "</td>"`;
+		if(field[0] != idField){ 
+			a ~= glue ~ `"<td>" ~ item.`~field[0]~`.to!string ~ "</td>"`;
 			glue = "~";
 		}
 	}
@@ -46,16 +46,16 @@ private string renderTableLine(string[] fields, string idField) {
 
 string adminTable(ITEM, string base, T)(T data) {
 
-	enum fields = ITEM.modelFields;
+	enum fields = ITEM.fields;
 	enum idField = ITEM.idField;
 
 	string a;
 
 	a  = "<table><thead><tr>";
 
-	foreach(field; ITEM.modelFields) {
-		if(field != idField) { 
-			a ~= "<th>" ~ field ~ "</th>";
+	foreach(field; fields) {
+		if(field[0] != idField) { 
+			a ~= "<th>" ~ field[0] ~ "</th>";
 		}
 	}
 

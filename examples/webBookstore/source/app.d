@@ -1,28 +1,40 @@
 import vibe.d;
 import crated.model.mongo;
 import crated.controller.vibed;
-import crated.view.adminTable;
+import crated.view.web.adminTable;
+import crated.view.web.adminEditItem;
 import std.stdio;
 
 /**
  * The project modelZ
  */
 class BookItem {
-	@field @id BsonObjectID _id;
-	@field string name = "unknown";
-	@field string author = "unknown";
-	
-	//
-	static BookItem FromJson(BookModel parent, Json elm) {
-		BookItem itm = new BookItem(parent);
-		
-		itm._id = BsonObjectID.fromString(elm._id.to!string);
-		itm.name = elm.name.to!string;
-		itm.author = elm.author.to!string;
-		
-		return itm;
-	}
-	
+	enum BookCategory : string {
+		Fiction = "Fiction",
+		Nonfiction = "Nonfiction"
+	};
+
+	@field @id
+	BsonObjectID _id;
+
+	@field @required 
+	string name = "unknown";
+
+	@field @required 
+	string author = "unknown";
+
+	@field @type!("select")
+	BookCategory category;
+
+	@field 
+	double price = 100;
+
+	@field @type!"color"
+	string color = "#fff";
+
+	@field @required 
+	bool inStock = true;
+
 	//insert model item code
 	mixin MixItem!(BookItem, BookModel);
 }
@@ -45,12 +57,12 @@ class BookController {
 	 */
 	@HttpRequest("GET", "/")
 	static void index(HTTPServerRequest req, HTTPServerResponse res) {
-
-
 		MongoClient client = connectMongoDB("127.0.0.1");
 		auto books = new BookModel(client);
 
 		auto items = books.allItems;
+
+
 		res.writeBody( adminTable!(BookItem, "/")(items) , "text/html; charset=UTF-8");
 	}
 
@@ -59,8 +71,25 @@ class BookController {
 	 */
 	@HttpRequest("GET", "/edit/:id")
 	static void edit(HTTPServerRequest req, HTTPServerResponse res) {
-		res.headers.remove("Content-Type");
-		res.writeBody( "edit" );
+		MongoClient client = connectMongoDB("127.0.0.1");
+		auto books = new BookModel(client);
+		
+		auto item = books.findBy!"_id"(BsonObjectID.fromString(req.params["id"]));
+
+		res.writeBody( adminEditItem!("/")(item[0]) , "text/html; charset=UTF-8");
+	}
+
+	/**
+	 * The edit page
+	 */
+	@HttpRequest("POST", "/save/:id")
+	static void save(HTTPServerRequest req, HTTPServerResponse res) {
+		MongoClient client = connectMongoDB("127.0.0.1");
+		auto books = new BookModel(client);
+
+		BookItem.From(req.form,books);
+
+		res.writeBody(req.form.to!string , "text/html; charset=UTF-8");
 	}
 
 	//insert controller code
@@ -78,9 +107,12 @@ shared static this()
 	auto books = new BookModel(client);
 	books.remove();
 	
-	auto item1 = books.createItem;
+	BookItem item1 = books.createItem;
 	item1.name = "Prelude to Foundation";
 	item1.author = "Isaac Asimov";
+	item1.price = 120;
+	item1.inStock = false;
+	item1.category = BookItem.BookCategory.Nonfiction;
 	item1.save;
 	
 	auto item2 = books.createItem;

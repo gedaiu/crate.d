@@ -25,19 +25,21 @@
 module crated.model.base;
 
 import std.stdio;
-public  import std.conv;
-public  import std.typetuple;
-
+import std.traits;
+public import std.conv;
+public import std.typetuple;
 
 /// User defined attribute (not intended for direct use)
-struct FieldAttribute {}
+struct FieldAttribute {
+	string name;
+}
 
 /**
  *	Attribute marking a property field
  */
 @property FieldAttribute field()
 {
-	return FieldAttribute();
+	return FieldAttribute("field");
 }
 
 /**
@@ -45,9 +47,40 @@ struct FieldAttribute {}
  */
 @property FieldAttribute id()
 {
-	return FieldAttribute();
+	return FieldAttribute("id");
 }
 
+/**
+ *	Attribute marking a property required field
+ */
+@property FieldAttribute required()
+{
+	return FieldAttribute("required");
+}
+
+/**
+ *	Attribute that sets a property type (used for randering)
+ */
+@property FieldAttribute type(string name)()
+{
+	return FieldAttribute(name);
+}
+
+//check if the type is an enum
+template IsEnum(T) if(is(T == enum)) {
+	enum bool check = true;
+} 
+template IsEnum(T) if(!is(T == enum)) {
+	enum bool check = false;
+} 
+
+//check if the method has an from string method
+template HasFromString(T) if(is(T == class) || is(T == struct)) {
+	enum bool check = __traits(hasMember, T, "fromString");
+}
+template HasFromString(T) if(!is(T == class) && !is(T == struct)) {
+	enum bool check = false;
+}
 
 /**
  * This template is used to represent one item from a model
@@ -64,7 +97,7 @@ public mixin template MixItem(Prototype, Model) {
 	 * Get a class property
 	 */
 	private template ItemProperty(item, string method) {
-
+		
 		static if(__traits(hasMember, item, method)) {
 			alias ItemProperty = TypeTuple!(__traits(getMember, item, method));
 		} else {
@@ -78,11 +111,11 @@ public mixin template MixItem(Prototype, Model) {
 	template ItemFields(FIELDS...) {
 		static if (FIELDS.length > 1) {
 			alias ItemFields = TypeTuple!(
-									ItemFields!(FIELDS[0 .. $/2]),
-									ItemFields!(FIELDS[$/2 .. $])
-								); 
+				ItemFields!(FIELDS[0 .. $/2]),
+				ItemFields!(FIELDS[$/2 .. $])
+				); 
 		} else static if (FIELDS.length == 1 && FIELDS[0] != "modelFields") {
-
+			
 			static if(__traits(hasMember, Prototype, FIELDS[0])) {
 				static if(staticIndexOf!(field, __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0]))) >= 0) {
 					alias ItemFields = TypeTuple!(FIELDS[0]);
@@ -92,7 +125,7 @@ public mixin template MixItem(Prototype, Model) {
 			} else {
 				alias ItemFields = TypeTuple!();
 			}
-
+			
 		} else alias ItemFields = TypeTuple!();
 	}
 
@@ -106,7 +139,7 @@ public mixin template MixItem(Prototype, Model) {
 				IdFields!(FIELDS[$/2 .. $])
 				); 
 		} else static if (FIELDS.length == 1 && FIELDS[0] != "modelFields") {
-
+			
 			static if(__traits(hasMember, Prototype, FIELDS[0])) {
 				static if(staticIndexOf!(id, __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0]))) >= 0) {
 					alias IdFields = TypeTuple!(FIELDS[0]);
@@ -120,17 +153,150 @@ public mixin template MixItem(Prototype, Model) {
 		} else alias IdFields = TypeTuple!();
 	}
 
+
+	//a pair of a field name and type to be accessed at runtime
+	enum string[][] fields = mixin(getFields);
+	enum string[string][string] attributes = mixin(getUDA);
+	enum string[][string] enumValues = mixin("[ ``: [] " ~ getEnumValues ~ "]");
+
 	/**
-	 * Return all the model fields
+	 * Generate the values for the enums from the current item
 	 */
-	enum modelFields = [ ItemFields!(__traits(allMembers, Prototype)) ];
+	private static string getEnumValues(ulong i = 0)() {
+		enum fields = Prototype.fields;
+		
+		//exit condition
+		static if(i >= fields.length) {
+			return "";
+		} else {
+			enum auto field = fields[i];
+			
+			//check for D types
+			static if(field[2] == "enum") {
+				import std.traits;
 
+				string vals = "";
 
+				string glue = "";
+				foreach(v; EnumMembers!(typeof(__traits(getMember, Prototype, field[0])))) {
+					vals ~= glue ~ `"` ~ v.stringof[1..$-1] ~ `"`; 
+					glue ~= ", ";
+				}
 
+				return `, "` ~ field[0] ~ `": [` ~ vals ~ `]` ~ getEnumValues!(i + 1);
+			} else {
+				return getEnumValues!(i + 1);
+			}
+		}
+
+	}
+
+	/**
+	 * Generate the UDA list for fields
+	 */
+	private static string getUDA() {
+		string a = "[";
+		
+		string glue;
+		foreach (method; __traits(allMembers, Prototype)) {
+			static if (method != "fields" && method != "attributes") {
+				string glue2;
+				string b;
+				foreach (i, T; __traits(getAttributes, ItemProperty!(Prototype, method))) {
+					if(T.stringof == "type()") {
+						b ~= glue2 ~ `"type":"`~T.name~`"`;
+					} else {
+						b ~= glue2 ~ `"` ~ T.name ~ `":""`;
+					}
+					
+					glue2 = ", ";
+				}
+				
+				if(b != "") {
+					a ~= glue ~ `"`~method~`": [` ~ b ~ `]`;
+					glue = ", ";
+				}
+			}
+		}
+		
+		return a ~ "]";
+	}
+
+	/**
+	 * Generate the field list
+	 */
+	private static string getFields() {
+		string a = "[";
+
+		import std.traits;
+
+		string glue;
+		foreach (method; __traits(allMembers, Prototype)) {
+			static if (method != "fields") {
+				string b;
+				foreach (i, T; __traits(getAttributes, __traits(getMember, Prototype, method))) {
+					if(T.stringof == "field()") {
+
+						string type = "unknown";
+						alias isEnum = IsEnum!(typeof(__traits(getMember, Prototype, method)));
+						alias hasFromString = HasFromString!(typeof(__traits(getMember, Prototype, method)));
+
+						if(isEnum.check) {
+							type = "enum";
+						} else if(isBasicType!(typeof(__traits(getMember, Prototype, method))) || 
+						   isSomeString!(typeof(__traits(getMember, Prototype, method)))) {
+							type = "basic";
+
+						} else if(hasFromString.check) {
+							type = "hasFromString";
+						}
+
+						b = `"`~method~`", "` ~ 
+									typeof(__traits(getMember, Prototype, method)).stringof ~ `", "` ~ type
+								~`"`;
+						break;
+					}
+				}
+
+				if(b != "") {
+					a ~= glue ~ `[` ~ b ~ `]`;
+					glue = ", ";
+				}
+			}
+		}
+		
+		return a ~ "]";
+	}
+
+	/**
+	 * Get the if field for the current item
+	 */
 	@property
 	static string idField() {
 		enum idFields = [ IdFields!(__traits(allMembers, Prototype)) ];
 		return idFields[0];
+	}
+
+	/**
+	 * Check if a field has a certain attribute
+	 */
+	static bool has(string property, string attr) {
+		if( property in attributes && attr in attributes[property]) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * Get the value of a certain attribute
+	 */
+	static string valueOf(string property, string attr) {
+		if( property in attributes && attr in attributes[property]) {
+			return attributes[property][attr];
+		} else {
+			return "";
+		}
 	}
 
 	/**
@@ -182,7 +348,42 @@ public mixin template MixItem(Prototype, Model) {
 
 		return a;
 	}
+
+	//
+	static BookItem From(T)( T elm, BookModel parent ) {
+		BookItem itm = new BookItem(parent);
+
+		mixin(FromCode!Prototype);
+		
+		return itm;
+	}
 }
+
+string FromCode(Prototype, int i = 0)() {
+	enum fields = Prototype.fields;
+
+	//exit condition
+	static if(i >= fields.length) {
+		return "";
+	} else {
+		enum auto field = fields[i];
+
+		//check for D types
+		static if(field[2] == "basic") {
+			return `itm.`~field[0]~` = elm["`~field[0]~`"].to!`~field[1]~`;` ~ FromCode!(Prototype, i + 1);
+		} else static if(field[2] == "enum") {
+			return `itm.`~field[0]~` = elm["`~field[0]~`"].to!string.to!`~field[1]~`;` ~ FromCode!(Prototype, i + 1);
+		} else static if(field[2] == "hasFromString") {
+			return `itm.`~field[0]~` = `~field[1]~`.fromString(elm["`~field[0]~`"].to!string);` ~ FromCode!(Prototype, i + 1);
+		} else {
+			pragma(msg, `Field '`,Prototype,`.`,field[0],`' can not be converted. You need a basic type, enum or class or struct with static fromString(string) method.`);
+
+			return FromCode!(Prototype, i + 1);
+		}
+	}
+}
+
+
 
 //TODO: unittest : check field parse
 

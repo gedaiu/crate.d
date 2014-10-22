@@ -62,7 +62,8 @@
     <Compile Include="source\crated\model\mongo.d" />
     <Compile Include="source\crated\view\base.d" />
     <Compile Include="source\crate.d" />
-    <Compile Include="source\crated\view\adminTable.d" />
+    <Compile Include="source\crated\view\web\adminTable.d" />
+    <Compile Include="source\crated\view\web\adminEditItem.d" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dub.json" />
@@ -72,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="source\crated\" />
+    <Folder Include="source\crated\view\web\" />
   </ItemGroup>
   <ProjectExtensions>
     <MonoDevelop>
