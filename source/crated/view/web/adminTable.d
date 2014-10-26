@@ -28,18 +28,18 @@ import std.conv;
 public import crated.view.base;
 
 
-private string renderTableLine(string[][] fields, const string idField) {
+private string renderTableLine(string[][] fields, const string primaryField) {
 	string a;
 
 	string glue = "";
 	foreach(field; fields) {
-		if(field[0] != idField){ 
+		if(field[0] != primaryField){ 
 			a ~= glue ~ `"<td>" ~ item.`~field[0]~`.to!string ~ "</td>"`;
 			glue = "~";
 		}
 	}
 
-	a ~= ` ~ "<td><a href='" ~ base ~ "edit/" ~ item.` ~ idField ~ `.to!string ~ "'>Edit</a> <a href='" ~ base ~ "delete/" ~ item.` ~ idField ~ `.to!string ~ "'>Delete</a></td>"`;
+	a ~= ` ~ "<td><a href='" ~ base ~ "edit/" ~ item.` ~ primaryField ~ `.to!string ~ "'>Edit</a> <a href='" ~ base ~ "delete/" ~ item.` ~ primaryField ~ `.to!string ~ "'>Delete</a></td>"`;
 
 	return a;
 }
@@ -47,14 +47,14 @@ private string renderTableLine(string[][] fields, const string idField) {
 string adminTable(ITEM, string base, T)(T data) {
 
 	enum fields = ITEM.fields;
-	enum idField = ITEM.idField;
+	enum primaryField = ITEM.primaryField;
 
 	string a;
 
 	a  = "<table><thead><tr>";
 
 	foreach(field; fields) {
-		if(field[0] != idField) { 
+		if(field[0] != primaryField) { 
 			a ~= "<th>" ~ field[0] ~ "</th>";
 		}
 	}
@@ -62,7 +62,7 @@ string adminTable(ITEM, string base, T)(T data) {
 	a ~= "<th></th></tr></thead><tbody>";
 
 	foreach(item; data) {
-		a ~= "<tr>" ~ mixin( renderTableLine(fields, idField) ) ~ "</tr>";
+		a ~= "<tr>" ~ mixin( renderTableLine(fields, primaryField) ) ~ "</tr>";
 	}
 
 	a ~= "</tbody></table>";

@@ -14,7 +14,7 @@ class BookItem {
 		Nonfiction = "Nonfiction"
 	};
 
-	@field @id
+	@field @primary
 	BsonObjectID _id;
 
 	@field @required 

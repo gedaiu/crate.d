@@ -2,7 +2,7 @@ import std.stdio : writeln;
 import crated.model.mongo;
 
 class BookItem {
-	@field BsonObjectID _id;
+	@field @primary BsonObjectID _id;
 	@field string name = "unknown";
 	@field string author = "unknown";
 
@@ -58,14 +58,14 @@ void test() {
 	
 	auto marksBooks = books.findBy!"author"("Mark Twain");
 	assert(marksBooks.length == 2);
-	assert(marksBooks[0].author == "Mark Twain");
-	assert(marksBooks[1].author == "Mark Twain");
+	assert(marksBooks[0].author == "Mark Twain", "invalid author name");
+	assert(marksBooks[1].author == "Mark Twain", "invalid author name");
 	
 	auto oneItem    = books.findOneBy!"author"("Mark Twain");
-	assert(oneItem.author == "Mark Twain");
+	assert(oneItem.author == "Mark Twain", "ca not get by author");
 	
 	auto all        = books.allItems;
-	assert(all.length == 4);
+	assert(all.length == 4, "can't get all elements");
 }
 
 

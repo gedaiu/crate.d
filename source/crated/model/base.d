@@ -43,11 +43,11 @@ struct FieldAttribute {
 }
 
 /**
- *	Attribute marking a property id field
+ *	Attribute marking a property primary field
  */
-@property FieldAttribute id()
+@property FieldAttribute primary()
 {
-	return FieldAttribute("id");
+	return FieldAttribute("primary");
 }
 
 /**
@@ -87,8 +87,10 @@ template HasFromString(T) if(!is(T == class) && !is(T == struct)) {
  */
 public mixin template MixItem(Prototype, Model) {
 
+	//the item model
 	private Model myModel;
 
+	//default item constructor
 	this(Model parent) {
 		myModel = parent;
 	}
@@ -132,31 +134,35 @@ public mixin template MixItem(Prototype, Model) {
 	/** 
 	 * Get all the metods that have @field attribute
 	 */
-	template IdFields(FIELDS...) {
+	template PrimaryFields(FIELDS...) {
 		static if (FIELDS.length > 1) {
-			alias IdFields = TypeTuple!(
-				IdFields!(FIELDS[0 .. $/2]),
-				IdFields!(FIELDS[$/2 .. $])
+			alias PrimaryFields = TypeTuple!(
+				PrimaryFields!(FIELDS[0 .. $/2]),
+				PrimaryFields!(FIELDS[$/2 .. $])
 				); 
 		} else static if (FIELDS.length == 1 && FIELDS[0] != "modelFields") {
 			
 			static if(__traits(hasMember, Prototype, FIELDS[0])) {
-				static if(staticIndexOf!(id, __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0]))) >= 0) {
-					alias IdFields = TypeTuple!(FIELDS[0]);
+				static if(staticIndexOf!(primary, __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0]))) >= 0) {
+					alias PrimaryFields = TypeTuple!(FIELDS[0]);
 				} else {
-					alias IdFields = TypeTuple!();
+					alias PrimaryFields = TypeTuple!();
 				}
 			} else {
-				alias IdFields = TypeTuple!();
+				alias PrimaryFields = TypeTuple!();
 			}
 			
-		} else alias IdFields = TypeTuple!();
+		} else alias PrimaryFields = TypeTuple!();
 	}
 
 
 	//a pair of a field name and type to be accessed at runtime
 	enum string[][] fields = mixin(getFields);
+
+	//the field attributes.
 	enum string[string][string] attributes = mixin(getUDA);
+
+	//all the enum fields with their keys
 	enum string[][string] enumValues = mixin("[ ``: [] " ~ getEnumValues ~ "]");
 
 	/**
@@ -195,9 +201,9 @@ public mixin template MixItem(Prototype, Model) {
 	 * Generate the UDA list for fields
 	 */
 	private static string getUDA() {
-		string a = "[";
-		
 		string glue;
+		string a;
+
 		foreach (method; __traits(allMembers, Prototype)) {
 			static if (method != "fields" && method != "attributes") {
 				string glue2;
@@ -218,8 +224,10 @@ public mixin template MixItem(Prototype, Model) {
 				}
 			}
 		}
-		
-		return a ~ "]";
+
+		if(a != "") return "[" ~ a ~ "]";
+
+		return "null";
 	}
 
 	/**
@@ -272,9 +280,12 @@ public mixin template MixItem(Prototype, Model) {
 	 * Get the if field for the current item
 	 */
 	@property
-	static string idField() {
-		enum idFields = [ IdFields!(__traits(allMembers, Prototype)) ];
-		return idFields[0];
+	static string primaryField() {
+		enum primaryFields = [ PrimaryFields!(__traits(allMembers, Prototype)) ];
+
+		static assert(primaryFields.length > 0, "there are no fields marked with @primary attribute.");
+
+		return primaryFields[0];
 	}
 
 	/**
@@ -349,7 +360,9 @@ public mixin template MixItem(Prototype, Model) {
 		return a;
 	}
 
-	//
+	/**
+	 * Create an item based on T type
+	 */
 	static BookItem From(T)( T elm, BookModel parent ) {
 		BookItem itm = new BookItem(parent);
 
@@ -359,6 +372,9 @@ public mixin template MixItem(Prototype, Model) {
 	}
 }
 
+/**
+ * create the code for the item From method
+ */
 string FromCode(Prototype, int i = 0)() {
 	enum fields = Prototype.fields;
 
@@ -384,57 +400,6 @@ string FromCode(Prototype, int i = 0)() {
 }
 
 
-
-//TODO: unittest : check field parse
-
-
-//check if types are correctly paresed
-/*unittest {
-
-	string generateValCode(string type, string val, string expected) {
-
-		string a = "
-        class c"~ type ~ "Model { mixin MixModel!(c"~ type ~ "Item,c"~ type ~ "Model); }
-        class c"~ type ~ "Item {
-			@field " ~ type ~ " val = "~ val ~";
-
-			//insert model item code
-			mixin MixItem!(c"~ type ~ "Item,c"~ type ~ "Model);
-		}
-
-		auto myC"~ type ~ "Item = new c"~ type ~ "Item;
-		assert(myC"~ type ~ "Item.to!string == `{ \"val\": "~ expected ~" }`, `error on ["~type~"] serialization`);";
-
-		return a;
-	}
-
-	mixin(generateValCode("bool", "true", "true"));
-	mixin(generateValCode("byte", "0", "0"));
-	mixin(generateValCode("ubyte", "0", "0"));
-	mixin(generateValCode("short", "0", "0"));
-	mixin(generateValCode("ushort", "0", "0"));
-
-	mixin(generateValCode("int", "0", "0"));
-	mixin(generateValCode("uint", "0", "0"));
-	mixin(generateValCode("long", "0", "0"));
-	mixin(generateValCode("ulong", "0", "0"));
-	//TODO: mixin(generateValCode("cent", "0"));
-	//TODO: mixin(generateValCode("ucent", "0"));
-	mixin(generateValCode("float", "0", "0"));
-	mixin(generateValCode("double", "0", "0"));
-	mixin(generateValCode("real", "0", "0"));
-	mixin(generateValCode("ifloat", "0i", `"0i"`));
-	mixin(generateValCode("idouble", "0i", `"0i"`));
-	mixin(generateValCode("ireal", "0i", `"0i"`));
-	//TODO: mixin(generateValCode("cfloat", "1.0i"));
-	//TODO: mixin(generateValCode("cdouble", "1.0i"));
-	//TODO: mixin(generateValCode("creal", "1.0i"));
-	mixin(generateValCode("string", `"0"`, `"0"`));
-	mixin(generateValCode("wstring", "`0`w", `"0"`));
-	mixin(generateValCode("dstring", "`0`d", `"0"`));
-}
-*/
-
 /**
  * This template is used to represent one item from a model
  */
@@ -446,7 +411,7 @@ public mixin template MixModel(Prototype, Model) {
 	 */
 	Prototype createItem() {
 		auto item = new Prototype(this);
-		item.id = items.length + 1;
+		mixin("item." ~ Prototype.primaryField) = items.length + 1;
 		items ~= [ item ];
 
 		return item;
@@ -456,7 +421,7 @@ public mixin template MixModel(Prototype, Model) {
 	 * Save the item
 	 */
 	void save(Prototype item) {
-		items[item.id-1] = item;
+		items[mixin("item." ~ Prototype.primaryField) - 1] = item;
 	}	
 	
 	/**
@@ -529,10 +494,3 @@ public mixin template MixCheckFieldsModel(Model) {
 	mixin(_genChkMember!(Model, "findOneBy"));
 
 }
-
-//TODO: unittest check model name
-/*unittest {
-	Model books = new Model("books");
-
-	assert(books.modelName == "books");
-}*/

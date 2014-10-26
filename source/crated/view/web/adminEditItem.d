@@ -5,7 +5,7 @@
  * Author:
  * Szabo Bogdan <szabobogdan@yahoo.com>
  * 
- * Copyright (c) 2014 ${CopyrightHolder}
+ * Copyright (c) 2014 Szabo Bogdan
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,11 +32,11 @@ import crated.model.base;
 public import crated.view.base;
 
 
-string inputFormFields(ITEM)(string[][] fields, const string idField) {
+string inputFormFields(ITEM)(string[][] fields, const string primaryField) {
 	string a="`";
 
 	foreach(field; fields) {
-		if(field[0] == idField) { 
+		if(field[0] == primaryField) { 
 
 			a ~= "<input type='hidden' name='" ~ field[0] ~ "' value='` ~ data."~field[0]~".to!string ~ `' >";
 
@@ -130,13 +130,13 @@ string adminEditItem(string base, ITEM)(ITEM data){
 	string a = "";
 
 	enum fields = ITEM.fields;
-	enum idField = ITEM.idField;
+	enum primaryField = ITEM.primaryField;
 
 	std.stdio.writeln(fields);
 
-	a ~= `<form action="`~base~`save/` ~ mixin("data." ~ idField ~ ".to!string") ~ `" method="post">`;
+	a ~= `<form action="`~base~`save/` ~ mixin("data." ~ primaryField ~ ".to!string") ~ `" method="post">`;
 
-	a ~= mixin(inputFormFields!ITEM(fields, idField));
+	a ~= mixin(inputFormFields!ITEM(fields, primaryField));
 
 	a ~= `<input type="submit"/>`;
 	a ~= `</form>`;

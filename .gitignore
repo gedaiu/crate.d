@@ -7,3 +7,9 @@ __dummy.html
 *dub.selections.json
 
 examples/webBookstore/dub.selections.json
+
+libcrate-d.a
+
+tests/crMongoList/crmongolist
+
+tests/crSimpleList/crsimplelist

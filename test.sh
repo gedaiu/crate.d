@@ -2,7 +2,9 @@
 bold=`tput bold`
 normal=`tput sgr0`
 
-echo -e "\033[34mRunning tests: ";
+echo -e "\033[34mRunning tests: \033[0m ";
+
+dub test;
 
 for d in tests/*/ ; do
 
@@ -13,5 +15,5 @@ for d in tests/*/ ; do
 
 	dub;
 
-	cd ..ß/../;
+	cd ../../;
 done

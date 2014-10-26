@@ -2,8 +2,11 @@ import std.stdio;
 import crated.model.base;
 
 class BookItem {
-	@field ulong id = 1;
+	@field @primary 
+	ulong id = 1;
+
 	@field string name = "unknown";
+
 	@field string author = "unknown";
 	
 	//insert model item code
@@ -13,8 +16,97 @@ class BookItem {
 class BookModel {
 	//insert model item code
 	mixin MixModel!(BookItem, BookModel);
+
+	Prototype[] query(T)(T data, int length = 0, int skip = 0) { Prototype[] list; return list; }
+	void remove() {}
 }
 
+
+string generateModelCode(string type, string val) {
+	
+	string a = "
+        class c"~ type ~ "Model { 
+             mixin MixModel!(c"~ type ~ "Item,c"~ type ~ "Model); 
+	         Prototype[] query(T)(T data, int length = 0, int skip = 0) { Prototype[] list; return list; }
+             void remove() {}
+        }
+
+        class c"~ type ~ "Item {
+			@field " ~ type ~ " val = "~ val ~";
+            @field @primary long id;
+			//insert model item code
+			mixin MixItem!(c"~ type ~ "Item,c"~ type ~ "Model);
+		}";
+	
+	return a;
+}
+
+string generateAssertCode(string type, string expected) {
+	string a = "
+	auto myC"~ type ~ "Item = new c"~ type ~ "Item(new c"~ type ~ "Model);
+	assert(myC"~ type ~ "Item.to!string == `{ \"val\": "~ expected ~" }`, `error on ["~type~"] serialization`);";
+
+	return a;
+}
+
+
+
+mixin(generateModelCode("bool", "true"));
+mixin(generateModelCode("byte", "0"));
+mixin(generateModelCode("ubyte", "0"));
+mixin(generateModelCode("short", "0"));
+mixin(generateModelCode("ushort", "0"));
+
+mixin(generateModelCode("int", "0"));
+mixin(generateModelCode("uint", "0"));
+mixin(generateModelCode("long", "0"));
+mixin(generateModelCode("ulong", "0"));
+//TODO: mixin(generateModelCode("cent", "0"));
+//TODO: mixin(generateModelCode("ucent", "0"));
+mixin(generateModelCode("float", "0"));
+mixin(generateModelCode("double", "0"));
+mixin(generateModelCode("real", "0"));
+mixin(generateModelCode("ifloat", "0i"));
+mixin(generateModelCode("idouble", "0i"));
+mixin(generateModelCode("ireal", "0i"));
+//TODO: mixin(generateModelCode("cfloat", "1.0i"));
+//TODO: mixin(generateModelCode("cdouble", "1.0i"));
+//TODO: mixin(generateModelCode("creal", "1.0i"));
+mixin(generateModelCode("string", `"0"`));
+mixin(generateModelCode("wstring", "`0`w"));
+mixin(generateModelCode("dstring", "`0`d"));
+
+
+//check if types are correctly paresed
+void testFieldParse() {
+
+
+	mixin(generateAssertCode("bool", "true"));
+
+	mixin(generateAssertCode("byte", "0"));
+	mixin(generateAssertCode("ubyte", "0"));
+	mixin(generateAssertCode("short", "0"));
+	mixin(generateAssertCode("ushort", "0"));
+
+	mixin(generateAssertCode("int", "0"));
+	mixin(generateAssertCode("uint", "0"));
+	mixin(generateAssertCode("long", "0"));
+	mixin(generateAssertCode("ulong", "0"));
+	//TODO: mixin(generateAssertCode("cent", "0"));
+	//TODO: mixin(generateAssertCode("ucent", "0"));
+	mixin(generateAssertCode("float", "0"));
+	mixin(generateAssertCode("double", "0"));
+	mixin(generateAssertCode("real", "0"));
+	mixin(generateAssertCode("ifloat", `"0i"`));
+	mixin(generateAssertCode("idouble", `"0i"`));
+	mixin(generateAssertCode("ireal", `"0i"`));
+	//TODO: mixin(generateAssertCode("cfloat", "1.0i"));
+	//TODO: mixin(generateAssertCode("cdouble", "1.0i"));
+	//TODO: mixin(generateAssertCode("creal", "1.0i"));
+	mixin(generateAssertCode("string", `"0"`));
+	mixin(generateAssertCode("wstring", `"0"`));
+	mixin(generateAssertCode("dstring", `"0"`));
+}
 
 
 void main()
