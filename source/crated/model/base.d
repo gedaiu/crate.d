@@ -340,10 +340,17 @@ public mixin template MixItem(Prototype, Model) {
 	}
 
 	/**
-	 * Save the item into the model
+	 * Save the item into model
 	 */
 	void save() {
 		myModel.save(this);
+	}
+
+	/**
+	 * Delete the item from model
+	 */
+	void remove() {
+		myModel.remove(this);
 	}
 
 	/**
@@ -366,7 +373,7 @@ public mixin template MixItem(Prototype, Model) {
 	static BookItem From(T)( T elm, BookModel parent ) {
 		BookItem itm = new BookItem(parent);
 
-		mixin(FromCode!Prototype);
+		mixin(FromCode!(Prototype, T));
 		
 		return itm;
 	}
@@ -375,7 +382,7 @@ public mixin template MixItem(Prototype, Model) {
 /**
  * create the code for the item From method
  */
-string FromCode(Prototype, int i = 0)() {
+string FromCode(Prototype, T, int i = 0)() {
 	enum fields = Prototype.fields;
 
 	//exit condition
@@ -386,15 +393,20 @@ string FromCode(Prototype, int i = 0)() {
 
 		//check for D types
 		static if(field[2] == "basic") {
-			return `itm.`~field[0]~` = elm["`~field[0]~`"].to!`~field[1]~`;` ~ FromCode!(Prototype, i + 1);
+
+			static if(field[1] == "bool") {
+				return `try { itm.`~field[0]~` = elm["`~field[0]~`"].to!`~field[1]~`; } catch(Exception e) {itm.`~field[0]~` = false; }` ~ FromCode!(Prototype, T, i + 1);
+			} else {
+				return `itm.`~field[0]~` = elm["`~field[0]~`"].to!`~field[1]~`;` ~ FromCode!(Prototype, T, i + 1);
+			}
 		} else static if(field[2] == "enum") {
-			return `itm.`~field[0]~` = elm["`~field[0]~`"].to!string.to!`~field[1]~`;` ~ FromCode!(Prototype, i + 1);
+			return `itm.`~field[0]~` = elm["`~field[0]~`"].to!string.to!`~field[1]~`;` ~ FromCode!(Prototype, T, i + 1);
 		} else static if(field[2] == "hasFromString") {
-			return `itm.`~field[0]~` = `~field[1]~`.fromString(elm["`~field[0]~`"].to!string);` ~ FromCode!(Prototype, i + 1);
+			return `itm.`~field[0]~` = `~field[1]~`.fromString(elm["`~field[0]~`"].to!string);` ~ FromCode!(Prototype, T, i + 1);
 		} else {
 			pragma(msg, `Field '`,Prototype,`.`,field[0],`' can not be converted. You need a basic type, enum or class or struct with static fromString(string) method.`);
 
-			return FromCode!(Prototype, i + 1);
+			return FromCode!(Prototype, T, i + 1);
 		}
 	}
 }
@@ -423,7 +435,14 @@ public mixin template MixModel(Prototype, Model) {
 	void save(Prototype item) {
 		items[mixin("item." ~ Prototype.primaryField) - 1] = item;
 	}	
-	
+
+	/**
+	 * Remove the item
+	 */
+	void remove(Prototype item) {
+		throw new Exception("method is not implemented");
+	}	
+
 	/**
 	 * Get all model items
 	 */

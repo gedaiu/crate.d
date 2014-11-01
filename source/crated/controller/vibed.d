@@ -29,6 +29,8 @@ import std.stdio;
 public import crated.controller.base;
 public import std.typetuple;
 
+import vibe.d;
+
 version(UseVibe) {}
 
 /**
@@ -76,6 +78,8 @@ public mixin template MixVibedController(Controller) {
 	}
 
 	static void route(void function(HTTPServerRequest, HTTPServerResponse) cb, string method, string path, ref URLRouter router) {
+
+		import std.stdio;
 		writeln(method, " ", path);
 
 		if(method == "ANY") router.any(path, cb);

@@ -1,8 +1,8 @@
 import vibe.d;
+
 import crated.model.mongo;
-import crated.controller.vibed;
-import crated.view.web.adminTable;
-import crated.view.web.adminEditItem;
+import crated.controller.admin;
+
 import std.stdio;
 
 /**
@@ -48,53 +48,7 @@ class BookModel {
 }
 
 
-/**
- * The project controller
- */
-class BookController {
-	/**
-	 * The list page
-	 */
-	@HttpRequest("GET", "/")
-	static void index(HTTPServerRequest req, HTTPServerResponse res) {
-		MongoClient client = connectMongoDB("127.0.0.1");
-		auto books = new BookModel(client);
 
-		auto items = books.allItems;
-
-
-		res.writeBody( adminTable!(BookItem, "/")(items) , "text/html; charset=UTF-8");
-	}
-
-	/**
-	 * The edit page
-	 */
-	@HttpRequest("GET", "/edit/:id")
-	static void edit(HTTPServerRequest req, HTTPServerResponse res) {
-		MongoClient client = connectMongoDB("127.0.0.1");
-		auto books = new BookModel(client);
-		
-		auto item = books.findBy!"_id"(BsonObjectID.fromString(req.params["id"]));
-
-		res.writeBody( adminEditItem!("/")(item[0]) , "text/html; charset=UTF-8");
-	}
-
-	/**
-	 * The edit page
-	 */
-	@HttpRequest("POST", "/save/:id")
-	static void save(HTTPServerRequest req, HTTPServerResponse res) {
-		MongoClient client = connectMongoDB("127.0.0.1");
-		auto books = new BookModel(client);
-
-		BookItem.From(req.form,books);
-
-		res.writeBody(req.form.to!string , "text/html; charset=UTF-8");
-	}
-
-	//insert controller code
-	mixin MixVibedController!(BookController);
-}
 
 /**
  *  Vibe.d init
@@ -138,7 +92,9 @@ shared static this()
 
 	auto router = new URLRouter;
 
-	BookController.addRoutes(router);
+	auto adminController = new AdminController!("/admin", BookModel, BookItem);
+
+	adminController.addRoutes(router);
 
 	listenHTTP(settings, router);
 	logInfo("Please open http://127.0.0.1:8080/ in your browser.");

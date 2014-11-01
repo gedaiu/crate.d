@@ -18,7 +18,9 @@ class BookModel {
 	mixin MixModel!(BookItem, BookModel);
 
 	Prototype[] query(T)(T data, int length = 0, int skip = 0) { Prototype[] list; return list; }
-	void remove() {}
+	void remove(BookItem itm) {
+
+	}
 }
 
 
@@ -27,8 +29,9 @@ string generateModelCode(string type, string val) {
 	string a = "
         class c"~ type ~ "Model { 
              mixin MixModel!(c"~ type ~ "Item,c"~ type ~ "Model); 
-	         Prototype[] query(T)(T data, int length = 0, int skip = 0) { Prototype[] list; return list; }
-             void remove() {}
+	         
+             Prototype[] query(T)(T data, int length = 0, int skip = 0) { Prototype[] list; return list; }
+             void remove(c"~ type ~ "Item itm) {}
         }
 
         class c"~ type ~ "Item {

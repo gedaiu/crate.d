@@ -62,10 +62,21 @@ public mixin template MixMongoModel(Prototype, Model) {
 	}
 
 	/**
-	 * Remove all items from the model
+	 * Remove all items from model
 	 */
 	void remove() {
 		collection.remove();
+	}
+
+	/**
+	 * Remove one item from model
+	 */
+	void remove(Prototype item) {
+		Bson selector = Bson.emptyObject;
+
+		mixin("selector." ~ Prototype.primaryField ~  "= item." ~ Prototype.primaryField ~ ";");
+
+		collection.remove(selector);
 	}
 
 	/**
