@@ -196,24 +196,78 @@ string FromCode(Prototype, T, int i = 0)() {
 
 template Model(Prototype) {
 
-	class ModelTemplate {
-		Prototype[] items;
+	//the item type
+	alias P = Item!(Prototype, ModelTemplate);
 
+	//the model template
+	class ModelTemplate {
+		P[] items;
+
+
+		/**
+		 * Add ot update an element
+		 */
 		bool save(Prototype item) {
 			return false;
 		}
 
-		bool remove(Prototype item) {
+		/**
+		 * Remove an existing item
+		 */
+		bool remove(T)(T item) {
 			return false;
 		}
 
+		/**
+		 * Remove all items
+		 */
+		bool clean() {
+			return false;
+		}
+
+		/**
+		 * Create a new item. This will be automatically added to
+		 * the model.
+		 */
+		P createItem() {
+			P item = new P(this);
+
+			return item;
+		}
+
+		/**
+		 * Retrieve all items
+		 */
+		P[] all() {
+			return items;
+		}
+
+		/**
+		 * Query the model
+		 */
+		P[] query() {
+			return items;
+		}
+
+		/**
+		 * Find all items that match the search criteria 
+		 */
+		P[] searchBy() {
+			return items;
+		}
+
+		/**
+		 * retrieve the first item that match the search
+		 * criteria
+		 */
+		P searchOneBy() {
+			return items[0];
+		}
 
 	}
 
-
 	mixin MixCheckFieldsModel!ModelTemplate;
 	alias Model = ModelTemplate;
-
 }
 
 /**
@@ -241,6 +295,6 @@ mixin template MixCheckFieldsModel(M) {
 	mixin(_genChkMember!(M, "all"));
 
 	mixin(_genChkMember!(M, "query"));
-	mixin(_genChkMember!(M, "findBy"));
-	mixin(_genChkMember!(M, "findOneBy"));
+	mixin(_genChkMember!(M, "searchBy"));
+	mixin(_genChkMember!(M, "searchOneBy"));
 }
