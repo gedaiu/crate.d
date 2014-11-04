@@ -1,0 +1,9 @@
+﻿body > .row {
+	max-width: 1200px;
+	margin: auto;
+	width: calc(100% - 40px)
+}
+
+.summary li {
+	color: #999;
+}

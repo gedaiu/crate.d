@@ -6,24 +6,14 @@ class BookItem {
 	ulong id = 1;
 
 	@field string name = "unknown";
-
 	@field string author = "unknown";
-	
-	//insert model item code
-	mixin MixItem!(BookItem, BookModel);
 }
 
 class BookModel {
-	//insert model item code
-	mixin MixModel!(BookItem, BookModel);
 
-	Prototype[] query(T)(T data, int length = 0, int skip = 0) { Prototype[] list; return list; }
-	void remove(BookItem itm) {
-
-	}
 }
 
-
+/*
 string generateModelCode(string type, string val) {
 	
 	string a = "
@@ -110,12 +100,19 @@ void testFieldParse() {
 	mixin(generateAssertCode("wstring", `"0"`));
 	mixin(generateAssertCode("dstring", `"0"`));
 }
-
+*/
 
 void main()
 {
-	auto books = new BookModel;
+	auto model = new Model!(BookItem);
+	auto item =  new Item!(BookItem, model)(model);
 
+
+
+
+	//auto books = new BookModel;
+
+	/*
 	auto item1 = books.createItem;
 	item1.name = "Prelude to Foundation";
 	item1.author = "Isaac Asimov";
@@ -136,7 +133,6 @@ void main()
 	item4.author = "Mark Twain";
 	item4.save;
 
-
 	auto marksBooks = books.findBy!"author"("Mark Twain");
 	assert(marksBooks.length == 2);
 	assert(marksBooks[0].author == "Mark Twain");
@@ -146,10 +142,8 @@ void main()
 	assert(oneItem.name == "The Adventures of Huckleberry Finn");
 	assert(oneItem.author == "Mark Twain");
 
-
 	auto all        = books.allItems;
-	assert(all.length == 4);
-
+	assert(all.length == 4);*/
 
 	writeln("OK");
 }

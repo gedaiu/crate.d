@@ -1,0 +1,14 @@
+﻿{
+	"name": "documentationviewer",
+	"description": "A documentation viewer created with vibe.d and crate.d",
+	"copyright": "Copyright © 2014, Szabo Bogdan",
+	"authors": ["Szabo Bogdan"],
+	"dependencies": {
+		"vibe-d": ">=0.7.21-rc.2"
+	},
+
+	"dflags": ["-J./source"],
+	"versions": ["UseVibe", "VibeDefaultMain"],
+
+	"sourcePaths": [ "../../source" ]
+}

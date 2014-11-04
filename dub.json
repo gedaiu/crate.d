@@ -14,5 +14,6 @@
 			"sourcePaths": ["source/model"],
 			"importPaths": ["source/model"]
 		}
-	]
+	],
+	"versions": ["VibeCustomMain"]
 }

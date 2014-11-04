@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{DB4CDBD0-F649-4863-B185-350E7C013528}</ProjectGuid>
+    <ProjectGuid>{178B4A05-610D-43CD-812E-CFA9C76C59E2}</ProjectGuid>
     <Compiler>DMD2</Compiler>
     <PreferOneStepBuild>true</PreferOneStepBuild>
     <UseDefaultCompiler>true</UseDefaultCompiler>
@@ -15,14 +15,13 @@
     <ObjectsDirectory>obj/Debug</ObjectsDirectory>
     <LinkinThirdPartyLibraries>false</LinkinThirdPartyLibraries>
     <UnittestMode>false</UnittestMode>
-    <OutputName>webBookstore</OutputName>
+    <OutputName>documentationViewer</OutputName>
     <Target>Executable</Target>
     <Externalconsole>true</Externalconsole>
     <DebugLevel>0</DebugLevel>
     <CustomCommands>
       <CustomCommands>
-        <Command type="Build" command="dub" workingdir="${ProjectDir}" externalConsole="True" />
-        <Command type="Clean" command="dub clean" workingdir="${ProjectDir}" />
+        <Command type="Build" command="dub clean; dub" workingdir="${ProjectDir}" externalConsole="True" />
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>
@@ -31,7 +30,7 @@
     <ObjectsDirectory>obj/Release</ObjectsDirectory>
     <LinkinThirdPartyLibraries>false</LinkinThirdPartyLibraries>
     <UnittestMode>false</UnittestMode>
-    <OutputName>webBookstore</OutputName>
+    <OutputName>documentationViewer</OutputName>
     <Target>Executable</Target>
     <Externalconsole>true</Externalconsole>
     <DebugLevel>0</DebugLevel>
@@ -42,15 +41,22 @@
     <ObjectsDirectory>obj/Unittest</ObjectsDirectory>
     <LinkinThirdPartyLibraries>false</LinkinThirdPartyLibraries>
     <UnittestMode>true</UnittestMode>
-    <OutputName>webBookstore</OutputName>
+    <OutputName>documentationViewer</OutputName>
     <Target>Executable</Target>
     <Externalconsole>true</Externalconsole>
     <DebugLevel>0</DebugLevel>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="dub.json" />
+    <Compile Include="source\app.d" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="source\app.d" />
+    <None Include="dub.json" />
+    <None Include="source\moduleList.dh" />
+    <None Include="public\styles\style.css" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="source\" />
+    <Folder Include="public\" />
+    <Folder Include="public\styles\" />
   </ItemGroup>
 </Project>
