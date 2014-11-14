@@ -13,7 +13,7 @@ for d in tests/*/ ; do
     
 	cd $d;
 
-	dub;
+	dub test;
 
 	cd ../../;
 done

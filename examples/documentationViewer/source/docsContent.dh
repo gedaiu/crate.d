@@ -1,0 +1,123 @@
+﻿<?
+	import std.array;
+	import std.string;
+	import std.conv;
+	import crated.model.base;
+
+
+	bool hasMembers(typeof(data[0]) item) {
+		if(item.kind == "alias") {
+			return false;
+		}
+
+		if(item.members.length == 0) {
+			return false;
+		}
+
+		return true;
+	}
+
+?><h1><? writeln(data[0].name.replace("crated.", ""), "<small> - ", data[0].kind, `</small>`); ?></h1>
+
+<p class="lead">
+	<?	
+		
+		//display description
+		foreach(i;0..data.length) {
+			if(data[i].description != "undefined") {
+				write( renderDh!"description.dh"(data[i].description) );
+			}
+		}
+	?>
+ </p>
+
+<?
+ 	if(data.length == 1) write("<h2>Deffinition</h2>");
+ 				    else write("<h2>Deffinitions</h2>");
+
+ 	//describe every overload
+
+	foreach(i;0..data.length) {
+		
+		string title;
+		string aliasName;
+
+		string glue;
+		foreach(j; 0..data[i].parameters.length) {
+			string name = data[i].parameters[j]["name"];
+			string type = data[i].parameters[j]["type"];
+			string kind = data[i].parameters[j]["kind"];
+
+			if(kind != "undefined") title ~= glue ~ `<span class="kind" data-toggle="tooltip" data-placement="top" title="`~kind~`">`;
+
+			if(type != "undefined") title ~= `<span class="type text-success">`~type~`</span> `;
+			title ~= name;
+
+			if(kind != "undefined") title ~= `</span>`;
+
+			glue = ", ";
+		}
+					 
+		?>
+
+		<h3>
+			<? writeln(data[i].name); ?>
+
+			<?
+				if(title != "") {
+					write("( ",title.replace("[]", "[ ]")," )");
+				}
+
+				if(data[i].aliasName != "") {
+					write(` => <a href="#">`, data[i].aliasName, `</a>`);
+				}
+
+
+			?>
+
+		</h3>
+
+		<?
+			auto parent = data[i].parent;
+			bool[string] found;
+			string contentList;
+
+			//look for the children
+			foreach(string path; data[i].members) {
+				auto item = parent.getOneBy!"path"(path);
+
+				if(item.path !in found ) {
+					auto label = "primary";
+					if( item.kind != "import" &&
+					   (item.kind != "alias" || (item.kind == "alias" && item.name != data[i].name )) ) {
+
+						if(item.kind == "variable") label = "info";
+						if(item.kind == "template") label = "warning";
+						if(item.kind == "alias") label = "default";
+
+						string description = item.description;
+						auto descriptionEnd = description.indexOf(".");
+
+						if(descriptionEnd != -1) description = description[0..descriptionEnd];
+
+						if( hasMembers(item) ) {
+							contentList ~= `<li><b><a href="`~path~`">`~item.name~"</a></b> - " ~ description ~ `. <span class="label label-`~label~`">` ~ item.kind ~`</span></li>`;
+						} else {
+							contentList ~= `<li><b>`~item.name~"</b> - " ~ description ~ `. <span class="label label-`~label~`">`~ item.kind ~`</span></li>`;
+						}
+
+						found[item.path] = true;
+					}
+				}
+			}
+
+			if(contentList.length > 0) {
+				?>
+					<ul>
+						<? write(contentList); ?>
+					</ul>
+			<?
+			}
+	}
+?>
+<br/><br/><br/><br/>

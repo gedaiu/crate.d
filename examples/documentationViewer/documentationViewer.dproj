@@ -48,11 +48,17 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="source\app.d" />
+    <Compile Include="source\docsModule.d" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dub.json" />
-    <None Include="source\moduleList.dh" />
     <None Include="public\styles\style.css" />
+    <None Include="source\docs.dh" />
+    <None Include="source\tableOfContents.dh" />
+    <None Include="source\breadcrumbs.dh" />
+    <None Include="source\docsContent.dh" />
+    <None Include="source\description.dh" />
+    <None Include="source\code.dh" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="source\" />

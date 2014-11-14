@@ -1,0 +1,786 @@
+[
+ {
+  "kind" : "module",
+  "file" : "./source/crate.d",
+  "members" : []
+ },
+ {
+  "name" : "crated.model.base",
+  "kind" : "module",
+  "file" : "./source/crated/model/base.d",
+  "members" : [
+   {
+    "name" : "std.stdio",
+    "kind" : "import",
+    "line" : 11,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "std.traits",
+    "kind" : "import",
+    "line" : 12,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "std.algorithm",
+    "kind" : "import",
+    "line" : 13,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "std.conv",
+    "kind" : "import",
+    "line" : 14,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "std.typetuple",
+    "kind" : "import",
+    "line" : 15,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "kind" : "template",
+    "line" : 18,
+    "char" : 1,
+    "name" : "IsEnum",
+    "parameters" : [
+     {
+      "name" : "T",
+      "kind" : "type"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "check",
+      "kind" : "variable",
+      "line" : 19,
+      "char" : 12,
+      "storageClass" : [
+       "enum"
+      ],
+      "deco" : "b",
+      "init" : "true"
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "line" : 21,
+    "char" : 1,
+    "name" : "IsEnum",
+    "parameters" : [
+     {
+      "name" : "T",
+      "kind" : "type"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "check",
+      "kind" : "variable",
+      "line" : 22,
+      "char" : 12,
+      "storageClass" : [
+       "enum"
+      ],
+      "deco" : "b",
+      "init" : "false"
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "line" : 26,
+    "char" : 1,
+    "name" : "HasFromString",
+    "parameters" : [
+     {
+      "name" : "T",
+      "kind" : "type"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "check",
+      "kind" : "variable",
+      "line" : 27,
+      "char" : 12,
+      "storageClass" : [
+       "enum"
+      ],
+      "deco" : "b",
+      "init" : "__traits(hasMember, T, \"fromString\")"
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "line" : 30,
+    "char" : 1,
+    "name" : "HasFromString",
+    "parameters" : [
+     {
+      "name" : "T",
+      "kind" : "type"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "check",
+      "kind" : "variable",
+      "line" : 31,
+      "char" : 12,
+      "storageClass" : [
+       "enum"
+      ],
+      "deco" : "b",
+      "init" : "false"
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "line" : 37,
+    "char" : 1,
+    "name" : "ItemProperty",
+    "parameters" : [
+     {
+      "name" : "item",
+      "kind" : "type"
+     },
+     {
+      "name" : "method",
+      "kind" : "value",
+      "deco" : "Aya"
+     }
+    ],
+    "members" : []
+   },
+   {
+    "kind" : "template",
+    "line" : 47,
+    "char" : 1,
+    "name" : "getItemFields",
+    "parameters" : [
+     {
+      "name" : "ATTR",
+      "kind" : "alias"
+     },
+     {
+      "name" : "Prototype",
+      "kind" : "type"
+     }
+    ],
+    "members" : [
+     {
+      "kind" : "template",
+      "line" : 50,
+      "char" : 9,
+      "name" : "Type",
+      "parameters" : [
+       {
+        "name" : "name",
+        "kind" : "value",
+        "type" : "string"
+       }
+      ],
+      "members" : [
+       {
+        "name" : "Type",
+        "kind" : "function",
+        "line" : 50,
+        "char" : 9,
+        "type" : "string()",
+        "endline" : 54,
+        "endchar" : 2
+       }
+      ]
+     },
+     {
+      "kind" : "template",
+      "line" : 59,
+      "char" : 2,
+      "name" : "ItemFields",
+      "parameters" : [
+       {
+        "name" : "FIELDS",
+        "kind" : "tuple"
+       }
+      ],
+      "members" : []
+     },
+     {
+      "name" : "fields",
+      "kind" : "variable",
+      "line" : 81,
+      "char" : 18,
+      "storageClass" : [
+       "enum"
+      ],
+      "type" : "string[][]",
+      "init" : "[ItemFields!(__traits(allMembers, Prototype))]"
+     },
+     {
+      "name" : "getItemFields",
+      "kind" : "alias",
+      "line" : 82,
+      "char" : 2,
+      "type" : "fields"
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "line" : 89,
+    "char" : 1,
+    "name" : "Item",
+    "parameters" : [
+     {
+      "name" : "Prototype",
+      "kind" : "type"
+     },
+     {
+      "name" : "M",
+      "kind" : "alias"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "Item",
+      "kind" : "alias",
+      "line" : 90,
+      "char" : 2,
+      "type" : "Item!(Prototype, typeof(M))"
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "line" : 93,
+    "char" : 1,
+    "name" : "Item",
+    "parameters" : [
+     {
+      "name" : "Prototype",
+      "kind" : "type"
+     },
+     {
+      "name" : "M",
+      "kind" : "type"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "ItemTemplate",
+      "kind" : "class",
+      "line" : 95,
+      "char" : 2,
+      "members" : [
+       {
+        "name" : "myModel",
+        "kind" : "variable",
+        "line" : 97,
+        "char" : 13,
+        "type" : "M"
+       },
+       {
+        "name" : "this",
+        "kind" : "constructor",
+        "line" : 101,
+        "char" : 3,
+        "type" : "(M parent)",
+        "parameters" : [
+         {
+          "name" : "parent",
+          "type" : "M"
+         }
+        ],
+        "endline" : 103,
+        "endchar" : 3
+       },
+       {
+        "kind" : "template",
+        "line" : 106,
+        "char" : 3,
+        "name" : "this",
+        "parameters" : [
+         {
+          "name" : "T",
+          "kind" : "type"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "this",
+          "kind" : "constructor",
+          "line" : 106,
+          "char" : 3,
+          "type" : "(T someItem, M parent)",
+          "parameters" : [
+           {
+            "name" : "someItem",
+            "type" : "T"
+           },
+           {
+            "name" : "parent",
+            "type" : "M"
+           }
+          ],
+          "endline" : 109,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "kind" : "template",
+        "line" : 111,
+        "char" : 8,
+        "name" : "copy",
+        "parameters" : [
+         {
+          "name" : "fields",
+          "kind" : "value",
+          "type" : "string[][]"
+         },
+         {
+          "name" : "T",
+          "kind" : "type"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "copy",
+          "kind" : "function",
+          "line" : 111,
+          "char" : 8,
+          "type" : "void(T someItem)",
+          "parameters" : [
+           {
+            "name" : "someItem",
+            "type" : "T"
+           }
+          ],
+          "endline" : 118,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "name" : "fields",
+        "kind" : "variable",
+        "line" : 121,
+        "char" : 19,
+        "storageClass" : [
+         "enum"
+        ],
+        "type" : "string[][]",
+        "init" : "getItemFields!(\"field\", Prototype)"
+       },
+       {
+        "name" : "primaryField",
+        "kind" : "variable",
+        "line" : 125,
+        "char" : 17,
+        "storageClass" : [
+         "enum"
+        ],
+        "type" : "string[]",
+        "init" : "getItemFields!(\"primary\", Prototype)[0]"
+       },
+       {
+        "name" : "parent",
+        "kind" : "function",
+        "line" : 134,
+        "char" : 5,
+        "type" : "@property M()",
+        "endline" : 136,
+        "endchar" : 3
+       },
+       {
+        "name" : "save",
+        "kind" : "function",
+        "line" : 141,
+        "char" : 8,
+        "type" : "void()",
+        "endline" : 143,
+        "endchar" : 3
+       },
+       {
+        "name" : "remove",
+        "kind" : "function",
+        "line" : 148,
+        "char" : 8,
+        "type" : "void()",
+        "endline" : 150,
+        "endchar" : 3
+       },
+       {
+        "name" : "toString",
+        "kind" : "function",
+        "line" : 155,
+        "char" : 19,
+        "storageClass" : [
+         "override"
+        ],
+        "type" : "string()",
+        "endline" : 163,
+        "endchar" : 3
+       },
+       {
+        "name" : "PropertyJson",
+        "kind" : "function",
+        "line" : 168,
+        "char" : 25,
+        "storageClass" : [
+         "static"
+        ],
+        "type" : "string()",
+        "endline" : 193,
+        "endchar" : 3
+       }
+      ]
+     },
+     {
+      "name" : "Item",
+      "kind" : "alias",
+      "line" : 197,
+      "char" : 2,
+      "type" : "ItemTemplate"
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "line" : 208,
+    "char" : 8,
+    "name" : "FromCode",
+    "parameters" : [
+     {
+      "name" : "Prototype",
+      "kind" : "type"
+     },
+     {
+      "name" : "T",
+      "kind" : "type"
+     },
+     {
+      "name" : "i",
+      "kind" : "value",
+      "deco" : "i",
+      "defaultValue" : "0"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "FromCode",
+      "kind" : "function",
+      "line" : 208,
+      "char" : 8,
+      "type" : "string()",
+      "endline" : 234,
+      "endchar" : 1
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "line" : 236,
+    "char" : 1,
+    "name" : "Model",
+    "parameters" : [
+     {
+      "name" : "Prototype",
+      "kind" : "type"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "ModelTemplate",
+      "kind" : "class",
+      "line" : 241,
+      "char" : 2,
+      "members" : [
+       {
+        "name" : "ItemCls",
+        "kind" : "alias",
+        "line" : 243,
+        "char" : 3,
+        "type" : "Item!(Prototype, ModelTemplate)"
+       },
+       {
+        "name" : "items",
+        "kind" : "variable",
+        "line" : 245,
+        "char" : 13,
+        "type" : "ItemCls[]"
+       },
+       {
+        "name" : "save",
+        "kind" : "function",
+        "line" : 250,
+        "char" : 8,
+        "type" : "void(ItemCls item)",
+        "parameters" : [
+         {
+          "name" : "item",
+          "type" : "ItemCls"
+         }
+        ],
+        "endline" : 264,
+        "endchar" : 3
+       },
+       {
+        "kind" : "template",
+        "line" : 269,
+        "char" : 8,
+        "name" : "remove",
+        "parameters" : [
+         {
+          "name" : "T",
+          "kind" : "type"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "remove",
+          "kind" : "function",
+          "line" : 269,
+          "char" : 8,
+          "type" : "void(T item)",
+          "parameters" : [
+           {
+            "name" : "item",
+            "type" : "T"
+           }
+          ],
+          "endline" : 271,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "name" : "clean",
+        "kind" : "function",
+        "line" : 276,
+        "char" : 8,
+        "type" : "void()",
+        "endline" : 278,
+        "endchar" : 3
+       },
+       {
+        "name" : "createItem",
+        "kind" : "function",
+        "line" : 285,
+        "char" : 11,
+        "type" : "ItemCls()",
+        "endline" : 289,
+        "endchar" : 3
+       },
+       {
+        "name" : "all",
+        "kind" : "function",
+        "line" : 294,
+        "char" : 13,
+        "type" : "ItemCls[]()",
+        "endline" : 296,
+        "endchar" : 3
+       },
+       {
+        "name" : "query",
+        "kind" : "function",
+        "line" : 301,
+        "char" : 13,
+        "type" : "ItemCls[]()",
+        "endline" : 303,
+        "endchar" : 3
+       },
+       {
+        "kind" : "template",
+        "line" : 308,
+        "char" : 9,
+        "name" : "length",
+        "parameters" : [
+         {
+          "name" : "fieldName",
+          "kind" : "value",
+          "type" : "string"
+         },
+         {
+          "name" : "T",
+          "kind" : "type"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "length",
+          "kind" : "function",
+          "line" : 308,
+          "char" : 9,
+          "type" : "ulong(T value)",
+          "parameters" : [
+           {
+            "name" : "value",
+            "type" : "T"
+           }
+          ],
+          "endline" : 316,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "name" : "length",
+        "kind" : "function",
+        "line" : 321,
+        "char" : 9,
+        "type" : "ulong()",
+        "endline" : 323,
+        "endchar" : 3
+       },
+       {
+        "kind" : "template",
+        "line" : 328,
+        "char" : 13,
+        "name" : "getBy",
+        "parameters" : [
+         {
+          "name" : "fieldName",
+          "kind" : "value",
+          "type" : "string"
+         },
+         {
+          "name" : "T",
+          "kind" : "type"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "getBy",
+          "kind" : "function",
+          "line" : 328,
+          "char" : 13,
+          "type" : "ItemCls[](T value)",
+          "parameters" : [
+           {
+            "name" : "value",
+            "type" : "T"
+           }
+          ],
+          "endline" : 338,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "kind" : "template",
+        "line" : 344,
+        "char" : 11,
+        "name" : "getOneBy",
+        "parameters" : [
+         {
+          "name" : "fieldName",
+          "kind" : "value",
+          "type" : "string"
+         },
+         {
+          "name" : "T",
+          "kind" : "type"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "getOneBy",
+          "kind" : "function",
+          "line" : 344,
+          "char" : 11,
+          "type" : "ItemCls(T value)",
+          "parameters" : [
+           {
+            "name" : "value",
+            "type" : "T"
+           }
+          ],
+          "endline" : 352,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "name" : "toString",
+        "kind" : "function",
+        "line" : 357,
+        "char" : 19,
+        "storageClass" : [
+         "override"
+        ],
+        "type" : "string()",
+        "endline" : 359,
+        "endchar" : 3
+       }
+      ]
+     },
+     {
+      "name" : "MixCheckFieldsModel!ModelTemplate",
+      "kind" : "mixin",
+      "line" : 363,
+      "char" : 2
+     },
+     {
+      "name" : "Model",
+      "kind" : "alias",
+      "line" : 364,
+      "char" : 2,
+      "type" : "ModelTemplate"
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "line" : 370,
+    "char" : 8,
+    "name" : "_genChkMember",
+    "parameters" : [
+     {
+      "name" : "M",
+      "kind" : "type"
+     },
+     {
+      "name" : "name",
+      "kind" : "value",
+      "deco" : "Aya"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "_genChkMember",
+      "kind" : "function",
+      "line" : 370,
+      "char" : 8,
+      "type" : "string()",
+      "endline" : 377,
+      "endchar" : 1
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "line" : 382,
+    "char" : 7,
+    "name" : "MixCheckFieldsModel",
+    "parameters" : [
+     {
+      "name" : "M",
+      "kind" : "type"
+     }
+    ],
+    "members" : []
+   }
+  ]
+ }
+]

@@ -1,0 +1,36 @@
+﻿<?
+	import std.array;
+	import std.regex;
+
+	//look for keywords
+	string lookForKeywords(string data) {
+		enum string[] keywords = ["class", "alias", "struct", "new", "auto", "string", "ulong", "long", "uint", "int"];
+
+		foreach(keyword; keywords) {
+			data = data.replace(keyword, `<span class="keyword">`~keyword~`</span>`);
+		}
+
+		return data;
+	} 
+
+
+	//look for strings
+	string codeWithStrings = "";
+	string post = data;
+	ulong oldPos = 0;
+
+	auto r = regex("(\"[^\"]*\")|(`.*`)|('.')");
+	foreach(c; matchAll(data, r)) {
+		ulong pos = (c.pre).length;
+
+		codeWithStrings ~= lookForKeywords( data[oldPos..pos] ) ~ `<span class="string">` ~ c.hit ~ `</span>`;
+
+		oldPos = pos + (c.hit).length;
+		post = c.post;
+	}
+
+	data = codeWithStrings ~ lookForKeywords(post);
+
+	write(data);
+
+?>

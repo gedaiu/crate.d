@@ -1,0 +1,45 @@
+﻿<h2>Table of contents</h2>
+
+<? 
+
+string tableFor(string path) {
+	string list = "";
+	bool[string] found;
+
+
+	foreach(item; data.getByPath(path)) {
+		if(item.path !in found && 
+		   (item.kind == "module" || 
+		    item.kind == "template" || 
+		    item.kind == "class" || 
+		    item.kind == "struct" || 
+		    item.kind == "function" ) ) {
+
+			  list ~= `<li><a href="` ~ item.path ~ `">` ~ item.name  ~ `</a>`;
+			  list ~= tableFor(item.path ~ "/");
+			  list ~= `</li>`;
+
+			found[item.path] = true;
+		}
+	}
+	
+	if(list != "") return "<ul>" ~ list ~ "</ul>";
+
+	return "";
+}
+
+?>
+
+<ul>
+	<li><a href="#">Introduction</a></li>
+	<li><a href="#">Model</a><? writeln(tableFor("/docs/crated.model")); ?></li>
+	<li><a href="#">View</a><? writeln(tableFor("/docs/crated.view")); ?></li>
+	<li><a href="#">Controller</a><? writeln(tableFor("/docs/crated.controller")); ?></li>
+</ul>
+
+
+
+
+
+
+

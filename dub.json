@@ -15,5 +15,7 @@
 			"importPaths": ["source/model"]
 		}
 	],
+
+	"libs": ["mongoc-1.0"],
 	"versions": ["VibeCustomMain"]
 }

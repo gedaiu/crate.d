@@ -1,149 +1,120 @@
 import std.stdio;
+import std.conv;
 import crated.model.base;
 
-class BookItem {
-	@field @primary 
-	ulong id = 1;
+class BookItemPrototype {
+	@("field", "primary")
+	ulong id;
 
-	@field string name = "unknown";
-	@field string author = "unknown";
+	@("field") string name = "unknown";
+	@("field") string author = "unknown";
 }
 
-class BookModel {
+/**
+ * Test the basic model functionality
+ */
+unittest {
+	auto books = new Model!(BookItemPrototype);
 
-}
-
-/*
-string generateModelCode(string type, string val) {
-	
-	string a = "
-        class c"~ type ~ "Model { 
-             mixin MixModel!(c"~ type ~ "Item,c"~ type ~ "Model); 
-	         
-             Prototype[] query(T)(T data, int length = 0, int skip = 0) { Prototype[] list; return list; }
-             void remove(c"~ type ~ "Item itm) {}
-        }
-
-        class c"~ type ~ "Item {
-			@field " ~ type ~ " val = "~ val ~";
-            @field @primary long id;
-			//insert model item code
-			mixin MixItem!(c"~ type ~ "Item,c"~ type ~ "Model);
-		}";
-	
-	return a;
-}
-
-string generateAssertCode(string type, string expected) {
-	string a = "
-	auto myC"~ type ~ "Item = new c"~ type ~ "Item(new c"~ type ~ "Model);
-	assert(myC"~ type ~ "Item.to!string == `{ \"val\": "~ expected ~" }`, `error on ["~type~"] serialization`);";
-
-	return a;
-}
-
-
-
-mixin(generateModelCode("bool", "true"));
-mixin(generateModelCode("byte", "0"));
-mixin(generateModelCode("ubyte", "0"));
-mixin(generateModelCode("short", "0"));
-mixin(generateModelCode("ushort", "0"));
-
-mixin(generateModelCode("int", "0"));
-mixin(generateModelCode("uint", "0"));
-mixin(generateModelCode("long", "0"));
-mixin(generateModelCode("ulong", "0"));
-//TODO: mixin(generateModelCode("cent", "0"));
-//TODO: mixin(generateModelCode("ucent", "0"));
-mixin(generateModelCode("float", "0"));
-mixin(generateModelCode("double", "0"));
-mixin(generateModelCode("real", "0"));
-mixin(generateModelCode("ifloat", "0i"));
-mixin(generateModelCode("idouble", "0i"));
-mixin(generateModelCode("ireal", "0i"));
-//TODO: mixin(generateModelCode("cfloat", "1.0i"));
-//TODO: mixin(generateModelCode("cdouble", "1.0i"));
-//TODO: mixin(generateModelCode("creal", "1.0i"));
-mixin(generateModelCode("string", `"0"`));
-mixin(generateModelCode("wstring", "`0`w"));
-mixin(generateModelCode("dstring", "`0`d"));
-
-
-//check if types are correctly paresed
-void testFieldParse() {
-
-
-	mixin(generateAssertCode("bool", "true"));
-
-	mixin(generateAssertCode("byte", "0"));
-	mixin(generateAssertCode("ubyte", "0"));
-	mixin(generateAssertCode("short", "0"));
-	mixin(generateAssertCode("ushort", "0"));
-
-	mixin(generateAssertCode("int", "0"));
-	mixin(generateAssertCode("uint", "0"));
-	mixin(generateAssertCode("long", "0"));
-	mixin(generateAssertCode("ulong", "0"));
-	//TODO: mixin(generateAssertCode("cent", "0"));
-	//TODO: mixin(generateAssertCode("ucent", "0"));
-	mixin(generateAssertCode("float", "0"));
-	mixin(generateAssertCode("double", "0"));
-	mixin(generateAssertCode("real", "0"));
-	mixin(generateAssertCode("ifloat", `"0i"`));
-	mixin(generateAssertCode("idouble", `"0i"`));
-	mixin(generateAssertCode("ireal", `"0i"`));
-	//TODO: mixin(generateAssertCode("cfloat", "1.0i"));
-	//TODO: mixin(generateAssertCode("cdouble", "1.0i"));
-	//TODO: mixin(generateAssertCode("creal", "1.0i"));
-	mixin(generateAssertCode("string", `"0"`));
-	mixin(generateAssertCode("wstring", `"0"`));
-	mixin(generateAssertCode("dstring", `"0"`));
-}
-*/
-
-void main()
-{
-	auto model = new Model!(BookItem);
-	auto item =  new Item!(BookItem, model)(model);
-
-
-
-
-	//auto books = new BookModel;
-
-	/*
 	auto item1 = books.createItem;
+	item1.id = 1;
 	item1.name = "Prelude to Foundation";
 	item1.author = "Isaac Asimov";
 	item1.save;
-
+	
 	auto item2 = books.createItem;
+	item2.id = 2;
 	item2.name = "The Hunger Games";
 	item2.author = "Suzanne Collins";
 	item2.save;
-
+	
 	auto item3 = books.createItem;
+	item3.id = 3;
 	item3.name = "The Adventures of Huckleberry Finn";
 	item3.author = "Mark Twain";
 	item3.save;
-
+	
 	auto item4 = books.createItem;
+	item4.id = 4;
 	item4.name = "The Adventures of Tom Sawyer";
 	item4.author = "Mark Twain";
 	item4.save;
 
-	auto marksBooks = books.findBy!"author"("Mark Twain");
-	assert(marksBooks.length == 2);
-	assert(marksBooks[0].author == "Mark Twain");
-	assert(marksBooks[1].author == "Mark Twain");
+	auto marksBooks = books.getBy!"author"("Mark Twain");
+	assert(marksBooks.length == 2, "getBy length expected to be 2 instead of " ~ marksBooks.length.to!string);
+	assert(marksBooks[0].author == "Mark Twain", "getBy[0] author expected to be `Mark Twain`");
+	assert(marksBooks[1].author == "Mark Twain", "getBy[0] author expected to be `Mark Twain`");
+	
+	auto oneItem    = books.getOneBy!"author"("Mark Twain");
+	assert(oneItem.name == "The Adventures of Huckleberry Finn", "getOneBy name expected to be `The Adventures of Huckleberry Finn`" );
+	assert(oneItem.author == "Mark Twain", "getOneBy author expected to be `Mark Twain`");
+	
+	auto all          = books.all;
+	assert(all.length == 4, "all length expected to be 4");
+}
 
-	auto oneItem    = books.findOneBy!"author"("Mark Twain");
-	assert(oneItem.name == "The Adventures of Huckleberry Finn");
-	assert(oneItem.author == "Mark Twain");
+/**
+ * Item creation
+ */
+unittest {
+	alias BookModel = Model!BookItemDef;
+	BookModel model = new BookModel;
 
-	auto all        = books.allItems;
-	assert(all.length == 4);*/
+	alias BookItem = Item!(BookItemDef, model);
 
+
+	//test the type
+	static if (!is(BookModel.ItemCls == BookItem)) {
+		assert(false, "ModelTemplate.Itemcls is not the same as " ~ BookItem.stringof);
+	}
+
+	static if (!is(typeof(model.createItem()) == BookItem)) {
+		assert(false, "`" ~ typeof(model.createItem()).stringof ~ "` ModelTemplate.createItem is not the same as " ~ BookItem.stringof);
+	}
+}
+
+//check the copy constructor
+unittest{
+	alias BookModel = Model!BookItemDef;
+	alias BookItem = Item!(BookItemDef, BookModel);
+
+	BookModel model = new BookModel;
+
+	auto dItem = new BookItemDef;
+	dItem.id = 99;
+	dItem.name = "some name";
+	dItem.author = "some author";
+
+	auto item = new BookItem(dItem, model);
+
+	assert(dItem.id == item.id, "id was not copied");
+	assert(dItem.name == item.name, "name was not copied");
+	assert(dItem.author == item.author, "author was not copied");
+	assert(model == item.parent, "wrong parent");
+
+	//you should be able to create items from any object 
+	//that has the same fields as the item that you want to create
+	class FakeItemDef {
+		ulong id;
+		string name;
+		string author;
+	}
+
+	auto fItem = new FakeItemDef;
+	fItem.id = 88;
+	fItem.name = "fake name";
+	fItem.author = "fake author";
+
+	item = new BookItem(fItem, model);
+	assert(fItem.id == item.id, "id was not copied");
+	assert(fItem.name == item.name, "name was not copied");
+	assert(fItem.author == item.author, "author was not copied");
+	assert(model == item.parent, "wrong parent");
+}
+
+
+
+void main()
+{
 	writeln("OK");
 }
