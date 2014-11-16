@@ -23,15 +23,36 @@ import std.algorithm;
 import std.conv;
 import std.typetuple;
 
-//check if the type is an enum
+/**
+ * Find if type (T) is an enum
+ * Example:
+ * --------------------------
+ * enum BookCategory : string {
+ *		Fiction = "Fiction",
+ *		Nonfiction = "Nonfiction"
+ *	};
+ *  
+ *  auto test = IsEnum!BookCategory;
+ *  assert(test.check == true);
+ * --------------------------
+ * 
+ * Example:
+ * --------------------------
+ *  auto test = IsEnum!string;
+ *  assert(test.check == false);
+ * --------------------------
+ */
 template IsEnum(T) if(is(T == enum)) {
 	enum bool check = true;
 } 
 template IsEnum(T) if(!is(T == enum)) {
 	enum bool check = false;
-} 
+}
 
-//check if the method has an from string method
+
+/**
+ * Check if the method has a from string method
+ */
 template HasFromString(T) if(is(T == class) || is(T == struct)) {
 	enum bool check = __traits(hasMember, T, "fromString");
 }

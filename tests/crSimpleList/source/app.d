@@ -57,10 +57,10 @@ unittest {
  * Item creation
  */
 unittest {
-	alias BookModel = Model!BookItemDef;
+	alias BookModel = Model!BookItemPrototype;
 	BookModel model = new BookModel;
 
-	alias BookItem = Item!(BookItemDef, model);
+	alias BookItem = Item!(BookItemPrototype, model);
 
 
 	//test the type
@@ -75,12 +75,12 @@ unittest {
 
 //check the copy constructor
 unittest{
-	alias BookModel = Model!BookItemDef;
-	alias BookItem = Item!(BookItemDef, BookModel);
+	alias BookModel = Model!BookItemPrototype;
+	alias BookItem = Item!(BookItemPrototype, BookModel);
 
 	BookModel model = new BookModel;
 
-	auto dItem = new BookItemDef;
+	auto dItem = new BookItemPrototype;
 	dItem.id = 99;
 	dItem.name = "some name";
 	dItem.author = "some author";
@@ -94,13 +94,13 @@ unittest{
 
 	//you should be able to create items from any object 
 	//that has the same fields as the item that you want to create
-	class FakeItemDef {
+	class FakeItemPrototype {
 		ulong id;
 		string name;
 		string author;
 	}
 
-	auto fItem = new FakeItemDef;
+	auto fItem = new FakeItemPrototype;
 	fItem.id = 88;
 	fItem.name = "fake name";
 	fItem.author = "fake author";

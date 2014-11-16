@@ -1,0 +1,35 @@
+﻿<?
+	import std.string;
+
+	string crumbs[] = data.split("/");
+
+
+?>
+<ol class="breadcrumb">
+	<?
+		
+		string path = "";
+
+		foreach(i; 0..crumbs.length) {
+			string cls = "";
+
+			path ~= crumbs[i] ~ "/";
+
+			if(i == crumbs.length - 1) {
+				?>
+					<li class="active">
+						<? write(crumbs[i]); ?>
+					</li>
+				<?
+			} else if(i>0) {
+				?>
+					<li>
+						<a href="<? write(path); ?>"><? write(crumbs[i]); ?></a>
+					</li>
+				<?
+			}
+
+		}
+
+	?>
+</ol>
