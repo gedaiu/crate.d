@@ -32,8 +32,8 @@
  </p>
 
 <?
- 	if(data.length == 1) write("<h2>Deffinition</h2>");
- 				    else write("<h2>Deffinitions</h2>");
+ 	if(data.length == 1) write("<h2>Definition</h2>");
+ 				    else write("<h2>Definitions</h2>");
 
  	//describe every overload
 
@@ -100,7 +100,7 @@
 
 						if(descriptionEnd != -1) description = description[0..descriptionEnd];
 
-						if( hasMembers(item) ) {
+						if( hasMembers(item) || item.kind == "template") {
 							contentList ~= `<li><b><a href="`~path~`">`~item.name~"</a></b> - " ~ description ~ `. <span class="label label-`~label~`">` ~ item.kind ~`</span></li>`;
 						} else {
 							contentList ~= `<li><b>`~item.name~"</b> - " ~ description ~ `. <span class="label label-`~label~`">`~ item.kind ~`</span></li>`;
@@ -110,6 +110,8 @@
 					}
 				}
 			}
+
+			//writeln("<pre>", data[i].data.replace("\n", "<br/>"), "</pre>");
 
 			if(contentList.length > 0) {
 				?>

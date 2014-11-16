@@ -35,39 +35,31 @@ body > .row {
 	line-height: 40px;
 }
 
-.tableOfContents ul a {
-	display: block;
-	text-indent: 20px;
+.tableOfContents li img {
+	width: 20px;
+	position: relative;
+	left: -20px;
+}
+.tableOfContents li img + a{
+	position: relative;
+	left: -20px;
 }
 
-.tableOfContents ul ul a {
-	text-indent: 40px;
+.tableOfContents ul .group {
+	display: inline-block;
+	margin-left: 10px;
 }
 
-.tableOfContents ul ul ul a {
-	text-indent: 60px;
-}
-
-.tableOfContents ul ul ul a {
-	text-indent: 80px;
-}
-
-.tableOfContents ul ul ul ul a {
-	text-indent: 100px;
-}
-
-.tableOfContents ul ul ul ul ul a {
-	text-indent: 120px;
-}
-
-.tableOfContents ul ul ul ul ul ul a {
-	text-indent: 140px;
+.tableOfContents .group + ul {
+	margin-left: 20px;
 }
 
 
-.tableOfContents ul li a:hover {
-	display: block;
-	background-color: #e5e5e5;
+.tableOfContents li .group {
+	padding-left: 10px;
+}
+
+.tableOfContents li .group a:hover {
 	text-decoration: none;
 }
 

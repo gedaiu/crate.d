@@ -62,7 +62,6 @@ unittest {
 
 	alias BookItem = Item!(BookItemPrototype, model);
 
-
 	//test the type
 	static if (!is(BookModel.ItemCls == BookItem)) {
 		assert(false, "ModelTemplate.Itemcls is not the same as " ~ BookItem.stringof);

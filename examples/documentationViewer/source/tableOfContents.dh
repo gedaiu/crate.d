@@ -14,12 +14,17 @@ string tableFor(string path) {
 		    item.kind == "class" || 
 		    item.kind == "struct" || 
 		    item.kind == "function" ) ) {
+		    	
+		    	string childTable = tableFor(item.path ~ "/");
 
-			  list ~= `<li><a href="` ~ item.path ~ `">` ~ item.name  ~ `</a>`;
-			  list ~= tableFor(item.path ~ "/");
-			  list ~= `</li>`;
-
-			found[item.path] = true;
+		    	if(childTable.length > 0) {
+					list ~= `<li><div class="group"><img src="/img/arrow.svg"/><a href="` ~ item.path ~ `">` ~ item.name  ~ `</div></a>`;
+					list ~= childTable;
+					list ~= `</li>`;
+				} else {
+					list ~= `<li><div class="group"><a href="` ~ item.path ~ `">` ~ item.name  ~ `</a></div></li>`;
+				}
+				found[item.path] = true;
 		}
 	}
 	
@@ -31,10 +36,10 @@ string tableFor(string path) {
 ?>
 
 <ul>
-	<li><a href="#">Introduction</a></li>
-	<li><a href="#">Model</a><? writeln(tableFor("/docs/crated.model")); ?></li>
-	<li><a href="#">View</a><? writeln(tableFor("/docs/crated.view")); ?></li>
-	<li><a href="#">Controller</a><? writeln(tableFor("/docs/crated.controller")); ?></li>
+	<li><div class="group"><a href="#">Introduction</a></div></li>
+	<li><div class="group"><a href="#">Model</a></div><? writeln(tableFor("/docs/crated.model")); ?></li>
+	<li><div class="group"><a href="#">View</a></div><? writeln(tableFor("/docs/crated.view")); ?></li>
+	<li><div class="group"><a href="#">Controller</a></div><? writeln(tableFor("/docs/crated.controller")); ?></li>
 </ul>
 
 
