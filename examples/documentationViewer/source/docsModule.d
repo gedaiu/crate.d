@@ -42,16 +42,20 @@ class ModuleItem {
 	string returnType;
 
 	@("field")
-	string[] members;
+	string paramText;
 
 	@("field")
-	string type;
+	string[] members;
+
 
 	@("field")
 	string aliasName;
 
 	@("field")
 	string aliasPath;
+
+	@("field")
+	bool isPrivate;
 
 	this() {}
 
@@ -63,36 +67,67 @@ class ModuleItem {
 		this.path = path ~ "/" ~ name;
 
 		if("kind" in data) this.kind = data.kind.to!string;
-		if("type" in data) this.type = data["type"].to!string;
 
-		if(this.kind == "template") {
-			isTemplate = true;
-		}
+		if("type" in data) {
+			string type = data["type"].to!string;
+			auto splitIndex = type.indexOf("(");
 
-		if(this.kind == "function") {
-			if("type" in data) {
-				auto crumbs = data.type.to!string.split("(");
-				this.returnType = crumbs[0];
+			if(splitIndex != -1) {
+				this.returnType = type[0..splitIndex];
+				this.paramText = type[splitIndex..$];
 			}
 		}
 
+		if(this.description.strip.indexOf("Private:") == 0) isPrivate = true;
+
+		if(this.kind == "template") {
+			isTemplate = true;
+
+			if(data.members.length == 1 && data.members[0].kind.to!string == "function" && data.members[0].name.to!string == this.name) {
+				this.kind = "template function";
+			}
+		}
+
+		if(this.kind == "variable") {
+			this.returnType = data["type"].to!string;
+		}
+
+		string templateParam;
+		string glue;
 		if("parameters" in data) {
 			foreach(i; 0..data.parameters.length) {
 				parameters ~= [ "name": data.parameters[i]["name"].to!string,
 								"type": data.parameters[i]["type"].to!string,
 								"kind": data.parameters[i]["kind"].to!string];
+
+				if(this.kind == "template function") {
+					if("type" in data.parameters[i]) 
+						templateParam ~= glue ~ data.parameters[i]["type"].to!string ~ " ";
+
+					templateParam ~= data.parameters[i]["name"].to!string;
+					glue = ", ";
+				}
 			}
 		}
 
 		//add the child members
-		if("members" in data) {
-			foreach(i; 0..data.members.length) {
-				members ~= [ this.path ~ "/" ~ data.members[i].name.to!string ];
-				auto item = parent.addItem(data.members[i], this.path);
+		if(this.kind == "template function") {
+			members ~= [ this.path ~ "/" ~ data.members[0].name.to!string ];
+			auto item = parent.addItem(data.members[0], this.path);
 
-				if(item.name == this.name && item.kind == "alias") {
-					this.aliasName = item.type;
-					this.aliasPath = item.path ~ "#member" ~ members.length.to!string;
+			this.returnType = item.returnType;
+			this.paramText = "(" ~ templateParam ~ ")" ~ item.paramText;
+
+		} else {
+			if("members" in data) {
+				foreach(i; 0..data.members.length) {
+					members ~= [ this.path ~ "/" ~ data.members[i].name.to!string ];
+					auto item = parent.addItem(data.members[i], this.path);
+
+					if(item.name == this.name && item.kind == "alias") {
+						this.aliasName = data.members[i]["type"].to!string;
+						this.aliasPath = item.path ~ "#member" ~ members.length.to!string;
+					}
 				}
 			}
 		}

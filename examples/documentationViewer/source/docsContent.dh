@@ -17,7 +17,7 @@
 		return true;
 	}
 
-?><h1><? writeln(data[0].name.replace("crated.", ""), "<small> - ", data[0].kind, `</small>`); ?></h1>
+?><h1><? writeln(data[0].name, "<small> - ", data[0].kind, `</small>`); ?></h1>
 
 <p class="lead">
 	<?	
@@ -32,21 +32,13 @@
  </p>
 
 <?
- 	if(data.length == 1) write("<h2>Definition</h2>");
- 				    else write("<h2>Definitions</h2>");
-
- 	//describe every overload
-
-	foreach(i;0..data.length) {
-		
-		string title;
-		string aliasName;
-
-		string glue;
-		foreach(j; 0..data[i].parameters.length) {
-			string name = data[i].parameters[j]["name"];
-			string type = data[i].parameters[j]["type"];
-			string kind = data[i].parameters[j]["kind"];
+ 	string getItemParamText(T)(T item) {
+ 		string glue;
+ 		string title;
+		foreach(j; 0..item.parameters.length) {
+			string name = item.parameters[j]["name"];
+			string type = item.parameters[j]["type"];
+			string kind = item.parameters[j]["kind"];
 
 			if(kind != "undefined") title ~= glue ~ `<span class="kind" data-toggle="tooltip" data-placement="top" title="`~kind~`">`;
 
@@ -57,21 +49,37 @@
 
 			glue = ", ";
 		}
-					 
+
+		return title;
+ 	}
+
+ 	if(data.length == 1) write("<h2>Definition</h2>");
+ 				    else write("<h2>Definitions</h2>");
+
+ 	//describe every overload
+
+	foreach(i;0..data.length) {
+		
+		string title = getItemParamText(data[i]);
+		string aliasName;
+							 
 		?>
 
 		<h3>
-			<? writeln(data[i].name); ?>
+			<?  
+				writeln(data[i].name); 
 
-			<?
-				if(title != "") {
-					write("( ",title.replace("[]", "[ ]")," )");
+				if(data[i].kind == "function" || data[i].kind == "template" || data[i].kind == "template function") {
+					write("( ",title," )");
+
+					if(data[i].kind == "template function") {
+						write("( ", getItemParamText( data[i].parent.getOneBy!"path"(data[i].members[0]) ) ," )");
+					}
 				}
 
 				if(data[i].aliasName != "") {
 					write(` => <a href="#">`, data[i].aliasName, `</a>`);
 				}
-
 
 			?>
 
@@ -88,11 +96,12 @@
 
 				if(item.path !in found ) {
 					auto label = "primary";
-					if( item.kind != "import" &&
+					if( !item.isPrivate &&
+						item.kind != "import" &&
 					   (item.kind != "alias" || (item.kind == "alias" && item.name != data[i].name )) ) {
 
 						if(item.kind == "variable") label = "info";
-						if(item.kind == "template") label = "warning";
+						if(item.kind == "template" || item.kind == "template function") label = "warning";
 						if(item.kind == "alias") label = "default";
 
 						string description = item.description;
@@ -100,12 +109,9 @@
 
 						if(descriptionEnd != -1) description = description[0..descriptionEnd];
 
-						if( hasMembers(item) || item.kind == "template") {
-							contentList ~= `<li><b><a href="`~path~`">`~item.name~"</a></b> - " ~ description ~ `. <span class="label label-`~label~`">` ~ item.kind ~`</span></li>`;
-						} else {
-							contentList ~= `<li><b>`~item.name~"</b> - " ~ description ~ `. <span class="label label-`~label~`">`~ item.kind ~`</span></li>`;
-						}
-
+						contentList ~= `<li><a href="`~path~`">`~item.returnType ~ " <b>" ~item.name ~ "</b>" ~ item.paramText ~ "</a> - " ~ description ~ `. <span class="label label-`~label~`">` ~ item.kind ~`</span></li>`;
+						//contentList ~= `<li>`~item.returnType ~ " <b>" ~item.name ~"</b>"~ item.paramText ~ " - " ~ description ~ `. <span class="label label-`~label~`">`~ item.kind ~`</span></li>`;
+					
 						found[item.path] = true;
 					}
 				}
@@ -113,7 +119,7 @@
 
 			//writeln("<pre>", data[i].data.replace("\n", "<br/>"), "</pre>");
 
-			if(contentList.length > 0) {
+			if(contentList.length > 0 && data[i].kind != "template function") {
 				?>
 					<ul>
 						<? write(contentList); ?>

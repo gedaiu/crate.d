@@ -24,166 +24,6 @@ import std.conv;
 import std.typetuple;
 
 /**
- * Find if type (T) is an enum.
- * Example:
- * --------------------------
- * enum BookCategory : string {
- *		Fiction = "Fiction",
- *		Nonfiction = "Nonfiction"
- * };
- *  
- * auto test = IsEnum!BookCategory;
- * assert(test.check == true);
- * --------------------------
- * 
- * Example:
- * --------------------------
- *  auto test = IsEnum!string;
- *  assert(test.check == false);
- * --------------------------
- */
-template IsEnum(T) if(is(T == enum)) {
-	/**
-	 * is true if T is enum
-	 */
-	enum bool check = true;
-} 
-template IsEnum(T) if(!is(T == enum)) {
-	/**
-	 * is true if T is enum
-	 */
-	enum bool check = false;
-}
-
-
-/**
- * Check if the method has a from string method.
- * 
- * Example: 
- * --------------------
- * class BookItemPrototype {
- * 	private string name;
- * 
- * 	this(string name) {
- *  	this.name = name;
- * 	}
- * 
- * 	static BookItemPrototype FromString(string name) {
- * 		return new BookItemPrototype(name);
- *  }
- * }
- * 
- * assert(HasFromString!BookItemPrototype == true);
- * assert(HasFromString!Object == false);
- * --------------------
- * 
- */
-template HasFromString(T) if(is(T == class) || is(T == struct)) {
-	/**
-	 * is true if T has `from string` method
-	 */
-	enum bool check = __traits(hasMember, T, "fromString");
-}
-
-template HasFromString(T) if(!is(T == class) && !is(T == struct)) {
-	/**
-	 * is true if T has `from string` method
-	 */
-	enum bool check = false;
-}
-
-/**
- * Get a class property.
- *
- * Example: 
- * --------------------
- * class BookItemPrototype {
- * 	@("field", "primary")
- *	ulong id;
- *
- *	@("field") string name = "unknown";
- * 	@("field") string author = "unknown";
- * }
- * 
- * assert(__traits(isIntegral, ItemProperty!(BookItemPrototype, "id")) == true);
- * --------------------
- */
-template ItemProperty(item, string method) {
-	static if(__traits(hasMember, item, method)) {
-		alias ItemProperty = TypeTuple!(__traits(getMember, item, method));
-	} else {
-		alias ItemProperty = TypeTuple!();
-	}
-}
-
-/** 
- * Get all members that have ATTR attribute.
- * 
- * Example: 
- * --------------------
- * class BookItemPrototype {
- * 	@("field", "primary")
- *	ulong id;
- *
- *	@("field") string name = "unknown";
- * 	@("field") string author = "unknown";
- * }
- * 
- * 
- * enum string[][] fields = getItemFields!("field", BookItemPrototype);
- * 
- * assert(fields[0][0] == "id");
- * assert(fields[0][1] == "ulong");
- * assert(fields[0][2] == "isIntegral");
- * 
- * --------------------
- */
-template getItemFields(alias ATTR, Prototype) {
-
-	/**
-	 *  Get a general type
-	 */
-	string Type(string name)() {
-		static if(__traits(isIntegral, ItemProperty!(Prototype, name))) return "isIntegral";
-		else static if(__traits(isFloating, ItemProperty!(Prototype, name))) return "isFloating";
-		else return "";
-	}
-
-	/** 
-	 * Get all the metods that have ATTR attribute
-	 */
-	template ItemFields(FIELDS...) {	
-
-		static if (FIELDS.length > 1) {
-			alias ItemFields = TypeTuple!(
-				ItemFields!(FIELDS[0 .. $/2]),
-				ItemFields!(FIELDS[$/2 .. $])
-				); 
-		} else static if (FIELDS.length == 1 && FIELDS[0] != "modelFields") {
-
-			static if(__traits(hasMember, Prototype, FIELDS[0])) {
-				static if(staticIndexOf!(ATTR, __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0]))) >= 0) {
-					alias ItemFields = TypeTuple!([FIELDS[0], typeof(FIELDS[0]).stringof, Type!(FIELDS[0]) ]);
-				} else {
-					alias ItemFields = TypeTuple!();
-				}
-			} else {
-				alias ItemFields = TypeTuple!();
-			}
-			
-		} else alias ItemFields = TypeTuple!();
-	}
-
-	/**
-	 * All the members that have ATTR attribute
-	 */
-	enum string[][] fields = [ ItemFields!(__traits(allMembers, Prototype)) ];
-
-	alias getItemFields = fields;
-}
-
-
-/**
  * Generate a crated item. A prototype class will be the base of ItemTemplate class which
  * contains helper methods and properties to make you able to use the prototype class with any other 
  * generated crate.d model.
@@ -251,22 +91,37 @@ template getItemFields(alias ATTR, Prototype) {
  */
 template Item(Prototype, M) {
 
+	/**
+	 * The Prototype wrapper. Every Item is created by wrapping a Prototype class with this class. <code>ItemTemplate</code>
+	 * contains methods to manipulate the Prototype like save and delete. 
+	 * 
+	 * 
+	 */
 	class ItemTemplate : Prototype {
-		//the item model
+		/**
+		 * Private: The parent model
+		 */
 		private M myModel;
 
 
-		//default item constructor
+		/**
+		 * Default constructor
+		 */
 		this(M parent) {
 			myModel = parent;
 		}
 
-		//a copy constructor
+		/**
+		 * Copy constructor
+		 */
 		this(T)(T someItem, M parent) {
 			copy!(fields)(someItem);
 			this(parent);
 		}
 
+		/**
+		 * Copy data from an object that have the same fields
+		 */
 		void copy(string[][] fields, T)(T someItem) {
 			static if(fields.length == 1) {
 				__traits(getMember, this, fields[0][0]) = __traits(getMember, someItem, fields[0][0]);
@@ -276,11 +131,15 @@ template Item(Prototype, M) {
 			}
 		}
 
-		//a pair of a field name and type to be accessed at runtime
+		/**
+		 * A pair of a field name and type to be accessed at runtime
+		 */
 		enum string[][] fields = getItemFields!("field", Prototype);
 
 
-		//a pair of a field name and type to be accessed at runtime
+		/**
+		 * a pair of a field name and type to be accessed at runtime
+		 */
 		enum string[] primaryField = getItemFields!("primary", Prototype)[0];
 		
 		//the field attributes.
@@ -289,6 +148,9 @@ template Item(Prototype, M) {
 		//all the enum fields with their keys
 		//enum string[][string] enumValues = mixin("[ ``: [] " ~ getEnumValues ~ "]");
 
+		/**
+		 * Parent model
+		 */
 		@property
 		M parent() {
 			return myModel;
@@ -322,7 +184,7 @@ template Item(Prototype, M) {
 		}
 
 		/**
-		 * Get code that generate the Json
+		 * Private: Get code that generate the Json
 		 */
 		private static string PropertyJson() {
 			string jsonCode;
@@ -353,44 +215,173 @@ template Item(Prototype, M) {
 	}
 
 
+	
+	/**
+	 * Find if type (T) is an enum.
+	 * Example:
+	 * --------------------------
+	 * enum BookCategory : string {
+	 *		Fiction = "Fiction",
+	 *		Nonfiction = "Nonfiction"
+	 * };
+	 *  
+	 * auto test = IsEnum!BookCategory;
+	 * assert(test.check == true);
+	 * --------------------------
+	 * 
+	 * Example:
+	 * --------------------------
+	 *  auto test = IsEnum!string;
+	 *  assert(test.check == false);
+	 * --------------------------
+	 */
+	template IsEnum(T) if(is(T == enum)) {
+		/**
+		 * is true if T is enum
+		 */
+		enum bool check = true;
+	} 
+	
+	template IsEnum(T) if(!is(T == enum)) {
+		/**
+		 * is true if T is enum
+		 */
+		enum bool check = false;
+	}
+	
+	
+	/**
+	 * Check if the method has a from string method.
+	 * 
+	 * Example: 
+	 * --------------------
+	 * class BookItemPrototype {
+	 * 	private string name;
+	 * 
+	 * 	this(string name) {
+	 *  	this.name = name;
+	 * 	}
+	 * 
+	 * 	static BookItemPrototype FromString(string name) {
+	 * 		return new BookItemPrototype(name);
+	 *  }
+	 * }
+	 * 
+	 * assert(HasFromString!BookItemPrototype == true);
+	 * assert(HasFromString!Object == false);
+	 * --------------------
+	 * 
+	 */
+	template HasFromString(T) if(is(T == class) || is(T == struct)) {
+		/**
+		 * is true if T has `from string` method
+		 */
+		enum bool check = __traits(hasMember, T, "fromString");
+	}
+	
+	template HasFromString(T) if(!is(T == class) && !is(T == struct)) {
+		/**
+		 * is true if T has `from string` method
+		 */
+		enum bool check = false;
+	}
+	
+	/**
+	 * Get a class property.
+	 *
+	 * Example: 
+	 * --------------------
+	 * class BookItemPrototype {
+	 * 	@("field", "primary")
+	 *	ulong id;
+	 *
+	 *	@("field") string name = "unknown";
+	 * 	@("field") string author = "unknown";
+	 * }
+	 * 
+	 * assert(__traits(isIntegral, ItemProperty!(BookItemPrototype, "id")) == true);
+	 * --------------------
+	 */
+	template ItemProperty(item, string method) {
+		static if(__traits(hasMember, item, method)) {
+			alias ItemProperty = TypeTuple!(__traits(getMember, item, method));
+		} else {
+			alias ItemProperty = TypeTuple!();
+		}
+	}
+	
+	/** 
+	 * Get all members that have ATTR attribute.
+	 * 
+	 * Example: 
+	 * --------------------
+	 * class BookItemPrototype {
+	 * 	@("field", "primary")
+	 *	ulong id;
+	 *
+	 *	@("field") string name = "unknown";
+	 * 	@("field") string author = "unknown";
+	 * }
+	 * 
+	 * 
+	 * enum string[][] fields = getItemFields!("field", BookItemPrototype);
+	 * 
+	 * assert(fields[0][0] == "id");
+	 * assert(fields[0][1] == "ulong");
+	 * assert(fields[0][2] == "isIntegral");
+	 * 
+	 * --------------------
+	 */
+	template getItemFields(alias ATTR, Prototype) {
+		
+		/**
+		 *  Get a general type
+		 */
+		string Type(string name)() {
+			static if(__traits(isIntegral, ItemProperty!(Prototype, name))) return "isIntegral";
+			else static if(__traits(isFloating, ItemProperty!(Prototype, name))) return "isFloating";
+			else return "";
+		}
+		
+		/** 
+		 * Get all the metods that have ATTR attribute
+		 */
+		template ItemFields(FIELDS...) {	
+			
+			static if (FIELDS.length > 1) {
+				alias ItemFields = TypeTuple!(
+					ItemFields!(FIELDS[0 .. $/2]),
+					ItemFields!(FIELDS[$/2 .. $])
+					); 
+			} else static if (FIELDS.length == 1 && FIELDS[0] != "modelFields") {
+				
+				static if(__traits(hasMember, Prototype, FIELDS[0])) {
+					static if(staticIndexOf!(ATTR, __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0]))) >= 0) {
+						alias ItemFields = TypeTuple!([FIELDS[0], typeof(FIELDS[0]).stringof, Type!(FIELDS[0]) ]);
+					} else {
+						alias ItemFields = TypeTuple!();
+					}
+				} else {
+					alias ItemFields = TypeTuple!();
+				}
+				
+			} else alias ItemFields = TypeTuple!();
+		}
+		
+		/**
+		 * All the members that have ATTR attribute
+		 */
+		enum string[][] fields = [ ItemFields!(__traits(allMembers, Prototype)) ];
+		
+		alias getItemFields = fields;
+	}
+	
+
 	alias Item = ItemTemplate;
 }
 
 template Item(Prototype, alias M) {
 	alias Item = Item!(Prototype, typeof(M));
-}
-
-
-
-/**
- * create the code for the item From method
- */
-string FromCode(Prototype, T, int i = 0)() {
-	enum fields = Prototype.fields;
-
-	//exit condition
-	static if(i >= fields.length) {
-		return "";
-	} else {
-		enum auto field = fields[i];
-
-		//check for D types
-		static if(field[2] == "basic") {
-
-			static if(field[1] == "bool") {
-				return `try { itm.`~field[0]~` = elm["`~field[0]~`"].to!`~field[1]~`; } catch(Exception e) {itm.`~field[0]~` = false; }` ~ FromCode!(Prototype, T, i + 1);
-			} else {
-				return `itm.`~field[0]~` = elm["`~field[0]~`"].to!`~field[1]~`;` ~ FromCode!(Prototype, T, i + 1);
-			}
-		} else static if(field[2] == "enum") {
-			return `itm.`~field[0]~` = elm["`~field[0]~`"].to!string.to!`~field[1]~`;` ~ FromCode!(Prototype, T, i + 1);
-		} else static if(field[2] == "hasFromString") {
-			return `itm.`~field[0]~` = `~field[1]~`.fromString(elm["`~field[0]~`"].to!string);` ~ FromCode!(Prototype, T, i + 1);
-		} else {
-
-			return FromCode!(Prototype, T, i + 1);
-		}
-	}
 }
 
 template Model(Prototype) {
@@ -523,20 +514,11 @@ template Model(Prototype) {
 
 	}
 
-	mixin MixCheckFieldsModel!ModelTemplate;
+	mixin MixCheckModelFields!ModelTemplate;
 	alias Model = ModelTemplate;
 }
 
-/**
- * Generate code that checks if a certain method is declared 
- */
-string _genChkMember(M, string name)() {
-	static if(!__traits(hasMember, M, name)) {
-		pragma(msg, "Have you forgot to declare method ["~name~"] for [", M ,"]?");
-	}
 
-	return "";
-}
 
 /**
  * This template is used to check if a model has declared all the methods.
@@ -551,7 +533,20 @@ string _genChkMember(M, string name)() {
  * Will show messages on compile for every missing member.
  * 
  */
-mixin template MixCheckFieldsModel(M) {
+mixin template MixCheckModelFields(M) {
+
+	/**
+	 * Generate code that checks if a certain method is declared 
+	 */
+	private string _genChkMember(M, string name)() {
+		static if(!__traits(hasMember, M, name)) {
+			pragma(msg, "Have you forgot to declare method ["~name~"] for [", M ,"]?");
+		}
+		
+		return "";
+	}
+
+
 	mixin(_genChkMember!(M, "createItem"));
 
 	mixin(_genChkMember!(M, "save"));

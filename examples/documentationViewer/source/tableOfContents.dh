@@ -12,7 +12,7 @@ string tableFor(string path, ref bool isOpen) {
 	if(path[0..$-1] == url) isOpen = true;
 
 	foreach(item; data.getByPath(path)) {
-		if(item.path !in found && 
+		if(!item.isPrivate && item.path !in found && 
 		   (item.kind == "module" || 
 		    item.kind == "template" || 
 		    item.kind == "class" || 
