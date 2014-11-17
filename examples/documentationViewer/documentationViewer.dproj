@@ -22,6 +22,7 @@
     <CustomCommands>
       <CustomCommands>
         <Command type="Build" command="dub clean; dub" workingdir="${ProjectDir}" externalConsole="True" />
+        <Command type="Execute" command="dub clean ; dub" workingdir="${ProjectDir}" externalConsole="True" />
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>

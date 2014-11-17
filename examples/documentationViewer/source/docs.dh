@@ -19,6 +19,10 @@
 			
 			$(function() {
 				$('span[data-toggle="tooltip"]').tooltip();
+
+				$('.group').click(function() {
+					$(this).parent().toggleClass("open");
+				});
 			});
 
 		</script>

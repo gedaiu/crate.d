@@ -11,8 +11,6 @@ import docsModule;
 
 enum docsJsonPath = "../../docs.json";
 
-
-
 /**
  * 
  */
@@ -58,7 +56,7 @@ class DocsController {
 		auto content = docsModel.getBy!"path"(req.requestURL);
 
 		if(content.length > 0) { 
-			data["tableOfContents"] = renderDh!"tableOfContents.dh"(docsModel);
+			data["tableOfContents"] = renderDh!"tableOfContents.dh"(docsModel, req.requestURL);
 			data["breadcrumbs"] = renderDh!"breadcrumbs.dh"(req.requestURL);
 			data["content"] = renderDh!"docsContent.dh"(content);
 

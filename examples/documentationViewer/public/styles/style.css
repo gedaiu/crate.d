@@ -39,7 +39,23 @@ body > .row {
 	width: 20px;
 	position: relative;
 	left: -20px;
+	cursor: pointer;
+
+	transition: transform 0.2s ease-out;
+	-webkit-transition: transform 0.2s ease-out;
 }
+
+.tableOfContents li.open > .group > img,
+.tableOfContents li.open > .group:hover > img {
+	transform: rotate(90deg);
+	-webkit-transform: rotate(90deg);
+}
+
+.tableOfContents li > .group:hover > img {
+	transform: rotate(20deg);
+	-webkit-transform: rotate(20deg);
+}
+
 .tableOfContents li img + a{
 	position: relative;
 	left: -20px;
@@ -52,8 +68,18 @@ body > .row {
 
 .tableOfContents .group + ul {
 	margin-left: 20px;
+	max-height: 0;
+	overflow: hidden;
+
+
+	transition: max-height 0.2s ease-out;
+	-webkit-transition: max-height 0.2s ease-out;
 }
 
+.tableOfContents .open > .group + ul {
+	max-height: 1000px;
+	overflow: hidden;
+}
 
 .tableOfContents li .group {
 	padding-left: 10px;

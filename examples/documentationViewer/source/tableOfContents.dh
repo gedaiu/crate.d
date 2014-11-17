@@ -2,10 +2,14 @@
 
 <? 
 
-string tableFor(string path) {
+import std.string;
+
+string tableFor(string path, ref bool isOpen) {
 	string list = "";
 	bool[string] found;
 
+
+	if(path[0..$-1] == url) isOpen = true;
 
 	foreach(item; data.getByPath(path)) {
 		if(item.path !in found && 
@@ -15,31 +19,53 @@ string tableFor(string path) {
 		    item.kind == "struct" || 
 		    item.kind == "function" ) ) {
 		    	
-		    	string childTable = tableFor(item.path ~ "/");
+		    	string childTable;
+				string cls;
+		    	
+				bool childOpen;
+	    		childTable = tableFor(item.path ~ "/", childOpen);
+				if(childOpen) isOpen = true;
+
+				if(childOpen) cls = ` class="open"`;
 
 		    	if(childTable.length > 0) {
-					list ~= `<li><div class="group"><img src="/img/arrow.svg"/><a href="` ~ item.path ~ `">` ~ item.name  ~ `</div></a>`;
+					list ~= `<li` ~ cls ~ `><div class="group"><img src="/img/arrow.svg"/><a href="` ~ item.path ~ `">` ~ item.name  ~ `</div></a>`;
 					list ~= childTable;
 					list ~= `</li>`;
 				} else {
 					list ~= `<li><div class="group"><a href="` ~ item.path ~ `">` ~ item.name  ~ `</a></div></li>`;
 				}
+
 				found[item.path] = true;
 		}
 	}
-	
+
 	if(list != "") return "<ul>" ~ list ~ "</ul>";
 
 	return "";
 }
 
+
+	bool modelIsOpen;
+	bool viewsIsOpen;
+	bool controllerIsOpen;
+
+	string models      = tableFor("/docs/crated.model", modelIsOpen);
+	string views       = tableFor("/docs/crated.view",  viewsIsOpen);
+	string controllers = tableFor("/docs/crated.controller", controllerIsOpen);
 ?>
 
 <ul>
 	<li><div class="group"><a href="#">Introduction</a></div></li>
-	<li><div class="group"><a href="#">Model</a></div><? writeln(tableFor("/docs/crated.model")); ?></li>
-	<li><div class="group"><a href="#">View</a></div><? writeln(tableFor("/docs/crated.view")); ?></li>
-	<li><div class="group"><a href="#">Controller</a></div><? writeln(tableFor("/docs/crated.controller")); ?></li>
+
+
+	<li <? if(modelIsOpen) write(`class="open"`); ?> ><div class="group"><img src="/img/arrow.svg"/><a href="#">Model</a></div><? writeln(models); ?></li>
+
+
+	<li <? if(viewsIsOpen) write(`class="open"`); ?> ><div class="group"><img src="/img/arrow.svg"/><a href="#">View</a></div><? writeln(views); ?></li>
+
+
+	<li <? if(controllerIsOpen) write(`class="open"`); ?> ><div class="group"><img src="/img/arrow.svg"/><a href="#">Controller</a></div><? writeln(controllers); ?></li>
 </ul>
 
 

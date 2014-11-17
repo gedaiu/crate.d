@@ -49,7 +49,7 @@ string parseDhContent(string content) {
 /**
  * Render a dh file 
  */
-string renderDh(string file, T)(T data) {
+string renderDh(string file, T)(T data, string url = "") {
 	import std.stdio;
 
 	//store the stdout file
