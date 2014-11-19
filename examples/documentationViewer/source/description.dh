@@ -85,7 +85,14 @@
 			descriptionCrumbs[j] = descriptionCrumbs[j].strip;
 
 			if(descriptionCrumbs[j].length > 2 && descriptionCrumbs[j][0] == '=') {
-				write("<h2>", descriptionCrumbs[j][1..$] ,"</h2>");
+				int heading = 1;
+
+				while(descriptionCrumbs[j].length>0 && descriptionCrumbs[j][0] == '=') {
+					descriptionCrumbs[j] = descriptionCrumbs[j][1..$];
+					heading++;
+				}
+
+				write("<h"~heading.to!string~">", descriptionCrumbs[j] ,"</h"~heading.to!string~">");
 				isCustomDisplay = true;
 			}
 

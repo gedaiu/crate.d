@@ -23,6 +23,16 @@ import std.algorithm;
 import std.conv;
 import std.typetuple;
 
+
+/**
+ * 
+ */
+class CratedModelException : Exception {
+	this(string msg, string file = __FILE__, ulong line = cast(ulong)__LINE__, Throwable next = null) {
+		super(msg, file, line, next);
+	}
+}
+
 /**
  * Generate a crated item. A prototype class will be the base of ItemTemplate class which
  * contains helper methods and properties to make you able to use the prototype class with any other 
@@ -88,6 +98,8 @@ import std.typetuple;
  * =Extending
  * 
  * ... more to be soon ... 
+ * 
+ * =Creating new Item templates
  */
 template Item(Prototype, M) {
 
@@ -115,7 +127,7 @@ template Item(Prototype, M) {
 		 * Copy constructor
 		 */
 		this(T)(T someItem, M parent) {
-			copy!(fields)(someItem);
+			copy!fields(someItem);
 			this(parent);
 		}
 
@@ -124,7 +136,14 @@ template Item(Prototype, M) {
 		 */
 		void copy(string[][] fields, T)(T someItem) {
 			static if(fields.length == 1) {
-				__traits(getMember, this, fields[0][0]) = __traits(getMember, someItem, fields[0][0]);
+				static if( is( typeof(__traits(getMember, this, fields[0][0]) ) == typeof(__traits(getMember, someItem, fields[0][0]) ) ) ) {
+					__traits(getMember, this, fields[0][0]) = __traits(getMember, someItem, fields[0][0]);
+				
+				} else {
+
+					__traits(getMember, this, fields[0][0]) = __traits(getMember, someItem, fields[0][0]).to!(typeof(__traits(getMember, this, fields[0][0])));
+				}
+
 			} else if(fields.length > 0) {
 				copy!(fields[0..$/2])(someItem);
 				copy!(fields[$/2..$])(someItem);
@@ -181,6 +200,34 @@ template Item(Prototype, M) {
 			jsonString ~= " }";
 
 			return jsonString;
+		}
+
+		@property
+		typeof(__traits(getMember, this, primaryField[0])) primaryKeyValue() {
+			return __traits(getMember, this, primaryField[0]);
+		}
+
+		/**
+		 * == operator overload. It will check if the fields of the current Item are equals to the other one.
+		 */
+		override bool opEquals(Object o) {
+			return isFieldEqual!(fields)(cast(typeof(this)) o);
+		}
+
+		/**
+		 * Check if the fields are equal
+		 */
+		private bool isFieldEqual(string[][] fields, T)(T o) {
+			static if(fields.length == 1) {
+				static if( is( typeof(__traits(getMember, this, fields[0][0]) ) == typeof(__traits(getMember, o, fields[0][0]) ) ) ) {
+					return __traits(getMember, this, fields[0][0]) == __traits(getMember, o, fields[0][0]);
+				} else {
+					return __traits(getMember, this, fields[0][0]) == __traits(getMember, o, fields[0][0]).to!(typeof(__traits(getMember, this, fields[0][0])));
+				}
+				
+			} else if(fields.length > 0) {
+				return isFieldEqual!(fields[0..$/2])(o) && isFieldEqual!(fields[$/2..$])(o);
+			}
 		}
 
 		/**
@@ -384,6 +431,74 @@ template Item(Prototype, alias M) {
 	alias Item = Item!(Prototype, typeof(M));
 }
 
+/**
+ * 
+ * =Extending
+ * .. more to come ..
+ * 
+ * =Creating new Item templates
+ * 
+ * ==Step 1
+ * 
+ * Create a new template that take a Type as parameter;
+ * 
+ * Example: 
+ * ----------
+ * template CustomModel(Prototype) {
+ * 
+ * }
+ * ----------
+ * 
+ * ==Step 2
+ * 
+ * Add a new class in the template and set the template alias to this class;
+ * 
+ * Example: 
+ * ----------
+ * template CustomModel(Prototype) {
+ * 	
+ *	class CustomModelTemplate {
+ *	
+ *	}
+ * 
+ *	alias CustomModel = CustomModelTemplate;
+ * }
+ * ----------
+ * 
+ * ==Step 3
+ * 
+ * Mix in the template that checks if your class implements all the required methods and add their implementation. 
+ * You can find more information about those metods in <code>ModelTemplate</code> class;
+ * 
+ * Example: 
+ * ----------
+ * template CustomModel(Prototype) {
+ * 	
+ *	class CustomModelTemplate {
+ *		
+ *	}
+ * 	
+ * 	mixin MixCheckModelFields!CustomModelTemplate;
+ *	alias CustomModel = CustomModelTemplate;
+ * }
+ * 
+ * ==Step 4
+ * 
+ * If you don't want to create a new template from scratch, you can extend the base Model template you can do it like this:
+ * 
+ * Example: 
+ * ----------
+ * template CustomModel(Prototype) {
+ * 	
+ *	class CustomModelTemplate : Model!Prototype {
+ *		
+ *	}
+ * 	
+ * 	mixin MixCheckModelFields!CustomModelTemplate;
+ *	alias CustomModel = CustomModelTemplate;
+ * }
+ * ----------
+ */
 template Model(Prototype) {
 
 	/**
@@ -391,6 +506,7 @@ template Model(Prototype) {
 	 * 
 	 */
 	class ModelTemplate {
+
 		/**
 		 * 
 		 */
@@ -421,13 +537,13 @@ template Model(Prototype) {
 		 * Remove an existing item
 		 */
 		void remove(T)(T item) {
-
+			throw new CratedModelException("unimplemented base method");
 		}
-
+	
 		/**
 		 * Remove all items
 		 */
-		void clean() {
+		void truncate() {
 			items = [];
 		}
 
@@ -450,10 +566,11 @@ template Model(Prototype) {
 		}
 
 		/**
-		 * Query the model
+		 * Query the model. This is unsupported for the base model, but if you want to use a database as storage,
+		 * you should implement this method in your model.
 		 */
 		ItemCls[] query() {
-			return items;
+			throw new CratedModelException("unsupported method");
 		}
 
 		/**
@@ -462,8 +579,10 @@ template Model(Prototype) {
 		ulong length(string fieldName, T)(T value) {
 			ulong sum = 0;
 
-			foreach(i; 0..items.length) {
-				sum += __traits(getMember, items[i], fieldName) == value ? 1 : 0;
+			auto list = all;
+
+			foreach(i; 0..list.length) {
+				sum += __traits(getMember, list[i], fieldName) == value ? 1 : 0;
 			}
 
 			return sum;
@@ -473,7 +592,7 @@ template Model(Prototype) {
 		 * Count all items
 		 */
 		ulong length() {
-			return items.length;
+			return all.length;
 		}
 
 		/**
@@ -482,9 +601,11 @@ template Model(Prototype) {
 		ItemCls[] getBy(string fieldName, T)(T value) {
 			ItemCls[] r;
 
-			foreach(i; 0..items.length) {
-				if(__traits(getMember, items[i], fieldName) == value) {
-					r ~= [ items[i] ];
+			auto list = all;
+
+			foreach(i; 0..list.length) {
+				if(__traits(getMember, list[i], fieldName) == value) {
+					r ~= [ list[i] ];
 				}
 			}
 
@@ -496,9 +617,11 @@ template Model(Prototype) {
 		 * criteria
 		 */
 		ItemCls getOneBy(string fieldName, T)(T value) {
-			foreach(i; 0..items.length) {
-				if(__traits(getMember, items[i], fieldName) == value) {
-					return items[i];
+			auto list = all;
+
+			foreach(i; 0..list.length) {
+				if(__traits(getMember, list[i], fieldName) == value) {
+					return list[i];
 				}
 			}
 
@@ -551,7 +674,7 @@ mixin template MixCheckModelFields(M) {
 
 	mixin(_genChkMember!(M, "save"));
 	mixin(_genChkMember!(M, "remove"));
-	mixin(_genChkMember!(M, "clean"));
+	mixin(_genChkMember!(M, "truncate"));
 
 	mixin(_genChkMember!(M, "all"));
 

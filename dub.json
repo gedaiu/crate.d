@@ -16,6 +16,6 @@
 		}
 	],
 
-	"libs": ["mongoc-1.0"],
+	"libs": ["mongoc-1.0", "bson-1.0"],
 	"versions": ["VibeCustomMain"]
 }

@@ -50,7 +50,7 @@ Global
 		{DB4CDBD0-F649-4863-B185-350E7C013528}.Unittest|Any CPU.Build.0 = Unittest|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = examples\documentationViewer\documentationViewer.dproj
+		StartupItem = crate.d.dproj
 		Policies = $0
 		$0.StandardHeader = $1
 		$1.Text = @Authors: ${AuthorName} <${AuthorEmail}>\nDate: ${Month} ${Day}, ${Year}\nLicense: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.\nCopyright: Public Domain

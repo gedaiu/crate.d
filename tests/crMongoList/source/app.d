@@ -1,41 +1,88 @@
 import std.stdio : writeln;
 import crated.model.mongo;
 
-class BookItem {
-	@field @primary BsonObjectID _id;
-	@field string name = "unknown";
-	@field string author = "unknown";
-
-	//
-	static BookItem FromJson(BookModel parent, Json elm) {
-		BookItem itm = new BookItem(parent);
-
-		itm._id = BsonObjectID.fromString(elm._id.to!string);
-		itm.name = elm.name.to!string;
-		itm.author = elm.author.to!string;
-
-		return itm;
-	}
-
-	//insert model item code
-	mixin MixItem!(BookItem, BookModel);
-}
-
-class BookModel {
-	//set the collection name
-	private enum string collectionName = "test.books";
-
-	//insert model item code
-	mixin MixMongoModel!(BookItem, BookModel);
+class BookItemPrototype {
+	@("field", "primary") string _id;
+	@("field") string name;
+	@("field") string author;
 }
 
 
-void test() {
-	MongoClient client = connectMongoDB("127.0.0.1");
+unittest {
+	auto books = new MongoModel!BookItemPrototype("127.0.0.1", "test.books");
+	books.truncate;
+}
+
+//test save
+unittest {
+	auto books = new MongoModel!BookItemPrototype("127.0.0.1", "test.books");
+	auto item = books.createItem;
+	item.save;
+		
+	assert(books.length == 1);
+
+	auto savedItem = books.all[0];
+	assert(item == savedItem);
+}
+
+//test truncate
+unittest {
+	auto books = new MongoModel!BookItemPrototype("127.0.0.1", "test.books");
+	auto item = books.createItem;
+	item.save;
 	
-	auto books = new BookModel(client);
-	books.remove();
+	books.truncate;
 	
+	assert(books.length == 0);
+}
+
+//test remove
+unittest {
+	auto books = new MongoModel!BookItemPrototype("127.0.0.1", "test.books");
+	auto item = books.createItem;
+	item.save;
+	
+	assert(books.length == 1);
+	
+	item.remove;
+	
+	assert(books.length == 0);
+}
+
+unittest {
+	auto books = new MongoModel!BookItemPrototype("127.0.0.1", "test.books");
+	auto item = books.createItem;
+	item.save;
+	
+	assert(books.length == 1);
+	
+	books.remove!"_id"(item._id);
+	
+	assert(books.length == 0);
+}
+
+//save and delete multiple values
+unittest {
+	auto books = new MongoModel!BookItemPrototype("127.0.0.1", "test.books");
+	auto item1 = books.createItem;
+	auto item2 = books.createItem;
+
+	books.save([item1, item2]);
+	
+	assert(books.length == 2);
+	
+	books.remove([item1, item2]);
+	
+	assert(books.length == 0);
+}
+
+//a complex test
+unittest {	
+	//create the connection
+	auto books = new MongoModel!BookItemPrototype("127.0.0.1", "test.books");
+	books.truncate;
+
+	//the setup
 	auto item1 = books.createItem;
 	item1.name = "Prelude to Foundation";
 	item1.author = "Isaac Asimov";
@@ -55,25 +102,32 @@ void test() {
 	item4.name = "The Adventures of Tom Sawyer";
 	item4.author = "Mark Twain";
 	item4.save;
-	
-	auto marksBooks = books.findBy!"author"("Mark Twain");
+
+	//checks
+	auto marksBooks = books.getBy!"author"("Mark Twain");
 	assert(marksBooks.length == 2);
 	assert(marksBooks[0].author == "Mark Twain", "invalid author name");
 	assert(marksBooks[1].author == "Mark Twain", "invalid author name");
 	
-	auto oneItem    = books.findOneBy!"author"("Mark Twain");
+	auto oneItem    = books.getOneBy!"author"("Mark Twain");
 	assert(oneItem.author == "Mark Twain", "ca not get by author");
 	
-	auto all        = books.allItems;
+	auto all        = books.all;
 	assert(all.length == 4, "can't get all elements");
+
+	//do a query
+	import vibe.d;
+
+	Json q = Json.emptyObject;
+	q["author"] = "Mark Twain";
+	auto queryResult = books.query(q);
+
+	assert(queryResult.length == 2);
+	assert(queryResult[0].author == "Mark Twain", "invalid author name");
+	assert(queryResult[1].author == "Mark Twain", "invalid author name");
 }
-
-
-
 
 void main()
 {	
-	test();
-
 	writeln("OK");
 }

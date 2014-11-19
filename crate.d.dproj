@@ -20,7 +20,7 @@
     <DebugLevel>0</DebugLevel>
     <CustomCommands>
       <CustomCommands>
-        <Command type="Build" command="dub build" workingdir="${ProjectDir}" externalConsole="True" />
+        <Command type="Build" command="dub test" workingdir="${ProjectDir}" externalConsole="True" />
         <Command type="Clean" command="dub clean" workingdir="${ProjectDir}" externalConsole="True" />
         <Command type="Execute" command=".dub/build/application-debug-posix.osx-x86_64-dmd-AD37A1B0CA4AE81292FC4DB52F2A12B1/crate.d" workingdir="${ProjectDir}" />
       </CustomCommands>
