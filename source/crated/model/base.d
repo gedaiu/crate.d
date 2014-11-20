@@ -156,16 +156,16 @@ template Item(Prototype, M) {
 		/**
 		 * A pair of a field name and type to be accessed at runtime
 		 */
-		enum string[][] fields = getItemFields!("field", Prototype);
+		static enum string[][] fields = getItemFields!("field", Prototype, false);
 
 
 		/**
 		 * a pair of a field name and type to be accessed at runtime
 		 */
-		enum string[] primaryField = getItemFields!("primary", Prototype)[0];
-		
+		static enum string[] primaryField = getItemFields!("primary", Prototype, false)[0];
+
 		//the field attributes.
-		//enum string[string][string] attributes = mixin(getUDA);
+		enum string[][] attributes = getItemFields!("field", Prototype, true);
 		
 		//all the enum fields with their keys
 		//enum string[][string] enumValues = mixin("[ ``: [] " ~ getEnumValues ~ "]");
@@ -209,12 +209,30 @@ template Item(Prototype, M) {
 		typeof(__traits(getMember, this, primaryField[0])) primaryKeyValue() {
 			return __traits(getMember, this, primaryField[0]);
 		}
+		
+		/**
+		 * 
+		 */
+		static bool fieldHas(T)(T fieldName, string attribute) {
+			return false;
+		}
+
+		/**
+		 * 
+		 */
+		static string valueOf(string fieldName, string attribute) {
+			return "";
+		}
 
 		/**
 		 * == operator overload. It will check if the fields of the current Item are equals to the other one.
 		 */
 		override bool opEquals(Object o) {
 			return isFieldEqual!(fields)(cast(typeof(this)) o);
+		}
+
+		string fieldAsString(string fieldName)() {
+			return __traits(getMember, this, fieldName).to!string;
 		}
 
 		/**
@@ -359,7 +377,8 @@ template Item(Prototype, M) {
 			alias ItemProperty = TypeTuple!();
 		}
 	}
-	
+
+
 	/** 
 	 * Get all members that have ATTR attribute.
 	 * 
@@ -382,7 +401,8 @@ template Item(Prototype, M) {
 	 * 
 	 * --------------------
 	 */
-	template getItemFields(alias ATTR, Prototype) {
+	template getItemFields(alias ATTR, Prototype, bool addFields) {
+
 		/**
 		 *  Get a general type
 		 */
@@ -401,17 +421,27 @@ template Item(Prototype, M) {
 		 * Get all the metods that have ATTR attribute
 		 */
 		template ItemFields(FIELDS...) {	
-
 			static if (FIELDS.length > 1) {
 				alias ItemFields = TypeTuple!(
 					ItemFields!(FIELDS[0 .. $/2]),
 					ItemFields!(FIELDS[$/2 .. $])
 				); 
 			} else static if (FIELDS.length == 1 && FIELDS[0] != "modelFields") {
-
 				static if(__traits(hasMember, Prototype, FIELDS[0])) {
 					static if(staticIndexOf!(ATTR, __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0]))) >= 0) {
-						alias ItemFields = TypeTuple!([FIELDS[0], typeof(ItemProperty!(Prototype, FIELDS[0])).stringof[1..$-1], Type!(FIELDS[0]) ]);
+
+						pragma(msg,addFields, " = " , __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0])));
+
+						static if(addFields) {
+
+
+							pragma(msg, TypeTuple!([FIELDS[0], __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0])) ])   );
+
+							alias ItemFields = TypeTuple!([FIELDS[0], __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0])) ]);
+
+						} else {
+							alias ItemFields = TypeTuple!([FIELDS[0], typeof(ItemProperty!(Prototype, FIELDS[0])).stringof[1..$-1], Type!(FIELDS[0]) ]);
+						}
 					} else {
 						alias ItemFields = TypeTuple!();
 					}
@@ -426,7 +456,8 @@ template Item(Prototype, M) {
 		 * All the members that have ATTR attribute
 		 */
 		enum string[][] fields = [ ItemFields!(__traits(allMembers, Prototype)) ];
-		
+		pragma(msg, fields);
+
 		alias getItemFields = fields;
 	}
 	

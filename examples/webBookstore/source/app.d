@@ -6,9 +6,10 @@ import crated.controller.admin;
 import std.stdio;
 
 /**
- * The project modelZ
+ * The project model
  */
 class BookPrototype {
+
 	enum BookCategory : string {
 		Fiction = "Fiction",
 		Nonfiction = "Nonfiction"
@@ -29,7 +30,7 @@ class BookPrototype {
 	@("field") 
 	double price = 100;
 
-	@("field") 
+	@("field", "type:color") 
 	string color = "#fff";
 
 	@("field", "required") 
@@ -70,7 +71,7 @@ shared static this()
 	item4.name = "The Adventures of Tom Sawyer";
 	item4.author = "Mark Twain";
 	item4.save;
-
+*/
 
 	//set the web server
 	auto settings = new HTTPServerSettings;
@@ -84,5 +85,5 @@ shared static this()
 	adminController.addRoutes(router);
 
 	listenHTTP(settings, router);
-	logInfo("Please open http://127.0.0.1:8080/ in your browser.");*/
+	logInfo("Please open http://127.0.0.1:8080/ in your browser.");
 }

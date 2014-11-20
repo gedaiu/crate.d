@@ -8,7 +8,7 @@
  */
 module crated.controller.admin;
 
-import crated.view.web.admin;
+import crated.view.admin;
 
 import crated.controller.vibed;
 import vibe.d;
@@ -31,9 +31,11 @@ template AdminController(string baseUrl, Model) {
 		 */
 		@HttpRequest("GET", baseUrl ~ "")
 		static void index(HTTPServerRequest req, HTTPServerResponse res) {
-			auto itemList = new Model;
-			
-			//res.writeBody( itemList.all.viewAsAdminTable!(Prototype, baseUrl), "text/html; charset=UTF-8");
+
+			auto model = new Model;
+			auto view = new AdminView(baseUrl);
+
+			res.writeBody( view.asAdminTable(model.all), "text/html; charset=UTF-8");
 		}
 		
 		/**
@@ -41,11 +43,11 @@ template AdminController(string baseUrl, Model) {
 		 */
 		@HttpRequest("GET", baseUrl ~ "/edit/:id")
 		static void edit(HTTPServerRequest req, HTTPServerResponse res) {
-			/*auto myModel = new Model;
-			
-			auto item = myModel.getOneBy!"_id"(BsonObjectID.fromString(req.params["id"]));
+			auto model = new Model;
+			auto view = new AdminView(baseUrl);
+			auto item = model.getOneBy!"_id"(BsonObjectID.fromString(req.params["id"]));
 
-			res.writeBody( item.viewAsAdminEditForm!(baseUrl) , "text/html; charset=UTF-8");*/
+			res.writeBody( view.asEditForm(item) , "text/html; charset=UTF-8");
 		}
 		
 		/**
