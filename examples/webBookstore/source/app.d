@@ -45,8 +45,8 @@ shared static this()
 	crated.model.mongo.dbAddress = "127.0.0.1";
 
 	//init the data	
-	auto books = new MongoModel!BookPrototype("test.books");
-	books.truncate;
+	auto books = new MongoModel!(BookPrototype, "test.books");
+	/*books.truncate;
 	
 	auto item1 = books.createItem;
 	item1.name = "Prelude to Foundation";
@@ -79,10 +79,10 @@ shared static this()
 
 	auto router = new URLRouter;
 
-	auto adminController = new AdminController!("/admin", BookModel, BookItem);
+	auto adminController = new AdminController!("/admin", books);
 
 	adminController.addRoutes(router);
 
 	listenHTTP(settings, router);
-	logInfo("Please open http://127.0.0.1:8080/ in your browser.");
+	logInfo("Please open http://127.0.0.1:8080/ in your browser.");*/
 }

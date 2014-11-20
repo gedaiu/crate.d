@@ -17,7 +17,7 @@ import vibe.d;
  */
 shared static string dbAddress;
 
-template MongoModel(Prototype) {
+template MongoModel(Prototype, string collectionName) {
 
 	private MongoClient client;
 	private MongoCollection collection;
@@ -25,7 +25,7 @@ template MongoModel(Prototype) {
 	class MongoModelTemplate {
 		alias ItemCls = Item!(Prototype, MongoModelTemplate);
 
-		this(const string collectionName) {
+		this() {
 			client = connectMongoDB(dbAddress);
 			collection = client.getCollection(collectionName);
 		}

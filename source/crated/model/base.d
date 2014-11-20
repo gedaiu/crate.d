@@ -137,11 +137,14 @@ template Item(Prototype, M) {
 		void copy(string[][] fields, T)(T someItem) {
 			static if(fields.length == 1) {
 				static if( is( typeof(__traits(getMember, this, fields[0][0]) ) == typeof(__traits(getMember, someItem, fields[0][0]) ) ) ) {
-					__traits(getMember, this, fields[0][0]) = __traits(getMember, someItem, fields[0][0]);
-				
-				} else {
 
-					__traits(getMember, this, fields[0][0]) = __traits(getMember, someItem, fields[0][0]).to!(typeof(__traits(getMember, this, fields[0][0])));
+					__traits(getMember, this, fields[0][0]) = __traits(getMember, someItem, fields[0][0]);
+				} else {
+					static if(fields[0][2] == "isEnum") {
+						__traits(getMember, this, fields[0][0]) = __traits(getMember, someItem, fields[0][0]).to!string.to!(typeof(__traits(getMember, this, fields[0][0])));
+					} else {
+						__traits(getMember, this, fields[0][0]) = __traits(getMember, someItem, fields[0][0]).to!(typeof(__traits(getMember, this, fields[0][0])));
+					}
 				}
 
 			} else if(fields.length > 0) {
@@ -380,31 +383,35 @@ template Item(Prototype, M) {
 	 * --------------------
 	 */
 	template getItemFields(alias ATTR, Prototype) {
-		
 		/**
 		 *  Get a general type
 		 */
 		string Type(string name)() {
-			static if(__traits(isIntegral, ItemProperty!(Prototype, name))) return "isIntegral";
-			else static if(__traits(isFloating, ItemProperty!(Prototype, name))) return "isFloating";
-			else return "";
+
+			alias isEnum = IsEnum!(typeof(ItemProperty!(Prototype, name)));
+
+			static if(isEnum.check) return "isEnum";
+				else static if(__traits(isIntegral, ItemProperty!(Prototype, name))) return "isIntegral";
+				else static if(__traits(isFloating, ItemProperty!(Prototype, name))) return "isFloating";
+				else static if( is(ItemProperty!(Prototype, name) == enum) )  return "isEnum";
+				else return "";
 		}
 		
 		/** 
 		 * Get all the metods that have ATTR attribute
 		 */
 		template ItemFields(FIELDS...) {	
-			
+
 			static if (FIELDS.length > 1) {
 				alias ItemFields = TypeTuple!(
 					ItemFields!(FIELDS[0 .. $/2]),
 					ItemFields!(FIELDS[$/2 .. $])
-					); 
+				); 
 			} else static if (FIELDS.length == 1 && FIELDS[0] != "modelFields") {
-				
+
 				static if(__traits(hasMember, Prototype, FIELDS[0])) {
 					static if(staticIndexOf!(ATTR, __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0]))) >= 0) {
-						alias ItemFields = TypeTuple!([FIELDS[0], typeof(FIELDS[0]).stringof, Type!(FIELDS[0]) ]);
+						alias ItemFields = TypeTuple!([FIELDS[0], typeof(ItemProperty!(Prototype, FIELDS[0])).stringof[1..$-1], Type!(FIELDS[0]) ]);
 					} else {
 						alias ItemFields = TypeTuple!();
 					}
