@@ -1,6 +1,10 @@
 import std.stdio : writeln;
 import crated.model.mongo;
 
+unittest {
+	crated.model.mongo.dbAddress = "127.0.0.1";
+}
+
 class BookItemPrototype {
 	@("field", "primary") string _id;
 	@("field") string name;
@@ -9,13 +13,13 @@ class BookItemPrototype {
 
 
 unittest {
-	auto books = new MongoModel!BookItemPrototype("127.0.0.1", "test.books");
+	auto books = new MongoModel!BookItemPrototype("test.books");
 	books.truncate;
 }
 
 //test save
 unittest {
-	auto books = new MongoModel!BookItemPrototype("127.0.0.1", "test.books");
+	auto books = new MongoModel!BookItemPrototype("test.books");
 	auto item = books.createItem;
 	item.save;
 		
@@ -27,7 +31,7 @@ unittest {
 
 //test truncate
 unittest {
-	auto books = new MongoModel!BookItemPrototype("127.0.0.1", "test.books");
+	auto books = new MongoModel!BookItemPrototype("test.books");
 	auto item = books.createItem;
 	item.save;
 	
@@ -38,7 +42,7 @@ unittest {
 
 //test remove
 unittest {
-	auto books = new MongoModel!BookItemPrototype("127.0.0.1", "test.books");
+	auto books = new MongoModel!BookItemPrototype("test.books");
 	auto item = books.createItem;
 	item.save;
 	
@@ -50,7 +54,7 @@ unittest {
 }
 
 unittest {
-	auto books = new MongoModel!BookItemPrototype("127.0.0.1", "test.books");
+	auto books = new MongoModel!BookItemPrototype("test.books");
 	auto item = books.createItem;
 	item.save;
 	
@@ -63,7 +67,7 @@ unittest {
 
 //save and delete multiple values
 unittest {
-	auto books = new MongoModel!BookItemPrototype("127.0.0.1", "test.books");
+	auto books = new MongoModel!BookItemPrototype("test.books");
 	auto item1 = books.createItem;
 	auto item2 = books.createItem;
 
@@ -79,7 +83,7 @@ unittest {
 //a complex test
 unittest {	
 	//create the connection
-	auto books = new MongoModel!BookItemPrototype("127.0.0.1", "test.books");
+	auto books = new MongoModel!BookItemPrototype("test.books");
 	books.truncate;
 
 	//the setup

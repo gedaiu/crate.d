@@ -8,65 +8,52 @@ import std.stdio;
 /**
  * The project modelZ
  */
-class BookItem {
+class BookPrototype {
 	enum BookCategory : string {
 		Fiction = "Fiction",
 		Nonfiction = "Nonfiction"
 	};
 
-	@field @primary
-	BsonObjectID _id;
+	@("field", "primary")
+	string _id;
 
-	@field @required 
+	@("field", "required") 
 	string name = "unknown";
 
-	@field @required 
+	@("field", "required") 
 	string author = "unknown";
 
-	@field @type!("select")
+	@("field") 
 	BookCategory category;
 
-	@field 
+	@("field") 
 	double price = 100;
 
-	@field @type!"color"
+	@("field") 
 	string color = "#fff";
 
-	@field @required 
+	@("field", "required") 
 	bool inStock = true;
-
-	//insert model item code
-	mixin MixItem!(BookItem, BookModel);
 }
-
-class BookModel {
-	//set the collection name
-	private enum string collectionName = "test.books";
-	
-	//insert model item code
-	mixin MixMongoModel!(BookItem, BookModel);
-}
-
-
-
 
 /**
  *  Vibe.d init
  */
 shared static this()
 {	
-	//init the data
-	MongoClient client = connectMongoDB("127.0.0.1");
+	//setup the database
+	crated.model.mongo.dbAddress = "127.0.0.1";
+
+	//init the data	
+	auto books = new MongoModel!BookPrototype("test.books");
+	books.truncate;
 	
-	auto books = new BookModel(client);
-	books.remove();
-	
-	BookItem item1 = books.createItem;
+	auto item1 = books.createItem;
 	item1.name = "Prelude to Foundation";
 	item1.author = "Isaac Asimov";
 	item1.price = 120;
 	item1.inStock = false;
-	item1.category = BookItem.BookCategory.Nonfiction;
+	item1.category = BookPrototype.BookCategory.Nonfiction;
 	item1.save;
 	
 	auto item2 = books.createItem;

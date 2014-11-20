@@ -8,11 +8,14 @@
  */
 module crated.model.mongo;
 
-
 public import crated.model.base;
 public import std.conv;
 import vibe.d;
 
+/**
+ * 
+ */
+shared static string dbAddress;
 
 template MongoModel(Prototype) {
 
@@ -22,8 +25,8 @@ template MongoModel(Prototype) {
 	class MongoModelTemplate {
 		alias ItemCls = Item!(Prototype, MongoModelTemplate);
 
-		this(const string address, const string collectionName) {
-			client = connectMongoDB("127.0.0.1");
+		this(const string collectionName) {
+			client = connectMongoDB(dbAddress);
 			collection = client.getCollection(collectionName);
 		}
 
