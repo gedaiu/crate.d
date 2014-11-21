@@ -17,7 +17,7 @@ import vibe.d;
  */
 shared static string dbAddress;
 
-template MongoModel(Prototype, string collectionName, string modelName) {
+template MongoModel(Prototype, string collectionName, string modelName = "Unknown") {
 
 	private MongoClient client;
 	private MongoCollection collection;

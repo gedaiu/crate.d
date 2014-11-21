@@ -601,7 +601,7 @@ template Item(Prototype, alias M) {
  * }
  * ----------
  */
-template Model(Prototype, string modelName) {
+template Model(Prototype, string modelName = "Unknown") {
 
 	/**
 	 * 
