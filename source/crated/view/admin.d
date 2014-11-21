@@ -12,36 +12,6 @@ import std.conv;
 import crated.model.base;
 public import crated.view.base;
 
-/*
-
-
-string viewAsAdminTable(ITEM, string base, T)(T data) {
-	
-	enum fields = ITEM.fields;
-	enum primaryField = ITEM.primaryField;
-	
-	string a;
-	
-	a  = "<table><thead><tr>";
-	
-	foreach(field; fields) {
-		if(field[0] != primaryField) { 
-			a ~= "<th>" ~ field[0] ~ "</th>";
-		}
-	}
-	
-	a ~= "<th></th></tr></thead><tbody>";
-	
-	foreach(item; data) {
-		a ~= "<tr>" ~ mixin( renderTableLine(fields, primaryField) ) ~ "</tr>";
-	}
-	
-	a ~= "</tbody></table>";
-	a ~= `<a href='` ~ base ~ `/add'>Add</a>`;
-	
-	return a;
-}*/
-
 class AdminView : BaseView {
 
 	immutable string baseUrl;
@@ -94,18 +64,21 @@ class AdminView : BaseView {
 			default:
 				
 				if(field[2] == "isEnum") {
-					/*a ~= "<select name='" ~ field[0] ~ "'>";
+					string a = "<select name='" ~ field[0] ~ "'>";
+
 					import std.traits;
-					
+
+					std.stdio.writeln(PrototypedItem.enumValues);
 					auto values = PrototypedItem.enumValues[field[0]];
-					
+
+
 					foreach(v; values) {
-						a ~= "<option ` ~ ( data."~field[0]~".to!string == `"~v~"` ? `selected`:``) ~ `>"~v~"</option>";
+						a ~= "<option " ~ ( value == v ? `selected`:``) ~ ">"~v~"</option>";
 					}
 
-					a ~= "</select>";*/
+					a ~= "</select>";
 
-					return "enum";
+					return a;
 				} else {
 					return "<input name='" ~ field[0] ~ "' value='" ~ value ~ "' "~required~">";
 				}

@@ -18,6 +18,7 @@
 module crated.model.base;
 
 import std.stdio;
+import std.string;
 import std.traits;
 import std.algorithm;
 import std.conv;
@@ -168,7 +169,38 @@ template Item(Prototype, M) {
 		enum string[][] attributes = getItemFields!("field", Prototype, true);
 		
 		//all the enum fields with their keys
-		//enum string[][string] enumValues = mixin("[ ``: [] " ~ getEnumValues ~ "]");
+		enum string[][string] enumValues = mixin("[ ``: [] " ~ getEnumValues ~ "]");
+
+		/**
+		 * Generate the values for the enums from the current item
+		 */
+		private static string getEnumValues(ulong i = 0)() {
+
+			//exit condition
+			static if(i >= fields.length) {
+				return "";
+			} else {
+				enum auto field = fields[i];
+				
+				//check for D types
+				static if(field[2] == "isEnum") {
+					import std.traits;
+					
+					string vals = "";
+					
+					string glue = "";
+					foreach(v; EnumMembers!(typeof(__traits(getMember, Prototype, field[0])))) {
+						vals ~= glue ~ `"` ~ v.stringof[1..$-1] ~ `"`; 
+						glue ~= ", ";
+					}
+					
+					return `, "` ~ field[0] ~ `": [` ~ vals ~ `]` ~ getEnumValues!(i + 1);
+				} else {
+					return getEnumValues!(i + 1);
+				}
+			}
+			
+		}
 
 		/**
 		 * Parent model
@@ -221,6 +253,19 @@ template Item(Prototype, M) {
 		 * 
 		 */
 		static string valueOf(string fieldName, string attribute) {
+			foreach(list; attributes) {
+				if(list[0] == fieldName) {
+
+					foreach(i; 1..list.length) {
+						auto index = list[i].indexOf(":");
+
+						if(index > 0 && list[i][0..index] == attribute) {
+							return list[i][index+1..$];
+						}
+					}
+				}
+			}
+
 			return "";
 		}
 
@@ -430,13 +475,7 @@ template Item(Prototype, M) {
 				static if(__traits(hasMember, Prototype, FIELDS[0])) {
 					static if(staticIndexOf!(ATTR, __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0]))) >= 0) {
 
-						pragma(msg,addFields, " = " , __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0])));
-
 						static if(addFields) {
-
-
-							pragma(msg, TypeTuple!([FIELDS[0], __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0])) ])   );
-
 							alias ItemFields = TypeTuple!([FIELDS[0], __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0])) ]);
 
 						} else {
@@ -456,7 +495,6 @@ template Item(Prototype, M) {
 		 * All the members that have ATTR attribute
 		 */
 		enum string[][] fields = [ ItemFields!(__traits(allMembers, Prototype)) ];
-		pragma(msg, fields);
 
 		alias getItemFields = fields;
 	}
