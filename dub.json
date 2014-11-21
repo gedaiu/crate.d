@@ -17,6 +17,5 @@
 	],
 
 	"dflags": ["-J./source"],
-	"libs": ["mongoc-1.0", "bson-1.0"],
 	"versions": ["VibeCustomMain"]
 }
