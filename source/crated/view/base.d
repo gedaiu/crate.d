@@ -8,9 +8,13 @@
  */
 module crated.view.base;
 
-
+import crated.settings;
 
 class BaseView {
+
+	private string[] cssFiles;
+	private string[] jsFiles;
+
 	/**
 	 * Parse a dh file
 	 */
@@ -73,6 +77,42 @@ class BaseView {
 		stdout = tmpStdout;
 		
 		return result;
+	}
+
+	void useBootstrapCssCDN() {
+		cssFiles ~= [ BootstrapCssCDN ];
+	}
+
+	string html5Container(string content) {
+
+		string page = `<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">`;
+
+		foreach(i;0..cssFiles.length) {
+			page ~= "\n\t<link rel='stylesheet' href='" ~ cssFiles[i] ~ "'>";
+		}
+	
+	page~=`
+</head>
+<body>
+	` ~ content;
+
+		foreach(i;0..jsFiles.length) {
+			page ~= "\n\t<script src='" ~ jsFiles[i] ~ "'></script>";
+		}
+
+	page ~= `
+</body>
+</html>`;
+
+
+
+		return page;
 	}
 
 }

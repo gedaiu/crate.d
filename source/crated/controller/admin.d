@@ -35,6 +35,8 @@ template AdminController(string baseUrl, Model) {
 			auto model = new Model;
 			auto view = new AdminView(baseUrl);
 
+			view.useBootstrapCssCDN;
+
 			res.writeBody( view.asAdminTable(model.all), "text/html; charset=UTF-8");
 		}
 		
@@ -45,6 +47,8 @@ template AdminController(string baseUrl, Model) {
 		static void edit(HTTPServerRequest req, HTTPServerResponse res) {
 			auto model = new Model;
 			auto view = new AdminView(baseUrl);
+			view.useBootstrapCssCDN;
+
 			auto item = model.getOneBy!"_id"(BsonObjectID.fromString(req.params["id"]));
 
 			res.writeBody( view.asEditForm(item) , "text/html; charset=UTF-8");
@@ -55,11 +59,13 @@ template AdminController(string baseUrl, Model) {
 		 */
 		@HttpRequest("GET", baseUrl ~ "/add")
 		static void add(HTTPServerRequest req, HTTPServerResponse res) {
-			/*auto myModel = new Model;
+			auto model = new Model;
+			auto view = new AdminView(baseUrl);
+			view.useBootstrapCssCDN;
 			
-			auto item = myModel.createItem;
+			auto item = model.createItem;
 			
-			res.writeBody( item.viewAsAdminEditForm!(baseUrl) , "text/html; charset=UTF-8");*/
+			res.writeBody( view.asAddForm(item) , "text/html; charset=UTF-8");
 		}
 		
 		
@@ -68,16 +74,16 @@ template AdminController(string baseUrl, Model) {
 		 */
 		@HttpRequest("POST", baseUrl ~ "/save/:id")
 		static void save(HTTPServerRequest req, HTTPServerResponse res) {
-			/*auto myModel = new Model;
-			
-			auto item = new Prototype(req.form, myModel);
+
+			auto model = new Model;
+			auto item = new Prototype(req.form, model);
 			item.save;
 			
 			res.headers["Location"] = baseUrl;
 			res.statusCode = 302;
 			res.statusPhrase = "Saved! Redirecting...";
 			
-			res.writeBody( "Saved! Redirecting..." , "text/html; charset=UTF-8");*/
+			res.writeBody( "Saved! Redirecting..." , "text/html; charset=UTF-8");
 		}
 		
 		/**
@@ -85,17 +91,16 @@ template AdminController(string baseUrl, Model) {
 		 */
 		@HttpRequest("ANY", baseUrl ~ "/delete/:id")
 		static void delete_(HTTPServerRequest req, HTTPServerResponse res) {
-			/*auto myModel = new Model;
-			
-			auto item = myModel.getOneBy!"_id"(BsonObjectID.fromString(req.params["id"]));
-			
-			item.remove;
+			auto model = new Model;
+
+			model.remove!(Model.ItemCls.primaryField[0])(req.params["id"]);
+
 			
 			res.headers["Location"] = baseUrl;
 			res.statusCode = 302;
 			res.statusPhrase = "Deleted! Redirecting...";
 			
-			res.writeBody( "Deleted! Redirecting..." , "text/html; charset=UTF-8");*/
+			res.writeBody( "Deleted! Redirecting..." , "text/html; charset=UTF-8");
 		}
 		
 		

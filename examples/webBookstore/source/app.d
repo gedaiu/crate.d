@@ -46,7 +46,7 @@ shared static this()
 	crated.model.mongo.dbAddress = "127.0.0.1";
 
 	//init the data	
-	auto books = new MongoModel!(BookPrototype, "test.books");
+	auto books = new MongoModel!(BookPrototype, "test.books", "Books");
 	/*books.truncate;
 	
 	auto item1 = books.createItem;

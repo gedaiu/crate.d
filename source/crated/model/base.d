@@ -116,6 +116,7 @@ template Item(Prototype, M) {
 		 */
 		private M myModel;
 
+		alias modelCls = M;
 
 		/**
 		 * Default constructor
@@ -137,14 +138,37 @@ template Item(Prototype, M) {
 		 */
 		void copy(string[][] fields, T)(T someItem) {
 			static if(fields.length == 1) {
-				static if( is( typeof(__traits(getMember, this, fields[0][0]) ) == typeof(__traits(getMember, someItem, fields[0][0]) ) ) ) {
+				bool found = true;
 
-					__traits(getMember, this, fields[0][0]) = __traits(getMember, someItem, fields[0][0]);
+				static if(__traits(hasMember, someItem, fields[0][0])) {
+					auto someField = __traits(getMember, someItem, fields[0][0]);
 				} else {
-					static if(fields[0][2] == "isEnum") {
-						__traits(getMember, this, fields[0][0]) = __traits(getMember, someItem, fields[0][0]).to!string.to!(typeof(__traits(getMember, this, fields[0][0])));
+
+					string someField;
+
+					try {
+						someField = someItem[fields[0][0]].to!string;
+					} catch (Exception e) {
+						someField = "";
+						found = false;
+					}
+
+				}
+
+				if(found) { 
+					static if( is( typeof(__traits(getMember, this, fields[0][0]) ) == typeof(someField) ) ) {
+
+						__traits(getMember, this, fields[0][0]) = someField;
 					} else {
-						__traits(getMember, this, fields[0][0]) = __traits(getMember, someItem, fields[0][0]).to!(typeof(__traits(getMember, this, fields[0][0])));
+						static if(fields[0][2] == "isEnum") {
+							__traits(getMember, this, fields[0][0]) = someField.to!string.to!(typeof(__traits(getMember, this, fields[0][0])));
+						} else {
+							__traits(getMember, this, fields[0][0]) = someField.to!(typeof(__traits(getMember, this, fields[0][0])));
+						}
+					}
+				} else {
+					static if( is( typeof(__traits(getMember, this, fields[0][0]) ) == bool ) ) {
+						__traits(getMember, this, fields[0][0]) = false;
 					}
 				}
 
@@ -166,9 +190,11 @@ template Item(Prototype, M) {
 		static enum string[] primaryField = getItemFields!("primary", Prototype, false)[0];
 
 		//the field attributes.
+		//TODO: make attributes of type string[string][string] to avoid runtime string parsing in valueOf method
 		enum string[][] attributes = getItemFields!("field", Prototype, true);
 		
 		//all the enum fields with their keys
+		//TODO: remove the string mixin
 		enum string[][string] enumValues = mixin("[ ``: [] " ~ getEnumValues ~ "]");
 
 		/**
@@ -575,7 +601,7 @@ template Item(Prototype, alias M) {
  * }
  * ----------
  */
-template Model(Prototype) {
+template Model(Prototype, string modelName) {
 
 	/**
 	 * 
@@ -587,6 +613,7 @@ template Model(Prototype) {
 		 * 
 		 */
 		alias ItemCls = Item!(Prototype, ModelTemplate);
+		enum string name = modelName;
 
 		ItemCls[] items;
 

@@ -17,13 +17,15 @@ import vibe.d;
  */
 shared static string dbAddress;
 
-template MongoModel(Prototype, string collectionName) {
+template MongoModel(Prototype, string collectionName, string modelName) {
 
 	private MongoClient client;
 	private MongoCollection collection;
 
 	class MongoModelTemplate {
 		alias ItemCls = Item!(Prototype, MongoModelTemplate);
+
+		enum string name = modelName;
 
 		this() {
 			client = connectMongoDB(dbAddress);

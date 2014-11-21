@@ -64,6 +64,7 @@
     <Compile Include="source\crate.d" />
     <Compile Include="source\crated\controller\admin.d" />
     <Compile Include="source\crated\view\admin.d" />
+    <Compile Include="source\crated\settings.d" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dub.json" />
