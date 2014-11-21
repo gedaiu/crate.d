@@ -95,16 +95,13 @@ template AdminController(string baseUrl, Model) {
 
 			model.remove!(Model.ItemCls.primaryField[0])(req.params["id"]);
 
-			
 			res.headers["Location"] = baseUrl;
 			res.statusCode = 302;
 			res.statusPhrase = "Deleted! Redirecting...";
 			
 			res.writeBody( "Deleted! Redirecting..." , "text/html; charset=UTF-8");
 		}
-		
-		
-		
+
 		//insert controller code
 		mixin MixVibedController!(AdminControllerTemplate);
 	}
