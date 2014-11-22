@@ -67,7 +67,7 @@
 
 		<h3>
 			<?  
-				writeln(data[i].name); 
+				writeln(data[i].returnType, " ", data[i].name); 
 
 				if(data[i].kind == "function" || data[i].kind == "template" || data[i].kind == "template function") {
 					write("( ",title," )");
@@ -117,7 +117,7 @@
 				}
 			}
 
-			//writeln("<pre>", data[i].data.replace("\n", "<br/>"), "</pre>");
+			//writeln("JSON: <pre>", data[i].data.replace("\n", "<br/>"), "</pre>");
 
 			if(contentList.length > 0 && data[i].kind != "template function") {
 				?>

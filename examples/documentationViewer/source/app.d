@@ -24,12 +24,14 @@ class DocsController {
 		auto docsModel = new DocsModuleModel(docsJsonPath);
 		
 		string[string] data;
-		
-		data["tableOfContents"] = renderDh!"tableOfContents.dh"(docsModel);
-		data["breadcrumbs"] = renderDh!"breadcrumbs.dh"("");
+
+		auto view = new BaseView;
+
+		data["tableOfContents"] = view.renderDh!"tableOfContents.dh"(docsModel);
+		data["breadcrumbs"] = view.renderDh!"breadcrumbs.dh"("");
 		data["content"] = "content";
 		
-		res.writeBody( renderDh!"docs.dh"(data), "text/html; charset=UTF-8");
+		res.writeBody( view.renderDh!"docs.dh"(data), "text/html; charset=UTF-8");
 	}
 
 	/**
@@ -46,8 +48,7 @@ class DocsController {
 	@HttpRequest("GET", "/docs/*")
 	static void docMemberPage(HTTPServerRequest req, HTTPServerResponse res) {
 		auto docsModel = new DocsModuleModel(docsJsonPath);
-		
-		string[string] data;
+
 
 		if(req.requestURL[$-1..$] == "/") {
 			req.requestURL = req.requestURL[0..$-1];
@@ -56,11 +57,15 @@ class DocsController {
 		auto content = docsModel.getBy!"path"(req.requestURL);
 
 		if(content.length > 0) { 
-			data["tableOfContents"] = renderDh!"tableOfContents.dh"(docsModel, req.requestURL);
-			data["breadcrumbs"] = renderDh!"breadcrumbs.dh"(req.requestURL);
-			data["content"] = renderDh!"docsContent.dh"(content);
 
-			res.writeBody( renderDh!"docs.dh"(data), "text/html; charset=UTF-8");
+			string[string] data;
+			auto view = new BaseView;
+
+			data["tableOfContents"] = view.renderDh!"tableOfContents.dh"(docsModel, req.requestURL);
+			data["breadcrumbs"] = view.renderDh!"breadcrumbs.dh"(req.requestURL);
+			data["content"] = view.renderDh!"docsContent.dh"(content);
+
+			res.writeBody( view.renderDh!"docs.dh"(data), "text/html; charset=UTF-8");
 		}
 	}
 	

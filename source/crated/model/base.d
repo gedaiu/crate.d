@@ -26,9 +26,12 @@ import std.typetuple;
 
 
 /**
- * 
+ * Aggregates all information about a model error status.
  */
 class CratedModelException : Exception {
+	/**
+	 * Create the exception
+	 */
 	this(string msg, string file = __FILE__, ulong line = cast(ulong)__LINE__, Throwable next = null) {
 		super(msg, file, line, next);
 	}
@@ -116,6 +119,9 @@ template Item(Prototype, M) {
 		 */
 		private M myModel;
 
+		/**
+		 * An alias to the model type
+		 */
 		alias modelCls = M;
 
 		/**
@@ -185,16 +191,16 @@ template Item(Prototype, M) {
 
 
 		/**
-		 * a pair of a field name and type to be accessed at runtime
+		 * A pair of a field name and type to be accessed at runtime
 		 */
 		static enum string[] primaryField = getItemFields!("primary", Prototype, false)[0];
 
-		//the field attributes.
 		//TODO: make attributes of type string[string][string] to avoid runtime string parsing in valueOf method
+		///The field attributes.
 		enum string[][] attributes = getItemFields!("field", Prototype, true);
-		
-		//all the enum fields with their keys
+
 		//TODO: remove the string mixin
+		///All the enum fields with their keys
 		enum string[][string] enumValues = mixin("[ ``: [] " ~ getEnumValues ~ "]");
 
 		/**
@@ -229,7 +235,7 @@ template Item(Prototype, M) {
 		}
 
 		/**
-		 * Parent model
+		 * The parent model
 		 */
 		@property
 		M parent() {
@@ -263,20 +269,50 @@ template Item(Prototype, M) {
 			return jsonString;
 		}
 
+		/**
+		 * Private: The primary key type alias
+		 */
+		private alias PrimaryKeyType = typeof(__traits(getMember, this, primaryField[0]));
+
+		/**
+		 * Get the primary field value
+		 */
 		@property
-		typeof(__traits(getMember, this, primaryField[0])) primaryKeyValue() {
+		PrimaryKeyType primaryKeyValue() {
 			return __traits(getMember, this, primaryField[0]);
 		}
 		
 		/**
-		 * 
+		 * Check if a field has a certain attribute
 		 */
 		static bool fieldHas(T)(T fieldName, string attribute) {
+			foreach(list; attributes) {
+
+				if(list[0] == fieldName.to!string) {
+					
+					foreach(i; 1..list.length) {
+						auto index = list[i].indexOf(":");
+
+						if(list[i] == attribute) return true;
+
+						if(index > 0 && list[i][0..index] == attribute) {
+							return true;
+						}
+					}
+				}
+			}
+
 			return false;
 		}
 
 		/**
+		 * Get the value of an attribute. An atribute value is set like this:
 		 * 
+		 * Example: 
+		 * -------------
+		 * @("field", "custom attribute:custom value")
+		 * string name;
+		 * -------------
 		 */
 		static string valueOf(string fieldName, string attribute) {
 			foreach(list; attributes) {
@@ -301,7 +337,10 @@ template Item(Prototype, M) {
 		override bool opEquals(Object o) {
 			return isFieldEqual!(fields)(cast(typeof(this)) o);
 		}
-
+		
+		/**
+		 * Get a field value as string. Very useful in views
+		 */
 		string fieldAsString(string fieldName)() {
 			return __traits(getMember, this, fieldName).to!string;
 		}
@@ -534,9 +573,25 @@ template Item(Prototype, alias M) {
 }
 
 /**
+ * Create a crated Model. A model is responsable with manipulating Items. It save, delete and query the 
+ * Items into a db or other storage type.
+ * 
  * 
  * =Extending
- * .. more to come ..
+ * 
+ * You can extend a model like this:
+ * 
+ * Example:
+ * -----------------
+ * class MyModel : Model!Prototype {
+ * 
+ * 	ItemCls[] customQuery() {
+ * 		....
+ * 	}
+ * 
+ * }
+ * -----------------
+ * 
  * 
  * =Creating new Item templates
  * 
@@ -546,7 +601,8 @@ template Item(Prototype, alias M) {
  * 
  * Example: 
  * ----------
- * template CustomModel(Prototype) {
+ * template CustomModel(Prototype, string modelName = "Unknown") {
+ * 		
  * 
  * }
  * ----------
@@ -557,10 +613,12 @@ template Item(Prototype, alias M) {
  * 
  * Example: 
  * ----------
- * template CustomModel(Prototype) {
+ * template CustomModel(Prototype, string modelName = "Unknown") {
  * 	
  *	class CustomModelTemplate {
- *	
+ *		enum string name = modelName;
+		alias ItemCls = Item!(Prototype, CustomModelTemplate);
+ *
  *	}
  * 
  *	alias CustomModel = CustomModelTemplate;
@@ -574,15 +632,18 @@ template Item(Prototype, alias M) {
  * 
  * Example: 
  * ----------
- * template CustomModel(Prototype) {
+ * template CustomModel(Prototype, string modelName = "Unknown") {
  * 	
  *	class CustomModelTemplate {
+ *		enum string name = modelName;
+		alias ItemCls = Item!(Prototype, CustomModelTemplate);
  *		
  *	}
  * 	
  * 	mixin MixCheckModelFields!CustomModelTemplate;
  *	alias CustomModel = CustomModelTemplate;
  * }
+ * ----------
  * 
  * ==Step 4
  * 
@@ -590,32 +651,35 @@ template Item(Prototype, alias M) {
  * 
  * Example: 
  * ----------
- * template CustomModel(Prototype) {
+ * template CustomModel(Prototype, string modelName = "Unknown") {
  * 	
  *	class CustomModelTemplate : Model!Prototype {
- *		
+ *		enum string name = modelName;
+ *
  *	}
  * 	
  * 	mixin MixCheckModelFields!CustomModelTemplate;
  *	alias CustomModel = CustomModelTemplate;
  * }
  * ----------
+ * 
+ * 
  */
 template Model(Prototype, string modelName = "Unknown") {
 
 	/**
-	 * 
-	 * 
+	 * A basic model implementation without any persistence
 	 */
 	class ModelTemplate {
 
-		/**
-		 * 
-		 */
+		///An alias to the item class type.
 		alias ItemCls = Item!(Prototype, ModelTemplate);
+
+		///The model name.
 		enum string name = modelName;
 
-		ItemCls[] items;
+		///Protected: item container
+		protected ItemCls[] items;
 
 		/**
 		 * Add or update an element
@@ -716,8 +780,7 @@ template Model(Prototype, string modelName = "Unknown") {
 		}
 
 		/**
-		 * retrieve the first item that match the search
-		 * criteria
+		 * Retrieve the first item that match the search criteria
 		 */
 		ItemCls getOneBy(string fieldName, T)(T value) {
 			auto list = all;
@@ -732,15 +795,16 @@ template Model(Prototype, string modelName = "Unknown") {
 		}
 
 		/**
-		 * Convert the items to a string
+		 * Convert the items to a Json string
 		 */
 		override string toString() {
 			return items.to!string;
 		}
-
 	}
 
+	///Private: 
 	mixin MixCheckModelFields!ModelTemplate;
+
 	alias Model = ModelTemplate;
 }
 

@@ -68,8 +68,12 @@ class ModuleItem {
 
 		if("kind" in data) this.kind = data.kind.to!string;
 
-		if("type" in data) {
-			string type = data["type"].to!string;
+		string type;
+
+		if("type" in data) type = data["type"].to!string;
+		if("type" !in data && "originalType" in data) type = data["originalType"].to!string;
+
+		if(type != "") {
 			auto splitIndex = type.indexOf("(");
 
 			if(splitIndex != -1) {

@@ -26,7 +26,7 @@ class AdminView : BaseView {
 	/**
 	 * 
 	 */
-	string editFormFieldByAttribute(string field, PrototypedItem)(PrototypedItem item, ulong index) {
+	private string editFormFieldByAttribute(string field, PrototypedItem)(PrototypedItem item, ulong index) {
 		string required = "";
 		if(PrototypedItem.fieldHas(field[0], "required")) required = "required";
 
@@ -87,7 +87,7 @@ class AdminView : BaseView {
 
 					return a;
 				} else {
-					return "<input id='formElement"~index.to!string~"' class='form-control "~cls~"' name='" ~ field[0] ~ "' value='" ~ value ~ "' "~required~">";
+					return "<input id='formElement"~index.to!string~"' class='form-control "~cls~"' name='" ~ field[0] ~ "' value='" ~ value ~ "' "~required~">" ~ required;
 				}
 		}
 	}

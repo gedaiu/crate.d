@@ -18,7 +18,7 @@ class BaseView {
 	/**
 	 * Parse a dh file
 	 */
-	string parseDhContent(string content) {
+	static string parseDhContent(string content) {
 		string code;
 		
 		bool parsingCode = false;
