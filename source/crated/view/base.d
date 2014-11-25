@@ -9,11 +9,21 @@
 module crated.view.base;
 
 import crated.settings;
+import std.string;
 
 class BaseView {
 
 	private string[] cssFiles;
 	private string[] jsFiles;
+
+	string content;
+	string title;
+	BaseView parent;
+
+	this(BaseView parent = null) {
+		import std.stdio;
+		this.parent = parent;
+	}
 
 	/**
 	 * Parse a dh file
@@ -83,36 +93,51 @@ class BaseView {
 		cssFiles ~= [ BootstrapCssCDN ];
 	}
 
-	string html5Container(string content) {
+	void useJqueryCDN() {
+		jsFiles ~= [ JQueryCDN ];
+	}
 
+	void uses(string file) {
+		if(file.indexOf(".js") != -1) {
+			jsFiles ~= [ "/assets/" ~ file ];
+		}
+
+		if(file.indexOf(".css") != -1) {
+			cssFiles ~= [ "/assets/" ~ file ];
+		}
+	}
+
+	string wrapWithBaseContainer(const string content) {
 		string page = `<!DOCTYPE html>
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title></title>
+    <title>`~title~`</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">`;
-
+		
 		foreach(i;0..cssFiles.length) {
 			page ~= "\n\t<link rel='stylesheet' href='" ~ cssFiles[i] ~ "'>";
 		}
-	
-	page~=`
+		
+		page~=`
 </head>
 <body>
 	` ~ content;
-
+		
 		foreach(i;0..jsFiles.length) {
 			page ~= "\n\t<script src='" ~ jsFiles[i] ~ "'></script>";
 		}
-
-	page ~= `
+		
+		page ~= `
 </body>
 </html>`;
 
-
-
 		return page;
+	}
+
+	override string toString() {
+		return wrapWithBaseContainer(content);
 	}
 
 }

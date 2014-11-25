@@ -21,59 +21,74 @@ template AdminController(string baseUrl, alias model) {
 	alias AdminController = AdminController!(baseUrl, typeof(model));
 }
 
-template AdminController(string baseUrl, Model) {
+template AdminController(string baseUrl, Model, ContainerCls = BaseView) {
 
 	alias Prototype = Model.ItemCls;
 
-	class AdminControllerTemplate {
+	class AdminControllerTemplate  {
+
 		/**
 		 * The list page
 		 */
-		@HttpRequest("GET", baseUrl ~ "")
+		@("HttpRequest", "method:GET", "node:" ~ baseUrl)
 		static void index(HTTPServerRequest req, HTTPServerResponse res) {
 
+			auto container = new ContainerCls;
+
 			auto model = new Model;
-			auto view = new AdminView(baseUrl);
+			auto view = new AdminView(baseUrl, container);
 
-			view.useBootstrapCssCDN;
+			container.useBootstrapCssCDN;
+			container.content = view.asAdminTable(model.all);
 
-			res.writeBody( view.asAdminTable(model.all), "text/html; charset=UTF-8");
+			res.writeBody( container.to!string , "text/html; charset=UTF-8");
 		}
 		
 		/**
 		 * The edit page
 		 */
-		@HttpRequest("GET", baseUrl ~ "/edit/:id")
+		@("HttpRequest", "method:GET", "node:" ~ baseUrl ~ "/edit/:id")
 		static void edit(HTTPServerRequest req, HTTPServerResponse res) {
+
+			auto container = new ContainerCls;
+
 			auto model = new Model;
-			auto view = new AdminView(baseUrl);
-			view.useBootstrapCssCDN;
+			auto view = new AdminView(baseUrl, container);
 
 			auto item = model.getOneBy!"_id"(BsonObjectID.fromString(req.params["id"]));
 
-			res.writeBody( view.asEditForm(item) , "text/html; charset=UTF-8");
+			container.useBootstrapCssCDN;
+			container.content = view.asEditForm(item);
+
+			res.writeBody( container.to!string , "text/html; charset=UTF-8");
 		}
 		
 		/**
 		 * The add item page
 		 */
-		@HttpRequest("GET", baseUrl ~ "/add")
+		@("HttpRequest", "method:GET", "node:" ~ baseUrl ~ "/add")
 		static void add(HTTPServerRequest req, HTTPServerResponse res) {
+			auto container = new ContainerCls;
+
 			auto model = new Model;
-			auto view = new AdminView(baseUrl);
-			view.useBootstrapCssCDN;
-			
+			auto view = new AdminView(baseUrl, container);
+
 			auto item = model.createItem;
-			
-			res.writeBody( view.asAddForm(item) , "text/html; charset=UTF-8");
+
+			container.useBootstrapCssCDN;
+			container.content = view.asAddForm(item);
+
+			res.writeBody( container.to!string, "text/html; charset=UTF-8");
 		}
 		
 		
 		/**
 		 * The save item action
 		 */
-		@HttpRequest("POST", baseUrl ~ "/save/:id")
+		@("HttpRequest", "method:POST", "node:" ~ baseUrl ~ "/save/:id")
 		static void save(HTTPServerRequest req, HTTPServerResponse res) {
+
+			auto container = new ContainerCls;
 
 			auto model = new Model;
 			auto item = new Prototype(req.form, model);
@@ -89,7 +104,7 @@ template AdminController(string baseUrl, Model) {
 		/**
 		 * The delete item action
 		 */
-		@HttpRequest("ANY", baseUrl ~ "/delete/:id")
+		@("HttpRequest", "method:ANY", "node:" ~ baseUrl ~ "/delete/:id")
 		static void delete_(HTTPServerRequest req, HTTPServerResponse res) {
 			auto model = new Model;
 

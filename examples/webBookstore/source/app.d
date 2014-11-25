@@ -1,7 +1,9 @@
 import vibe.d;
 
 import crated.model.mongo;
+import crated.controller.base;
 import crated.controller.admin;
+import crated.controller.datamanager;
 
 import std.stdio;
 
@@ -9,31 +11,58 @@ import std.stdio;
  * The project model
  */
 class BookPrototype {
-
+	
 	enum BookCategory : string {
 		Fiction = "Fiction",
 		Nonfiction = "Nonfiction"
 	};
-
+	
 	@("field", "primary")
 	string _id;
+	
+	@("field", "required") 
+	string name = "unknown";
+	
+	@("field", "required") 
+	string author = "unknown";
+	
+	@("field") 
+	BookCategory category;
+	
+	@("field", "required") 
+	double price = 100;
+	
+	@("field", "required", "type:color") 
+	string color = "#fff";
+	
+	@("field") 
+	bool inStock = true;
+}
 
+/**
+ * The project model
+ */
+class OtherProductsPrototype {
+	
+	enum OtherProductsCategory : string {
+		Tea = "Tea",
+		Games = "Games",
+		Other = "Other"
+	};
+	
+	@("field", "primary")
+	string _id;
+	
 	@("field", "required") 
 	string name = "unknown";
 
+	@("field") 
+	OtherProductsCategory category;
+	
 	@("field", "required") 
-	string author = "unknown";
-
-	@("field") 
-	BookCategory category;
-
-	@("field") 
 	double price = 100;
 
-	@("field", "type:color") 
-	string color = "#fff";
-
-	@("field", "required") 
+	@("field") 
 	bool inStock = true;
 }
 
@@ -46,32 +75,12 @@ shared static this()
 	crated.model.mongo.dbAddress = "127.0.0.1";
 
 	//init the data	
-	auto books = new MongoModel!(BookPrototype, "test.books", "Books");
-	/*books.truncate;
-	
-	auto item1 = books.createItem;
-	item1.name = "Prelude to Foundation";
-	item1.author = "Isaac Asimov";
-	item1.price = 120;
-	item1.inStock = false;
-	item1.category = BookPrototype.BookCategory.Nonfiction;
-	item1.save;
-	
-	auto item2 = books.createItem;
-	item2.name = "The Hunger Games";
-	item2.author = "Suzanne Collins";
-	item2.save;
-	
-	auto item3 = books.createItem;
-	item3.name = "The Adventures of Huckleberry Finn";
-	item3.author = "Mark Twain";
-	item3.save;
-	
-	auto item4 = books.createItem;
-	item4.name = "The Adventures of Tom Sawyer";
-	item4.author = "Mark Twain";
-	item4.save;
-*/
+	alias BookModel = MongoModel!(BookPrototype, "test.books", "Books");
+	alias OtherProductsModel = MongoModel!(OtherProductsPrototype, "test.otherProducts", "Other products");
+
+	alias DataManagerController = DataManager!("/admin", BookModel, OtherProductsModel);
+
+	auto dataManager = new Controller!DataManagerController;
 
 	//set the web server
 	auto settings = new HTTPServerSettings;
@@ -80,9 +89,11 @@ shared static this()
 
 	auto router = new URLRouter;
 
-	auto adminController = new AdminController!("/admin", books);
+	auto fsettings = new HTTPFileServerSettings;
+	fsettings.serverPathPrefix = "/assets/";
+	router.get("*", serveStaticFiles("../../assets/", fsettings));
 
-	adminController.addRoutes(router);
+	dataManager.addRoutes(router);
 
 	listenHTTP(settings, router);
 	logInfo("Please open http://127.0.0.1:8080/ in your browser.");

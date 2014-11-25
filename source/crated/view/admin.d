@@ -16,10 +16,8 @@ class AdminView : BaseView {
 
 	immutable string baseUrl;
 
-
-	bool useDefaultContainer = true;
-
-	this(const string baseUrl) {
+	this(const string baseUrl, BaseView parent) {
+		super(parent);
 		this.baseUrl = baseUrl;
 	}
 
@@ -27,8 +25,8 @@ class AdminView : BaseView {
 	 * 
 	 */
 	private string editFormFieldByAttribute(string field, PrototypedItem)(PrototypedItem item, ulong index) {
-		string required = "";
-		if(PrototypedItem.fieldHas(field[0], "required")) required = "required";
+		bool required;
+		if(PrototypedItem.fieldHas(field, "required")) required = true;
 
 		string fieldType = PrototypedItem.valueOf(field, "type");
 		string cls;
@@ -38,9 +36,20 @@ class AdminView : BaseView {
 		switch(fieldType) {
 			case "color": case "date": case "datetime": case "datetime-local": case "email": case "month":
 			case "number": case "range": case "tel": case "time": case "url": case "week":
+				if(required) {				
+					return "<div class='input-group'>
+						               <input class='"~cls~" form-control' id='formElement"~index.to!string~"' type='" ~ fieldType ~ "' name='" ~ field ~ "' value='" ~ item.fieldAsString!field ~ "' required>
+									   <span class='input-group-addon'>
+                                             <span class='glyphicon glyphicon-fire' aria-hidden='true'></span>
+                                       </span>
+						        </div>";
+					
+				} else {
+					return "<input class='"~cls~" form-control' id='formElement"~index.to!string~"' type='" ~ fieldType ~ "' name='" ~ field ~ "' value='" ~ item.fieldAsString!field ~ "'/>";
 
-				return "<input class='"~cls~" form-control' id='formElement"~index.to!string~"' type='" ~ fieldType ~ "' name='" ~ field ~ "' value='" ~ item.fieldAsString!field ~ "' " ~ required ~ ">";
-	
+				}
+
+
 			default:
 
 				return "";
@@ -51,9 +60,11 @@ class AdminView : BaseView {
 	 * 
 	 */
 	string editFormFieldByType(string[] field, PrototypedItem)(PrototypedItem item, ulong index) {
-		string required = "";
-		if(PrototypedItem.fieldHas(field[0], "required")) required = "required";
+		bool required;
+		string requiredIcon;
 
+		if(PrototypedItem.fieldHas(field[0], "required")) required = true;
+	
 		string value = item.fieldAsString!(field[0]);
 		string cls;
 
@@ -65,10 +76,33 @@ class AdminView : BaseView {
 
 			case "byte": case "short": case "int": case "long": case "cent": case "ubyte": case "ushort":
 			case "uint": case "ulong": case "ucent":
-				return "<input class='"~cls~" form-control "~cls~"' id='formElement"~index.to!string~"' type='number' name='" ~ field[0] ~ "' value='" ~ value ~ "' "~field[0]~" "~required~">";
+				if(required) {				
+					return "<div class='input-group'>
+						               <input class='"~cls~" form-control "~cls~"' id='formElement"~index.to!string~"' type='number' name='" ~ field[0] ~ "' value='" ~ value ~ "' "~field[0]~" required>
+										     <span class='input-group-addon'>
+                                             <span class='glyphicon glyphicon-fire' aria-hidden='true'></span>
+                                       </span>
+						        </div>";
+					
+				} else {
+					return "<input class='"~cls~" form-control "~cls~"' id='formElement"~index.to!string~"' type='number' name='" ~ field[0] ~ "' value='" ~ value ~ "' "~field[0]~">";
+
+				}
+
 
 			case "float": case "double": case "real":
-				return "<input class='"~cls~" form-control "~cls~"' id='formElement"~index.to!string~"' step='0.01' type='number' name='" ~ field[0] ~ "' value='" ~ value ~ "' "~required~">";
+				if(required) {				
+					return "<div class='input-group'>
+						               <input class='"~cls~" form-control "~cls~"' id='formElement"~index.to!string~"' step='0.01' type='number' name='" ~ field[0] ~ "' value='" ~ value ~ "' required>
+						               <span class='input-group-addon'>
+                                             <span class='glyphicon glyphicon-fire' aria-hidden='true'></span>
+                                       </span>
+						        </div>";
+					
+				} else {
+					return "<input class='"~cls~" form-control "~cls~"' id='formElement"~index.to!string~"' step='0.01' type='number' name='" ~ field[0] ~ "' value='" ~ value ~ "'>";
+
+				}
 
 			default:
 				
@@ -87,7 +121,18 @@ class AdminView : BaseView {
 
 					return a;
 				} else {
-					return "<input id='formElement"~index.to!string~"' class='form-control "~cls~"' name='" ~ field[0] ~ "' value='" ~ value ~ "' "~required~">" ~ required;
+					if(required) {				
+						return "<div class='input-group'>
+						               <input id='formElement"~index.to!string~"' class='form-control "~cls~"' name='" ~ field[0] ~ "' value='" ~ value ~ "' required/>
+						               <span class='input-group-addon'>
+                                             <span class='glyphicon glyphicon-fire' aria-hidden='true'></span>
+                                       </span>
+						        </div>";
+
+					} else {
+						return "<input id='formElement"~index.to!string~"' class='form-control "~cls~"' name='" ~ field[0] ~ "' value='" ~ value ~ "'/>";
+				
+					}
 				}
 		}
 	}
@@ -145,17 +190,19 @@ class AdminView : BaseView {
 		enum fields = PrototypedItem.fields;
 		enum primaryField = PrototypedItem.primaryField;
 
-		a  = "<h1>Edit " ~ PrototypedItem.modelCls.name ~ "</h1>";
+		if(parent) {
+			parent.title = "Edit " ~ PrototypedItem.modelCls.name;
+		}
 
 
-		a ~= `<form action="`~baseUrl~`/save/` ~ item.fieldAsString!(primaryField[0]) ~ `" method="post">`;
+		a = `<form action="`~baseUrl~`/save/` ~ item.fieldAsString!(primaryField[0]) ~ `" method="post">`;
 
 		a ~= editFormFields!(fields, primaryField[0])(item);
 
 		a ~= `<input class='btn btn-default' type="submit"/>`;
 		a ~= `</form>`;
 
-		if(useDefaultContainer) a = html5Container(`<div class="container"><div class="row"><div class="col-xs-12">` ~ a ~ `</div></div>`);
+		a = `<div class="container"><div class="row"><div class="col-xs-12">` ~ a ~ `</div></div>`;
 
 		return a;
 	}
@@ -169,16 +216,18 @@ class AdminView : BaseView {
 		enum fields = PrototypedItem.fields;
 		enum primaryField = PrototypedItem.primaryField;
 		
-		a  = "<h1>Add " ~ PrototypedItem.modelCls.name ~ "</h1>";
+		if(parent) {
+			parent.title = "Add " ~ PrototypedItem.modelCls.name;
+		}
 
-		a ~= `<form action="`~baseUrl~`/save/new" method="post">`;
+		a = `<form action="`~baseUrl~`/save/new" method="post">`;
 		
 		a ~= editFormFields!(fields, primaryField[0])(item);
 		
 		a ~= `<input class='btn btn-default' type="submit"/>`;
 		a ~= `</form>`;
 		
-		if(useDefaultContainer) a = html5Container(`<div class="container"><div class="row"><div class="col-xs-12">` ~ a ~ `</div></div>`);
+		a = `<div class="container"><div class="row"><div class="col-xs-12">` ~ a ~ `</div></div>`;
 		
 		return a;
 	}
@@ -191,8 +240,12 @@ class AdminView : BaseView {
 		enum primaryField = PrototypedItem.primaryField;
 		
 		string a;
-		
-		a  = "<h1>" ~ PrototypedItem.modelCls.name ~ "</h1><table class='table table-striped'>" ~ adminTableHeader(fields, primaryField[0]) ~ "<tbody>";
+
+		if(parent) {
+			parent.title = PrototypedItem.modelCls.name;
+		}
+
+		a  = "<table class='table table-striped'>" ~ adminTableHeader(fields, primaryField[0]) ~ "<tbody>";
 		
 		foreach(item; items) {
 			a ~= "<tr>";
@@ -206,7 +259,7 @@ class AdminView : BaseView {
 		a ~= "</tbody></table>";
 		a ~= `<a class='btn btn-default' href='` ~ baseUrl ~ `/add'>Add</a>`;
 
-		if(useDefaultContainer) a = html5Container(`<div class="container"><div class="row"><div class="col-xs-12">` ~ a ~ `</div></div>`);
+		a = `<div class="container"><div class="row"><div class="col-xs-12">` ~ a ~ `</div></div>`;
 
 		return a;
 	}
