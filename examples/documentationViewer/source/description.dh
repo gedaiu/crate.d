@@ -104,7 +104,7 @@
 			descriptionCrumbs[j] = descriptionCrumbs[j].strip;
 
 			//look for links
-			auto urlReg = regex(r"(https?:\/\/)([a-z.-]/?)*");
+			auto urlReg = regex(r"(https?:\/\/)([a-z.-]/?)+(#[a-z-]*)?");
 
 			string createLink(Captures!(string) m) {
 			    return `<a href="` ~ m.hit ~ `">` ~ m.hit ~ `</a>`;

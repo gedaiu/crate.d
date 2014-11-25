@@ -111,8 +111,6 @@ template Item(Prototype, M) {
 	/**
 	 * The Prototype wrapper. Every Item is created by wrapping a Prototype class with this class. <code>ItemTemplate</code>
 	 * contains methods to manipulate the Prototype like save and delete. 
-	 * 
-	 * 
 	 */
 	class ItemTemplate : Prototype {
 		/**

@@ -213,7 +213,7 @@
   "name" : "crated.controller.base",
   "kind" : "module",
   "file" : "source/crated/controller/base.d",
-  "comment" : " Controller basic functionality\n\n Authors: Szabo Bogdan <szabobogdan@yahoo.com>\n Date: November 3, 2014\n License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.\n Copyright: Public Domain\n",
+  "comment" : " Provides a template to create controllers.\n\n Authors: Szabo Bogdan <szabobogdan@yahoo.com>\n Date: November 3, 2014\n License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.\n Copyright: Public Domain\n",
   "members" : [
    {
     "name" : "vibe.d",
@@ -238,7 +238,8 @@
    },
    {
     "kind" : "template",
-    "line" : 18,
+    "comment" : " Generate a crate.d controller.\n\n This template extends <code>ControllerCls</code> with methods that helps you to automate the vibe.d routing.\n More info about vibe.d routing can be found here: http://vibed.org/docs#http-routing.\n To create a crated Controller, you have to create a class with static methods marked with three attributes:\n\n - HttpRequest - Show that the method is a request callback\n - method - mark the request method that the callback will react. example: <code>method:GET</code>\n - node - mark the request URI that the callback will react. example: <code>node:/item/:id</code>\n\n Here is an example of a simple controller:\n\n Example:\n --------------------\n class MyControllerPrototype  {\n\n \t@(\"HttpRequest\", \"method:GET\", \"node:/item/:id\")\n \tstatic void index(HTTPServerRequest req, HTTPServerResponse res) {\n \t\t...\n \t}\n }\n\n alias MyController = Controller!MyControllerPrototype;\n\n shared static this()\n {\n \t//set the web server\n \tauto settings = new HTTPServerSettings;\n \tsettings.port = 8080;\n \tsettings.bindAddresses = [\"::1\", \"127.0.0.1\"];\n\n \tauto router = new URLRouter;\n \tauto sampleController = new MyController;\n\n \tsampleController.addRoutes(router);\n\n \tlistenHTTP(settings, router);\n \tlogInfo(\"Please open http://127.0.0.1:8080/ in your browser.\");\n }\n --------------------\n\n",
+    "line" : 60,
     "char" : 1,
     "name" : "Controller",
     "parameters" : [
@@ -251,14 +252,15 @@
      {
       "name" : "ControllerTemplate",
       "kind" : "class",
-      "line" : 20,
+      "comment" : "\n",
+      "line" : 63,
       "char" : 2,
       "members" : [
        {
         "name" : "requests",
         "kind" : "variable",
         "comment" : "The request attributes.\n",
-        "line" : 24,
+        "line" : 67,
         "char" : 19,
         "storageClass" : [
          "enum"
@@ -269,8 +271,8 @@
        {
         "name" : "addRoutes",
         "kind" : "function",
-        "comment" : " Init the router\n",
-        "line" : 29,
+        "comment" : " Set the Controller callbacks to a vibe.d router\n",
+        "line" : 72,
         "char" : 8,
         "type" : "void(ref URLRouter router, bool callSuper = true)",
         "parameters" : [
@@ -287,13 +289,13 @@
           "default" : "true"
          }
         ],
-        "endline" : 36,
+        "endline" : 79,
         "endchar" : 3
        },
        {
         "kind" : "template",
-        "comment" : "\n",
-        "line" : 41,
+        "comment" : "Private:\n",
+        "line" : 82,
         "char" : 16,
         "name" : "addRoutes",
         "parameters" : [
@@ -307,8 +309,8 @@
          {
           "name" : "addRoutes",
           "kind" : "function",
-          "comment" : "\n",
-          "line" : 41,
+          "comment" : "Private:\n",
+          "line" : 82,
           "char" : 16,
           "type" : "void(ref URLRouter router)",
           "parameters" : [
@@ -320,7 +322,7 @@
             ]
            }
           ],
-          "endline" : 52,
+          "endline" : 93,
           "endchar" : 3
          }
         ]
@@ -328,9 +330,9 @@
        {
         "name" : "route",
         "kind" : "function",
-        "comment" : "\n",
-        "line" : 57,
-        "char" : 8,
+        "comment" : "Private:\n",
+        "line" : 96,
+        "char" : 16,
         "type" : "void(void function(HTTPServerRequest, HTTPServerResponse) cb, string method, string path, ref URLRouter router)",
         "parameters" : [
          {
@@ -353,14 +355,14 @@
           ]
          }
         ],
-        "endline" : 64,
+        "endline" : 103,
         "endchar" : 3
        },
        {
         "name" : "valueOf",
         "kind" : "function",
-        "comment" : " Get the value of an attribute. An atribute value is set like this:\n\n Example:\n -------------\n @(\"field\", \"custom attribute:custom value\")\n string name;\n -------------\n",
-        "line" : 76,
+        "comment" : " Get an attribute value. An atribute value is set like this:\n\n Example:\n -------------\n @(\"field\", \"custom attribute:custom value\")\n string name;\n -------------\n",
+        "line" : 115,
         "char" : 17,
         "storageClass" : [
          "static"
@@ -376,7 +378,7 @@
           "type" : "string"
          }
         ],
-        "endline" : 91,
+        "endline" : 130,
         "endchar" : 3
        }
       ]
@@ -384,86 +386,10 @@
      {
       "name" : "Controller",
       "kind" : "alias",
-      "line" : 94,
+      "comment" : "Private:\n",
+      "line" : 134,
       "char" : 2,
       "type" : "ControllerTemplate"
-     }
-    ]
-   },
-   {
-    "name" : "HttpRequest",
-    "kind" : "struct",
-    "comment" : "\n",
-    "line" : 101,
-    "char" : 1,
-    "members" : [
-     {
-      "name" : "method",
-      "kind" : "variable",
-      "line" : 102,
-      "char" : 9,
-      "deco" : "Aya",
-      "offset" : 0
-     },
-     {
-      "name" : "path",
-      "kind" : "variable",
-      "line" : 103,
-      "char" : 9,
-      "deco" : "Aya",
-      "offset" : 16
-     },
-     {
-      "name" : "cb",
-      "kind" : "variable",
-      "line" : 104,
-      "char" : 8,
-      "deco" : "Pv",
-      "offset" : 32
-     },
-     {
-      "name" : "this",
-      "kind" : "constructor",
-      "line" : 106,
-      "char" : 2,
-      "deco" : "FNcAyaAyaZS6crated10controller4base11HttpRequest",
-      "originalType" : "ref (string method, string path)",
-      "parameters" : [
-       {
-        "name" : "method",
-        "deco" : "Aya"
-       },
-       {
-        "name" : "path",
-        "deco" : "Aya"
-       }
-      ],
-      "endline" : 122,
-      "endchar" : 3
-     },
-     {
-      "name" : "this",
-      "kind" : "constructor",
-      "line" : 125,
-      "char" : 2,
-      "deco" : "FNcAyaAyaPvZS6crated10controller4base11HttpRequest",
-      "originalType" : "ref (string method, string path, void* cb)",
-      "parameters" : [
-       {
-        "name" : "method",
-        "deco" : "Aya"
-       },
-       {
-        "name" : "path",
-        "deco" : "Aya"
-       },
-       {
-        "name" : "cb",
-        "deco" : "Pv"
-       }
-      ],
-      "endline" : 127,
-      "endchar" : 2
      }
     ]
    }
@@ -675,15 +601,15 @@
      {
       "name" : "ItemTemplate",
       "kind" : "class",
-      "comment" : " The Prototype wrapper. Every Item is created by wrapping a Prototype class with this class. <code>ItemTemplate</code>\n contains methods to manipulate the Prototype like save and delete.\n\n\n",
-      "line" : 117,
+      "comment" : " The Prototype wrapper. Every Item is created by wrapping a Prototype class with this class. <code>ItemTemplate</code>\n contains methods to manipulate the Prototype like save and delete.\n",
+      "line" : 115,
       "char" : 2,
       "members" : [
        {
         "name" : "myModel",
         "kind" : "variable",
         "comment" : " Private: The parent model\n",
-        "line" : 121,
+        "line" : 119,
         "char" : 13,
         "type" : "M"
        },
@@ -691,7 +617,7 @@
         "name" : "modelCls",
         "kind" : "alias",
         "comment" : " An alias to the model type\n",
-        "line" : 126,
+        "line" : 124,
         "char" : 3,
         "type" : "M"
        },
@@ -699,7 +625,7 @@
         "name" : "this",
         "kind" : "constructor",
         "comment" : " Default constructor\n",
-        "line" : 131,
+        "line" : 129,
         "char" : 3,
         "type" : "(M parent)",
         "parameters" : [
@@ -708,13 +634,13 @@
           "type" : "M"
          }
         ],
-        "endline" : 133,
+        "endline" : 131,
         "endchar" : 3
        },
        {
         "kind" : "template",
         "comment" : " Copy constructor\n",
-        "line" : 138,
+        "line" : 136,
         "char" : 3,
         "name" : "this",
         "parameters" : [
@@ -727,7 +653,7 @@
          {
           "name" : "this",
           "kind" : "constructor",
-          "line" : 138,
+          "line" : 136,
           "char" : 3,
           "type" : "(T someItem, M parent)",
           "parameters" : [
@@ -740,7 +666,7 @@
             "type" : "M"
            }
           ],
-          "endline" : 141,
+          "endline" : 139,
           "endchar" : 3
          }
         ]
@@ -748,7 +674,7 @@
        {
         "kind" : "template",
         "comment" : " Copy data from an object that have the same fields\n",
-        "line" : 146,
+        "line" : 144,
         "char" : 8,
         "name" : "copy",
         "parameters" : [
@@ -767,7 +693,7 @@
           "name" : "copy",
           "kind" : "function",
           "comment" : " Copy data from an object that have the same fields\n",
-          "line" : 146,
+          "line" : 144,
           "char" : 8,
           "type" : "void(T someItem)",
           "parameters" : [
@@ -776,7 +702,7 @@
             "type" : "T"
            }
           ],
-          "endline" : 191,
+          "endline" : 189,
           "endchar" : 3
          }
         ]
@@ -785,7 +711,7 @@
         "name" : "fields",
         "kind" : "variable",
         "comment" : " A pair of a field name and type to be accessed at runtime\n",
-        "line" : 196,
+        "line" : 194,
         "char" : 26,
         "storageClass" : [
          "enum"
@@ -797,7 +723,7 @@
         "name" : "primaryField",
         "kind" : "variable",
         "comment" : " A pair of a field name and type to be accessed at runtime\n",
-        "line" : 202,
+        "line" : 200,
         "char" : 24,
         "storageClass" : [
          "enum"
@@ -809,7 +735,7 @@
         "name" : "attributes",
         "kind" : "variable",
         "comment" : "The field attributes.\n",
-        "line" : 206,
+        "line" : 204,
         "char" : 19,
         "storageClass" : [
          "enum"
@@ -821,7 +747,7 @@
         "name" : "enumValues",
         "kind" : "variable",
         "comment" : "All the enum fields with their keys\n",
-        "line" : 210,
+        "line" : 208,
         "char" : 25,
         "storageClass" : [
          "enum"
@@ -832,7 +758,7 @@
        {
         "kind" : "template",
         "comment" : " Generate the values for the enums from the current item\n",
-        "line" : 215,
+        "line" : 213,
         "char" : 25,
         "name" : "getEnumValues",
         "parameters" : [
@@ -848,10 +774,10 @@
           "name" : "getEnumValues",
           "kind" : "function",
           "comment" : " Generate the values for the enums from the current item\n",
-          "line" : 215,
+          "line" : 213,
           "char" : 25,
           "type" : "string()",
-          "endline" : 242,
+          "endline" : 240,
           "endchar" : 3
          }
         ]
@@ -860,50 +786,50 @@
         "name" : "parent",
         "kind" : "function",
         "comment" : " The parent model\n",
-        "line" : 248,
+        "line" : 246,
         "char" : 5,
         "type" : "@property M()",
-        "endline" : 250,
+        "endline" : 248,
         "endchar" : 3
        },
        {
         "name" : "save",
         "kind" : "function",
         "comment" : " Save item\n",
-        "line" : 255,
+        "line" : 253,
         "char" : 8,
         "type" : "void()",
-        "endline" : 257,
+        "endline" : 255,
         "endchar" : 3
        },
        {
         "name" : "remove",
         "kind" : "function",
         "comment" : " Delete item from the parent model\n",
-        "line" : 262,
+        "line" : 260,
         "char" : 8,
         "type" : "void()",
-        "endline" : 264,
+        "endline" : 262,
         "endchar" : 3
        },
        {
         "name" : "toString",
         "kind" : "function",
         "comment" : " Convert item to string\n",
-        "line" : 269,
+        "line" : 267,
         "char" : 19,
         "storageClass" : [
          "override"
         ],
         "type" : "string()",
-        "endline" : 277,
+        "endline" : 275,
         "endchar" : 3
        },
        {
         "name" : "PrimaryKeyType",
         "kind" : "alias",
         "comment" : " Private: The primary key type alias\n",
-        "line" : 282,
+        "line" : 280,
         "char" : 11,
         "type" : "typeof(__traits(getMember, this, primaryField[0]))"
        },
@@ -911,16 +837,16 @@
         "name" : "primaryKeyValue",
         "kind" : "function",
         "comment" : " Get the primary field value\n",
-        "line" : 288,
+        "line" : 286,
         "char" : 18,
         "type" : "@property PrimaryKeyType()",
-        "endline" : 290,
+        "endline" : 288,
         "endchar" : 3
        },
        {
         "kind" : "template",
         "comment" : " Check if a field has a certain attribute\n",
-        "line" : 295,
+        "line" : 293,
         "char" : 15,
         "name" : "fieldHas",
         "parameters" : [
@@ -934,7 +860,7 @@
           "name" : "fieldHas",
           "kind" : "function",
           "comment" : " Check if a field has a certain attribute\n",
-          "line" : 295,
+          "line" : 293,
           "char" : 15,
           "type" : "bool(T fieldName, string attribute)",
           "parameters" : [
@@ -947,7 +873,7 @@
             "type" : "string"
            }
           ],
-          "endline" : 313,
+          "endline" : 311,
           "endchar" : 3
          }
         ]
@@ -956,7 +882,7 @@
         "name" : "valueOf",
         "kind" : "function",
         "comment" : " Get the value of an attribute. An atribute value is set like this:\n\n Example:\n -------------\n @(\"field\", \"custom attribute:custom value\")\n string name;\n -------------\n",
-        "line" : 324,
+        "line" : 322,
         "char" : 17,
         "storageClass" : [
          "static"
@@ -972,14 +898,14 @@
           "type" : "string"
          }
         ],
-        "endline" : 339,
+        "endline" : 337,
         "endchar" : 3
        },
        {
         "name" : "opEquals",
         "kind" : "function",
         "comment" : " == operator overload. It will check if the fields of the current Item are equals to the other one.\n",
-        "line" : 344,
+        "line" : 342,
         "char" : 17,
         "storageClass" : [
          "override"
@@ -991,13 +917,13 @@
           "type" : "Object"
          }
         ],
-        "endline" : 346,
+        "endline" : 344,
         "endchar" : 3
        },
        {
         "kind" : "template",
         "comment" : " Get a field value as string. Very useful in views\n",
-        "line" : 351,
+        "line" : 349,
         "char" : 10,
         "name" : "fieldAsString",
         "parameters" : [
@@ -1012,10 +938,10 @@
           "name" : "fieldAsString",
           "kind" : "function",
           "comment" : " Get a field value as string. Very useful in views\n",
-          "line" : 351,
+          "line" : 349,
           "char" : 10,
           "type" : "string()",
-          "endline" : 353,
+          "endline" : 351,
           "endchar" : 3
          }
         ]
@@ -1023,7 +949,7 @@
        {
         "kind" : "template",
         "comment" : " Check if the fields are equal\n",
-        "line" : 358,
+        "line" : 356,
         "char" : 16,
         "name" : "isFieldEqual",
         "parameters" : [
@@ -1042,7 +968,7 @@
           "name" : "isFieldEqual",
           "kind" : "function",
           "comment" : " Check if the fields are equal\n",
-          "line" : 358,
+          "line" : 356,
           "char" : 16,
           "type" : "bool(T o)",
           "parameters" : [
@@ -1051,7 +977,7 @@
             "type" : "T"
            }
           ],
-          "endline" : 369,
+          "endline" : 367,
           "endchar" : 3
          }
         ]
@@ -1060,13 +986,13 @@
         "name" : "PropertyJson",
         "kind" : "function",
         "comment" : " Private: Get code that generate the Json\n",
-        "line" : 374,
+        "line" : 372,
         "char" : 25,
         "storageClass" : [
          "static"
         ],
         "type" : "string()",
-        "endline" : 399,
+        "endline" : 397,
         "endchar" : 3
        }
       ]
@@ -1074,7 +1000,7 @@
      {
       "name" : "Item",
       "kind" : "alias",
-      "line" : 402,
+      "line" : 400,
       "char" : 2,
       "type" : "ItemTemplate"
      }
@@ -1082,7 +1008,7 @@
    },
    {
     "kind" : "template",
-    "line" : 405,
+    "line" : 403,
     "char" : 1,
     "name" : "Item",
     "parameters" : [
@@ -1099,7 +1025,7 @@
      {
       "name" : "Item",
       "kind" : "alias",
-      "line" : 406,
+      "line" : 404,
       "char" : 2,
       "type" : "Item!(Prototype, typeof(M))"
      }
@@ -1108,7 +1034,7 @@
    {
     "kind" : "template",
     "comment" : " Create a crated Model. A model is responsable with manipulating Items. It save, delete and query the\n Items into a db or other storage type.\n\n\n =Extending\n\n You can extend a model like this:\n\n Example:\n -----------------\n class MyModel : Model!Prototype {\n\n \tItemCls[] customQuery() {\n \t\t....\n \t}\n\n }\n -----------------\n\n\n =Creating new Item templates\n\n ==Step 1\n\n Create a new template that take a Type as parameter;\n\n Example:\n ----------\n template CustomModel(Prototype, string modelName = \"Unknown\") {\n\n\n }\n ----------\n\n ==Step 2\n\n Add a new class in the template and set the template alias to this class;\n\n Example:\n ----------\n template CustomModel(Prototype, string modelName = \"Unknown\") {\n\n\tclass CustomModelTemplate {\n\t\tenum string name = modelName;\n\t\talias ItemCls = Item!(Prototype, CustomModelTemplate);\n\n\t}\n\n\talias CustomModel = CustomModelTemplate;\n }\n ----------\n\n ==Step 3\n\n Mix in the template that checks if your class implements all the required methods and add their implementation.\n You can find more information about those metods in <code>ModelTemplate</code> class;\n\n Example:\n ----------\n template CustomModel(Prototype, string modelName = \"Unknown\") {\n\n\tclass CustomModelTemplate {\n\t\tenum string name = modelName;\n\t\talias ItemCls = Item!(Prototype, CustomModelTemplate);\n\n\t}\n\n \tmixin MixCheckModelFields!CustomModelTemplate;\n\talias CustomModel = CustomModelTemplate;\n }\n ----------\n\n ==Step 4\n\n If you don't want to create a new template from scratch, you can extend the base Model template you can do it like this:\n\n Example:\n ----------\n template CustomModel(Prototype, string modelName = \"Unknown\") {\n\n\tclass CustomModelTemplate : Model!Prototype {\n\t\tenum string name = modelName;\n\n\t}\n\n \tmixin MixCheckModelFields!CustomModelTemplate;\n\talias CustomModel = CustomModelTemplate;\n }\n ----------\n\n\n",
-    "line" : 502,
+    "line" : 500,
     "char" : 1,
     "name" : "Model",
     "parameters" : [
@@ -1128,14 +1054,14 @@
       "name" : "ModelTemplate",
       "kind" : "class",
       "comment" : " A basic model implementation without any persistence\n",
-      "line" : 507,
+      "line" : 505,
       "char" : 2,
       "members" : [
        {
         "name" : "ItemCls",
         "kind" : "alias",
         "comment" : "An alias to the item class type.\n",
-        "line" : 510,
+        "line" : 508,
         "char" : 3,
         "type" : "Item!(Prototype, ModelTemplate)"
        },
@@ -1143,7 +1069,7 @@
         "name" : "name",
         "kind" : "variable",
         "comment" : "The model name.\n",
-        "line" : 513,
+        "line" : 511,
         "char" : 15,
         "storageClass" : [
          "enum"
@@ -1155,7 +1081,7 @@
         "name" : "items",
         "kind" : "variable",
         "comment" : "Protected: item container\n",
-        "line" : 516,
+        "line" : 514,
         "char" : 23,
         "type" : "ItemCls[]"
        },
@@ -1163,7 +1089,7 @@
         "name" : "save",
         "kind" : "function",
         "comment" : " Add or update an element\n",
-        "line" : 521,
+        "line" : 519,
         "char" : 8,
         "type" : "void(ItemCls item)",
         "parameters" : [
@@ -1172,13 +1098,13 @@
           "type" : "ItemCls"
          }
         ],
-        "endline" : 535,
+        "endline" : 533,
         "endchar" : 3
        },
        {
         "kind" : "template",
         "comment" : " Remove an existing item\n",
-        "line" : 540,
+        "line" : 538,
         "char" : 8,
         "name" : "remove",
         "parameters" : [
@@ -1192,7 +1118,7 @@
           "name" : "remove",
           "kind" : "function",
           "comment" : " Remove an existing item\n",
-          "line" : 540,
+          "line" : 538,
           "char" : 8,
           "type" : "void(T item)",
           "parameters" : [
@@ -1201,7 +1127,7 @@
             "type" : "T"
            }
           ],
-          "endline" : 542,
+          "endline" : 540,
           "endchar" : 3
          }
         ]
@@ -1210,46 +1136,46 @@
         "name" : "truncate",
         "kind" : "function",
         "comment" : " Remove all items\n",
-        "line" : 547,
+        "line" : 545,
         "char" : 8,
         "type" : "void()",
-        "endline" : 549,
+        "endline" : 547,
         "endchar" : 3
        },
        {
         "name" : "createItem",
         "kind" : "function",
         "comment" : " Create a new item. The returned item will not be\n automatically added to the model. If you want to add it to a model\n call Item.save()\n",
-        "line" : 556,
+        "line" : 554,
         "char" : 11,
         "type" : "ItemCls()",
-        "endline" : 560,
+        "endline" : 558,
         "endchar" : 3
        },
        {
         "name" : "all",
         "kind" : "function",
         "comment" : " Retrieve all items\n",
-        "line" : 565,
+        "line" : 563,
         "char" : 13,
         "type" : "ItemCls[]()",
-        "endline" : 567,
+        "endline" : 565,
         "endchar" : 3
        },
        {
         "name" : "query",
         "kind" : "function",
         "comment" : " Query the model. This is unsupported for the base model, but if you want to use a database as storage,\n you should implement this method in your model.\n",
-        "line" : 573,
+        "line" : 571,
         "char" : 13,
         "type" : "ItemCls[]()",
-        "endline" : 575,
+        "endline" : 573,
         "endchar" : 3
        },
        {
         "kind" : "template",
         "comment" : " Count an item set\n",
-        "line" : 580,
+        "line" : 578,
         "char" : 9,
         "name" : "length",
         "parameters" : [
@@ -1268,7 +1194,7 @@
           "name" : "length",
           "kind" : "function",
           "comment" : " Count an item set\n",
-          "line" : 580,
+          "line" : 578,
           "char" : 9,
           "type" : "ulong(T value)",
           "parameters" : [
@@ -1277,7 +1203,7 @@
             "type" : "T"
            }
           ],
-          "endline" : 590,
+          "endline" : 588,
           "endchar" : 3
          }
         ]
@@ -1286,16 +1212,16 @@
         "name" : "length",
         "kind" : "function",
         "comment" : " Count all items\n",
-        "line" : 595,
+        "line" : 593,
         "char" : 9,
         "type" : "ulong()",
-        "endline" : 597,
+        "endline" : 595,
         "endchar" : 3
        },
        {
         "kind" : "template",
         "comment" : " Find all items that match the search criteria\n",
-        "line" : 602,
+        "line" : 600,
         "char" : 13,
         "name" : "getBy",
         "parameters" : [
@@ -1314,7 +1240,7 @@
           "name" : "getBy",
           "kind" : "function",
           "comment" : " Find all items that match the search criteria\n",
-          "line" : 602,
+          "line" : 600,
           "char" : 13,
           "type" : "ItemCls[](T value)",
           "parameters" : [
@@ -1323,7 +1249,7 @@
             "type" : "T"
            }
           ],
-          "endline" : 614,
+          "endline" : 612,
           "endchar" : 3
          }
         ]
@@ -1331,7 +1257,7 @@
        {
         "kind" : "template",
         "comment" : " Retrieve the first item that match the search criteria\n",
-        "line" : 619,
+        "line" : 617,
         "char" : 11,
         "name" : "getOneBy",
         "parameters" : [
@@ -1350,7 +1276,7 @@
           "name" : "getOneBy",
           "kind" : "function",
           "comment" : " Retrieve the first item that match the search criteria\n",
-          "line" : 619,
+          "line" : 617,
           "char" : 11,
           "type" : "ItemCls(T value)",
           "parameters" : [
@@ -1359,7 +1285,7 @@
             "type" : "T"
            }
           ],
-          "endline" : 629,
+          "endline" : 627,
           "endchar" : 3
          }
         ]
@@ -1368,13 +1294,13 @@
         "name" : "toString",
         "kind" : "function",
         "comment" : " Convert the items to a Json string\n",
-        "line" : 634,
+        "line" : 632,
         "char" : 19,
         "storageClass" : [
          "override"
         ],
         "type" : "string()",
-        "endline" : 636,
+        "endline" : 634,
         "endchar" : 3
        }
       ]
@@ -1383,13 +1309,13 @@
       "name" : "MixCheckModelFields!ModelTemplate",
       "kind" : "mixin",
       "comment" : "Private:\n",
-      "line" : 640,
+      "line" : 638,
       "char" : 2
      },
      {
       "name" : "Model",
       "kind" : "alias",
-      "line" : 642,
+      "line" : 640,
       "char" : 2,
       "type" : "ModelTemplate"
      }
@@ -1398,7 +1324,7 @@
    {
     "kind" : "template",
     "comment" : " This template is used to check if a model has declared all the methods.\n\n Example:\n ----------------------\n class MyModel {\n \tmixin MixCheckFieldsModel!MyModel;\n }\n ----------------------\n\n Will show messages on compile for every missing member.\n\n",
-    "line" : 660,
+    "line" : 658,
     "char" : 7,
     "name" : "MixCheckModelFields",
     "parameters" : [
@@ -1411,7 +1337,7 @@
      {
       "kind" : "template",
       "comment" : " Generate code that checks if a certain method is declared\n",
-      "line" : 665,
+      "line" : 663,
       "char" : 17,
       "name" : "_genChkMember",
       "parameters" : [
@@ -1430,10 +1356,10 @@
         "name" : "_genChkMember",
         "kind" : "function",
         "comment" : " Generate code that checks if a certain method is declared\n",
-        "line" : 665,
+        "line" : 663,
         "char" : 17,
         "type" : "string()",
-        "endline" : 671,
+        "endline" : 669,
         "endchar" : 2
        }
       ]
