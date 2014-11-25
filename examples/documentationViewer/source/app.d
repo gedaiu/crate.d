@@ -2,7 +2,7 @@
 
 import crated.model.base;
 import crated.view.base;
-import crated.controller.vibed;
+import crated.controller.base;
 
 import std.stdio;
 import std.file;
@@ -19,7 +19,7 @@ class DocsController {
 	/**
 	 * The index page page
 	 */
-	@HttpRequest("GET", "/docs")
+	@("HttpRequest", "method:GET", "node:/docs")
 	static void docPage(HTTPServerRequest req, HTTPServerResponse res) {
 		auto docsModel = new DocsModuleModel(docsJsonPath);
 		
@@ -37,7 +37,7 @@ class DocsController {
 	/**
 	 * ditto
 	 */
-	@HttpRequest("GET", "/docs/")
+	@("HttpRequest", "method:GET", "node:/docs/")
 	static void docPage2(HTTPServerRequest req, HTTPServerResponse res) {
 		docPage(req, res);
 	}
@@ -45,7 +45,7 @@ class DocsController {
 	/**
 	 * The list page
 	 */
-	@HttpRequest("GET", "/docs/*")
+	@("HttpRequest", "method:GET", "node:/docs/*")
 	static void docMemberPage(HTTPServerRequest req, HTTPServerResponse res) {
 		auto docsModel = new DocsModuleModel(docsJsonPath);
 
@@ -68,9 +68,6 @@ class DocsController {
 			res.writeBody( view.renderDh!"docs.dh"(data), "text/html; charset=UTF-8");
 		}
 	}
-	
-	//insert controller code
-	mixin MixVibedController!(DocsController);
 }
 
 
@@ -90,7 +87,7 @@ shared static this()
 	
 	auto router = new URLRouter;
 
-	auto docsController = new DocsController;
+	auto docsController = new Controller!DocsController;
 	
 	docsController.addRoutes(router);
 	router.get("*", serveStaticFiles("./public/"));
