@@ -67,7 +67,7 @@
 
 		<h3>
 			<?  
-				writeln(data[i].returnType, " ", data[i].name); 
+				writeln(data[i].storageClass, " ", data[i].returnType, " ", data[i].name); 
 
 				if(data[i].kind == "function" || data[i].kind == "template" || data[i].kind == "template function") {
 					write("( ",title," )");
@@ -109,7 +109,7 @@
 
 						if(descriptionEnd != -1) description = description[0..descriptionEnd];
 
-						contentList ~= `<li><a href="`~path~`">`~item.returnType ~ " <b>" ~item.name ~ "</b>" ~ item.paramText ~ "</a> - " ~ description ~ `. <span class="label label-`~label~`">` ~ item.kind ~`</span></li>`;
+						contentList ~= `<li>` ~ item.storageClass ~ `<a href="`~path~`">`~item.returnType ~ " <b>" ~item.name ~ "</b>" ~ item.paramText ~ "</a> - " ~ description ~ `. <span class="label label-`~label~`">` ~ item.kind ~`</span></li>`;
 						//contentList ~= `<li>`~item.returnType ~ " <b>" ~item.name ~"</b>"~ item.paramText ~ " - " ~ description ~ `. <span class="label label-`~label~`">`~ item.kind ~`</span></li>`;
 					
 						found[item.path] = true;

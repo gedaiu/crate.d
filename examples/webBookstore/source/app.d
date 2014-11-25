@@ -8,7 +8,7 @@ import crated.controller.datamanager;
 import std.stdio;
 
 /**
- * The project model
+ * A book item prototype
  */
 class BookPrototype {
 	
@@ -40,7 +40,7 @@ class BookPrototype {
 }
 
 /**
- * The project model
+ * Other products prototype
  */
 class OtherProductsPrototype {
 	
@@ -71,7 +71,7 @@ class OtherProductsPrototype {
  */
 shared static this()
 {	
-	//setup the database
+	//setup the database connection string
 	crated.model.mongo.dbAddress = "127.0.0.1";
 
 	//init the data	

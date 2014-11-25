@@ -2,6 +2,7 @@
 	import std.array;
 	import std.string;
 	import std.conv;
+	import std.regex;
 
 	auto descriptionCrumbs = data.split("\n");
 	string glue = "";
@@ -100,8 +101,19 @@
 
 		//display other lines
 		if(!isCustomDisplay) {
-
 			descriptionCrumbs[j] = descriptionCrumbs[j].strip;
+
+			//look for links
+			auto urlReg = regex(r"(https?:\/\/)([a-z.-]/?)*");
+
+			string createLink(Captures!(string) m) {
+			    return `<a href="` ~ m.hit ~ `">` ~ m.hit ~ `</a>`;
+			}
+
+			auto urlText = replaceAll!(createLink)(descriptionCrumbs[j], urlReg);
+
+			descriptionCrumbs[j] = urlText;
+
 
 			if(descriptionCrumbs[j] != "") write(descriptionCrumbs[j], " ");
 									else write("</p><p>");

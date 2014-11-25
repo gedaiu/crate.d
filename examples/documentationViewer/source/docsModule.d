@@ -57,6 +57,9 @@ class ModuleItem {
 	@("field")
 	bool isPrivate;
 
+	@("field")
+	string storageClass;
+
 	this() {}
 
 	this(const Json data, const string path, DocsModuleModel parent) {
@@ -79,6 +82,16 @@ class ModuleItem {
 			if(splitIndex != -1) {
 				this.returnType = type[0..splitIndex];
 				this.paramText = type[splitIndex..$];
+			} else {
+				this.returnType = type;
+			}
+		}
+
+		if("storageClass" in data) {
+			if(data["storageClass"].type == Json.Type.array) {
+				foreach(elm; data["storageClass"]) {
+					this.storageClass ~= elm.to!string ~ " ";
+				}
 			}
 		}
 
@@ -90,10 +103,6 @@ class ModuleItem {
 			if(data.members.length == 1 && data.members[0].kind.to!string == "function" && data.members[0].name.to!string == this.name) {
 				this.kind = "template function";
 			}
-		}
-
-		if(this.kind == "variable") {
-			this.returnType = data["type"].to!string;
 		}
 
 		string templateParam;

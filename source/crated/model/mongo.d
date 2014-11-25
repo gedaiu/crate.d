@@ -1,5 +1,5 @@
 ﻿/**
- * Mongo implementation model
+ * A model that use mongo db database to save the data.
  * 
  * Authors: Szabo Bogdan <szabobogdan@yahoo.com>
  * Date: November 3, 2014
@@ -13,20 +13,67 @@ public import std.conv;
 import vibe.d;
 
 /**
+ * Mongo connection String URI.
+ * Find more here: http://docs.mongodb.org/manual/reference/connection-string/
  * 
+ * Example:
+ * ---------------
+ * //setup the database connection string
+ * crated.model.mongo.dbAddress = "127.0.0.1";
+ * 
+ * //init the data	
+ * alias BookModel = MongoModel!(BookPrototype, "test.books", "Books");
+ * ---------------
  */
 shared static string dbAddress;
 
+/**
+ * Create a mongo model. More general informations about the Models and Items can be found in crates.model.base.
+ * 
+ * The MongoModel template takes three parameters:
+ *  - Prototype - is the item prototype that will be stored in the database
+ *  - string CollectionName - the collection where the items will be stored
+ *  - string modelName - the model name used in various situations to identify the model type
+ * 
+ * Here is an example of how you can use a Mongo model:
+ * 
+ * Example:
+ * ---------------
+ * class BookPrototype {
+ * 
+ * 	@("field", "primary")
+ * 	string _id;
+ * 	
+ * 	@("field", "required") 
+ * 	string name = "unknown";
+ * 	
+ * 	@("field", "required") 
+ * 	string author = "unknown";
+ * }
+ * 
+ * //create the mongo model
+ * alias BookModel = MongoModel!(BookPrototype, "test.books", "Books");
+ * ---------------
+ */
 template MongoModel(Prototype, string collectionName, string modelName = "Unknown") {
 
+	///Private:
 	private MongoClient client;
+	///Private:
 	private MongoCollection collection;
 
+	/**
+	 * Mongo model implementation
+	 */
 	class MongoModelTemplate {
+
+		///An alias to the item class type.
 		alias ItemCls = Item!(Prototype, MongoModelTemplate);
 
+		///Model name
 		enum string name = modelName;
 
+		///Create the object an init the connection
 		this() {
 			client = connectMongoDB(dbAddress);
 			collection = client.getCollection(collectionName);
@@ -77,6 +124,7 @@ template MongoModel(Prototype, string collectionName, string modelName = "Unknow
 			}
 		}
 
+		///Private: copy field values from query to item
 		private void setFieldsInto(string[][] fields)(ref Bson query, const ItemCls item) {
 
 			static if(fields.length == 1) {
@@ -267,7 +315,7 @@ template MongoModel(Prototype, string collectionName, string modelName = "Unknow
 		}
 	}
 
-
+	///Private: check if we implemented all required fields
 	mixin MixCheckModelFields!MongoModelTemplate;
 	alias MongoModel = MongoModelTemplate;
 }

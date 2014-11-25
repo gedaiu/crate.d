@@ -1,0 +1,2839 @@
+[
+ {
+  "name" : "crated.controller.admin",
+  "kind" : "module",
+  "file" : "source/crated/controller/admin.d",
+  "comment" : " Manage models easily\n\n Authors: Szabo Bogdan <szabobogdan@yahoo.com>\n Date: November 3, 2014\n License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.\n Copyright: Public Domain\n",
+  "members" : [
+   {
+    "name" : "crated.view.admin",
+    "kind" : "import",
+    "line" : 11,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "vibe.d",
+    "kind" : "import",
+    "line" : 12,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "kind" : "template",
+    "comment" : " The project controller\n",
+    "line" : 18,
+    "char" : 1,
+    "name" : "AdminController",
+    "parameters" : [
+     {
+      "name" : "baseUrl",
+      "kind" : "value",
+      "deco" : "Aya"
+     },
+     {
+      "name" : "model",
+      "kind" : "alias"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "AdminController",
+      "kind" : "alias",
+      "line" : 19,
+      "char" : 2,
+      "type" : "AdminController!(baseUrl, typeof(model))"
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "line" : 22,
+    "char" : 1,
+    "name" : "AdminController",
+    "parameters" : [
+     {
+      "name" : "baseUrl",
+      "kind" : "value",
+      "deco" : "Aya"
+     },
+     {
+      "name" : "Model",
+      "kind" : "type"
+     },
+     {
+      "name" : "ContainerCls",
+      "kind" : "type",
+      "default" : "BaseView"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "Prototype",
+      "kind" : "alias",
+      "line" : 24,
+      "char" : 2,
+      "type" : "Model.ItemCls"
+     },
+     {
+      "name" : "AdminControllerTemplate",
+      "kind" : "class",
+      "line" : 26,
+      "char" : 2,
+      "members" : [
+       {
+        "name" : "index",
+        "kind" : "function",
+        "comment" : " The list page\n",
+        "line" : 32,
+        "char" : 15,
+        "storageClass" : [
+         "static"
+        ],
+        "type" : "void(HTTPServerRequest req, HTTPServerResponse res)",
+        "parameters" : [
+         {
+          "name" : "req",
+          "type" : "HTTPServerRequest"
+         },
+         {
+          "name" : "res",
+          "type" : "HTTPServerResponse"
+         }
+        ],
+        "endline" : 43,
+        "endchar" : 3
+       },
+       {
+        "name" : "edit",
+        "kind" : "function",
+        "comment" : " The edit page\n",
+        "line" : 49,
+        "char" : 15,
+        "storageClass" : [
+         "static"
+        ],
+        "type" : "void(HTTPServerRequest req, HTTPServerResponse res)",
+        "parameters" : [
+         {
+          "name" : "req",
+          "type" : "HTTPServerRequest"
+         },
+         {
+          "name" : "res",
+          "type" : "HTTPServerResponse"
+         }
+        ],
+        "endline" : 62,
+        "endchar" : 3
+       },
+       {
+        "name" : "add",
+        "kind" : "function",
+        "comment" : " The add item page\n",
+        "line" : 68,
+        "char" : 15,
+        "storageClass" : [
+         "static"
+        ],
+        "type" : "void(HTTPServerRequest req, HTTPServerResponse res)",
+        "parameters" : [
+         {
+          "name" : "req",
+          "type" : "HTTPServerRequest"
+         },
+         {
+          "name" : "res",
+          "type" : "HTTPServerResponse"
+         }
+        ],
+        "endline" : 80,
+        "endchar" : 3
+       },
+       {
+        "name" : "save",
+        "kind" : "function",
+        "comment" : " The save item action\n",
+        "line" : 87,
+        "char" : 15,
+        "storageClass" : [
+         "static"
+        ],
+        "type" : "void(HTTPServerRequest req, HTTPServerResponse res)",
+        "parameters" : [
+         {
+          "name" : "req",
+          "type" : "HTTPServerRequest"
+         },
+         {
+          "name" : "res",
+          "type" : "HTTPServerResponse"
+         }
+        ],
+        "endline" : 100,
+        "endchar" : 3
+       },
+       {
+        "name" : "delete_",
+        "kind" : "function",
+        "comment" : " The delete item action\n",
+        "line" : 106,
+        "char" : 15,
+        "storageClass" : [
+         "static"
+        ],
+        "type" : "void(HTTPServerRequest req, HTTPServerResponse res)",
+        "parameters" : [
+         {
+          "name" : "req",
+          "type" : "HTTPServerRequest"
+         },
+         {
+          "name" : "res",
+          "type" : "HTTPServerResponse"
+         }
+        ],
+        "endline" : 116,
+        "endchar" : 3
+       }
+      ]
+     },
+     {
+      "name" : "AdminController",
+      "kind" : "alias",
+      "line" : 119,
+      "char" : 2,
+      "type" : "AdminControllerTemplate"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name" : "crated.controller.base",
+  "kind" : "module",
+  "file" : "source/crated/controller/base.d",
+  "comment" : " Controller basic functionality\n\n Authors: Szabo Bogdan <szabobogdan@yahoo.com>\n Date: November 3, 2014\n License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.\n Copyright: Public Domain\n",
+  "members" : [
+   {
+    "name" : "vibe.d",
+    "kind" : "import",
+    "line" : 12,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "crated.view.base",
+    "kind" : "import",
+    "line" : 14,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "crated.tools",
+    "kind" : "import",
+    "line" : 15,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "kind" : "template",
+    "line" : 18,
+    "char" : 1,
+    "name" : "Controller",
+    "parameters" : [
+     {
+      "name" : "ControllerCls",
+      "kind" : "type"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "ControllerTemplate",
+      "kind" : "class",
+      "line" : 20,
+      "char" : 2,
+      "members" : [
+       {
+        "name" : "requests",
+        "kind" : "variable",
+        "comment" : "The request attributes.\n",
+        "line" : 24,
+        "char" : 19,
+        "storageClass" : [
+         "enum"
+        ],
+        "type" : "string[][]",
+        "init" : "getItemFields!(\"HttpRequest\", ControllerCls, true)"
+       },
+       {
+        "name" : "addRoutes",
+        "kind" : "function",
+        "comment" : " Init the router\n",
+        "line" : 29,
+        "char" : 8,
+        "type" : "void(ref URLRouter router, bool callSuper = true)",
+        "parameters" : [
+         {
+          "name" : "router",
+          "type" : "URLRouter",
+          "storageClass" : [
+           "ref"
+          ]
+         },
+         {
+          "name" : "callSuper",
+          "deco" : "b",
+          "default" : "true"
+         }
+        ],
+        "endline" : 36,
+        "endchar" : 3
+       },
+       {
+        "kind" : "template",
+        "comment" : "\n",
+        "line" : 41,
+        "char" : 16,
+        "name" : "addRoutes",
+        "parameters" : [
+         {
+          "name" : "requests",
+          "kind" : "value",
+          "type" : "string[][]"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "addRoutes",
+          "kind" : "function",
+          "comment" : "\n",
+          "line" : 41,
+          "char" : 16,
+          "type" : "void(ref URLRouter router)",
+          "parameters" : [
+           {
+            "name" : "router",
+            "type" : "URLRouter",
+            "storageClass" : [
+             "ref"
+            ]
+           }
+          ],
+          "endline" : 52,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "name" : "route",
+        "kind" : "function",
+        "comment" : "\n",
+        "line" : 57,
+        "char" : 8,
+        "type" : "void(void function(HTTPServerRequest, HTTPServerResponse) cb, string method, string path, ref URLRouter router)",
+        "parameters" : [
+         {
+          "name" : "cb",
+          "type" : "void function(HTTPServerRequest, HTTPServerResponse)"
+         },
+         {
+          "name" : "method",
+          "type" : "string"
+         },
+         {
+          "name" : "path",
+          "type" : "string"
+         },
+         {
+          "name" : "router",
+          "type" : "URLRouter",
+          "storageClass" : [
+           "ref"
+          ]
+         }
+        ],
+        "endline" : 64,
+        "endchar" : 3
+       },
+       {
+        "name" : "valueOf",
+        "kind" : "function",
+        "comment" : " Get the value of an attribute. An atribute value is set like this:\n\n Example:\n -------------\n @(\"field\", \"custom attribute:custom value\")\n string name;\n -------------\n",
+        "line" : 76,
+        "char" : 17,
+        "storageClass" : [
+         "static"
+        ],
+        "type" : "string(string fieldName, string attribute)",
+        "parameters" : [
+         {
+          "name" : "fieldName",
+          "type" : "string"
+         },
+         {
+          "name" : "attribute",
+          "type" : "string"
+         }
+        ],
+        "endline" : 91,
+        "endchar" : 3
+       }
+      ]
+     },
+     {
+      "name" : "Controller",
+      "kind" : "alias",
+      "line" : 94,
+      "char" : 2,
+      "type" : "ControllerTemplate"
+     }
+    ]
+   },
+   {
+    "name" : "HttpRequest",
+    "kind" : "struct",
+    "comment" : "\n",
+    "line" : 101,
+    "char" : 1,
+    "members" : [
+     {
+      "name" : "method",
+      "kind" : "variable",
+      "line" : 102,
+      "char" : 9,
+      "deco" : "Aya",
+      "offset" : 0
+     },
+     {
+      "name" : "path",
+      "kind" : "variable",
+      "line" : 103,
+      "char" : 9,
+      "deco" : "Aya",
+      "offset" : 16
+     },
+     {
+      "name" : "cb",
+      "kind" : "variable",
+      "line" : 104,
+      "char" : 8,
+      "deco" : "Pv",
+      "offset" : 32
+     },
+     {
+      "name" : "this",
+      "kind" : "constructor",
+      "line" : 106,
+      "char" : 2,
+      "deco" : "FNcAyaAyaZS6crated10controller4base11HttpRequest",
+      "originalType" : "ref (string method, string path)",
+      "parameters" : [
+       {
+        "name" : "method",
+        "deco" : "Aya"
+       },
+       {
+        "name" : "path",
+        "deco" : "Aya"
+       }
+      ],
+      "endline" : 122,
+      "endchar" : 3
+     },
+     {
+      "name" : "this",
+      "kind" : "constructor",
+      "line" : 125,
+      "char" : 2,
+      "deco" : "FNcAyaAyaPvZS6crated10controller4base11HttpRequest",
+      "originalType" : "ref (string method, string path, void* cb)",
+      "parameters" : [
+       {
+        "name" : "method",
+        "deco" : "Aya"
+       },
+       {
+        "name" : "path",
+        "deco" : "Aya"
+       },
+       {
+        "name" : "cb",
+        "deco" : "Pv"
+       }
+      ],
+      "endline" : 127,
+      "endchar" : 2
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name" : "crated.controller.datamanager",
+  "kind" : "module",
+  "file" : "source/crated/controller/datamanager.d",
+  "comment" : " Manage models easily\n\n Authors: Szabo Bogdan <szabobogdan@yahoo.com>\n Date: November 3, 2014\n License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.\n Copyright: Public Domain\n",
+  "members" : [
+   {
+    "name" : "crated.view.adminmenu",
+    "kind" : "import",
+    "line" : 11,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "crated.controller.base",
+    "kind" : "import",
+    "line" : 13,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "crated.controller.admin",
+    "kind" : "import",
+    "line" : 14,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "vibe.d",
+    "kind" : "import",
+    "line" : 15,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "kind" : "template",
+    "line" : 17,
+    "char" : 1,
+    "name" : "DataManager",
+    "parameters" : [
+     {
+      "name" : "baseUrl",
+      "kind" : "value",
+      "deco" : "Aya"
+     },
+     {
+      "name" : "EL",
+      "kind" : "tuple"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "DataManagerTemplate",
+      "kind" : "class",
+      "line" : 20,
+      "char" : 2,
+      "members" : [
+       {
+        "name" : "addOtherRoutes",
+        "kind" : "function",
+        "comment" : " Init the router\n",
+        "line" : 25,
+        "char" : 8,
+        "type" : "void(ref URLRouter router)",
+        "parameters" : [
+         {
+          "name" : "router",
+          "type" : "URLRouter",
+          "storageClass" : [
+           "ref"
+          ]
+         }
+        ],
+        "endline" : 46,
+        "endchar" : 3
+       }
+      ]
+     },
+     {
+      "name" : "DataManager",
+      "kind" : "alias",
+      "line" : 49,
+      "char" : 2,
+      "type" : "DataManagerTemplate"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name" : "crated.model.base",
+  "kind" : "module",
+  "file" : "source/crated/model/base.d",
+  "comment" : " Provides templates to create data models. There are two components that are used\n to represent data. Models and Items.\n\n The model is a collection of items and it usualy represents a table. The <code>ModelTemplate</code>\n provides a standard interface for one dimension model. It can be used directly,\n but it does not save it's content.\n\n An Item is a group of fields that usualy represents a table row. The <code>ItemTemplate</code>\n provides a standard interface for a group of fields. Usualy you should not need to extend this\n class, but you can check the Item template for more information.\n\n Authors: Szabo Bogdan <szabobogdan@yahoo.com>\n Date: November 3, 2014\n License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.\n Copyright: Public Domain\n",
+  "members" : [
+   {
+    "name" : "std.stdio",
+    "kind" : "import",
+    "line" : 20,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "std.string",
+    "kind" : "import",
+    "line" : 21,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "std.traits",
+    "kind" : "import",
+    "line" : 22,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "std.algorithm",
+    "kind" : "import",
+    "line" : 23,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "std.conv",
+    "kind" : "import",
+    "line" : 24,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "std.typetuple",
+    "kind" : "import",
+    "line" : 25,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "crated.tools",
+    "kind" : "import",
+    "line" : 27,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "CratedModelException",
+    "kind" : "class",
+    "comment" : " Aggregates all information about a model error status.\n",
+    "line" : 32,
+    "char" : 1,
+    "base" : "Exception",
+    "members" : [
+     {
+      "name" : "this",
+      "kind" : "constructor",
+      "comment" : " Create the exception\n",
+      "line" : 36,
+      "char" : 2,
+      "deco" : "FAyaAyamC6object9ThrowableZC6crated5model4base20CratedModelException",
+      "originalType" : "(string msg, string file = __FILE__, ulong line = cast(ulong)36, Throwable next = null)",
+      "parameters" : [
+       {
+        "name" : "msg",
+        "deco" : "Aya"
+       },
+       {
+        "name" : "file",
+        "deco" : "Aya",
+        "default" : "__FILE__"
+       },
+       {
+        "name" : "line",
+        "deco" : "m",
+        "default" : "36LU"
+       },
+       {
+        "name" : "next",
+        "deco" : "C6object9Throwable",
+        "default" : "null"
+       }
+      ],
+      "endline" : 38,
+      "endchar" : 2
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "comment" : " Generate a crated item. A prototype class will be the base of ItemTemplate class which\n contains helper methods and properties to make you able to use the prototype class with any other\n generated crate.d model.\n\n The Item will be generated based on what attribute has every property declared. If you want to treat\n a property as a db field you have to add <code>@(\"field\")</code> attribute. Also every prototype must have\n a <code>@(\"primary\")</code> attribute to let the models look for the primary fields.\n\n The default supported attributes are:\n \t+ <code>field</code>   - an item field\n \t+ <code>primary</code> - the primary key\n\n But you are free to create and use any other atributes that can describe your Prototype.\n\n Let's take a valid Prototype:\n\n Example:\n --------------------\n class BookItemPrototype {\n \t@(\"field\", \"primary\")\n\tulong id;\n\n\t@(\"field\") string name = \"unknown\";\n \t@(\"field\") string author = \"unknown\";\n }\n --------------------\n\n The most simple way of crate.d item like this:\n\n Example:\n ---------------------\n auto books = new Model!(BookItemPrototype);\n\n auto item = books.createItem;\n ---------------------\n\n As you can see, you can not have an Item without a model. In fact in order to make <code>item.save</code>\n and <code>item.detele</code> methods to work, the item has to know who is it's parent,\n because those methods are shortcuts for <code>model.save(item)</code> or <code>model.delete(item)</code>.\n\n In fact the code that create an Item looks like this:\n\n Example:\n ---------------------\n auto books = new Model!(BookItemPrototype);\n\n auto item = new Item!BookItemPrototype(books);\n ---------------------\n\n If you want to create an alias for the item type you can do it like this:\n\n Example:\n ---------------------\n alias ItemCls = Item!BookItemPrototype;\n\n ... or ...\n\n auto books = new Model!(BookItemPrototype);\n alias ItemCls = Item!(BookItemPrototype, books);\n ---------------------\n\n =Extending\n\n ... more to be soon ...\n\n =Creating new Item templates\n",
+    "line" : 109,
+    "char" : 1,
+    "name" : "Item",
+    "parameters" : [
+     {
+      "name" : "Prototype",
+      "kind" : "type"
+     },
+     {
+      "name" : "M",
+      "kind" : "type"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "ItemTemplate",
+      "kind" : "class",
+      "comment" : " The Prototype wrapper. Every Item is created by wrapping a Prototype class with this class. <code>ItemTemplate</code>\n contains methods to manipulate the Prototype like save and delete.\n\n\n",
+      "line" : 117,
+      "char" : 2,
+      "members" : [
+       {
+        "name" : "myModel",
+        "kind" : "variable",
+        "comment" : " Private: The parent model\n",
+        "line" : 121,
+        "char" : 13,
+        "type" : "M"
+       },
+       {
+        "name" : "modelCls",
+        "kind" : "alias",
+        "comment" : " An alias to the model type\n",
+        "line" : 126,
+        "char" : 3,
+        "type" : "M"
+       },
+       {
+        "name" : "this",
+        "kind" : "constructor",
+        "comment" : " Default constructor\n",
+        "line" : 131,
+        "char" : 3,
+        "type" : "(M parent)",
+        "parameters" : [
+         {
+          "name" : "parent",
+          "type" : "M"
+         }
+        ],
+        "endline" : 133,
+        "endchar" : 3
+       },
+       {
+        "kind" : "template",
+        "comment" : " Copy constructor\n",
+        "line" : 138,
+        "char" : 3,
+        "name" : "this",
+        "parameters" : [
+         {
+          "name" : "T",
+          "kind" : "type"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "this",
+          "kind" : "constructor",
+          "line" : 138,
+          "char" : 3,
+          "type" : "(T someItem, M parent)",
+          "parameters" : [
+           {
+            "name" : "someItem",
+            "type" : "T"
+           },
+           {
+            "name" : "parent",
+            "type" : "M"
+           }
+          ],
+          "endline" : 141,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "kind" : "template",
+        "comment" : " Copy data from an object that have the same fields\n",
+        "line" : 146,
+        "char" : 8,
+        "name" : "copy",
+        "parameters" : [
+         {
+          "name" : "fields",
+          "kind" : "value",
+          "type" : "string[][]"
+         },
+         {
+          "name" : "T",
+          "kind" : "type"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "copy",
+          "kind" : "function",
+          "comment" : " Copy data from an object that have the same fields\n",
+          "line" : 146,
+          "char" : 8,
+          "type" : "void(T someItem)",
+          "parameters" : [
+           {
+            "name" : "someItem",
+            "type" : "T"
+           }
+          ],
+          "endline" : 191,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "name" : "fields",
+        "kind" : "variable",
+        "comment" : " A pair of a field name and type to be accessed at runtime\n",
+        "line" : 196,
+        "char" : 26,
+        "storageClass" : [
+         "enum"
+        ],
+        "type" : "string[][]",
+        "init" : "getItemFields!(\"field\", Prototype, false)"
+       },
+       {
+        "name" : "primaryField",
+        "kind" : "variable",
+        "comment" : " A pair of a field name and type to be accessed at runtime\n",
+        "line" : 202,
+        "char" : 24,
+        "storageClass" : [
+         "enum"
+        ],
+        "type" : "string[]",
+        "init" : "getItemFields!(\"primary\", Prototype, false)[0]"
+       },
+       {
+        "name" : "attributes",
+        "kind" : "variable",
+        "comment" : "The field attributes.\n",
+        "line" : 206,
+        "char" : 19,
+        "storageClass" : [
+         "enum"
+        ],
+        "type" : "string[][]",
+        "init" : "getItemFields!(\"field\", Prototype, true)"
+       },
+       {
+        "name" : "enumValues",
+        "kind" : "variable",
+        "comment" : "All the enum fields with their keys\n",
+        "line" : 210,
+        "char" : 25,
+        "storageClass" : [
+         "enum"
+        ],
+        "type" : "string[][string]",
+        "init" : "mixin(\"[ ``: [] \" ~ getEnumValues ~ \"]\")"
+       },
+       {
+        "kind" : "template",
+        "comment" : " Generate the values for the enums from the current item\n",
+        "line" : 215,
+        "char" : 25,
+        "name" : "getEnumValues",
+        "parameters" : [
+         {
+          "name" : "i",
+          "kind" : "value",
+          "deco" : "m",
+          "defaultValue" : "0"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "getEnumValues",
+          "kind" : "function",
+          "comment" : " Generate the values for the enums from the current item\n",
+          "line" : 215,
+          "char" : 25,
+          "type" : "string()",
+          "endline" : 242,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "name" : "parent",
+        "kind" : "function",
+        "comment" : " The parent model\n",
+        "line" : 248,
+        "char" : 5,
+        "type" : "@property M()",
+        "endline" : 250,
+        "endchar" : 3
+       },
+       {
+        "name" : "save",
+        "kind" : "function",
+        "comment" : " Save item\n",
+        "line" : 255,
+        "char" : 8,
+        "type" : "void()",
+        "endline" : 257,
+        "endchar" : 3
+       },
+       {
+        "name" : "remove",
+        "kind" : "function",
+        "comment" : " Delete item from the parent model\n",
+        "line" : 262,
+        "char" : 8,
+        "type" : "void()",
+        "endline" : 264,
+        "endchar" : 3
+       },
+       {
+        "name" : "toString",
+        "kind" : "function",
+        "comment" : " Convert item to string\n",
+        "line" : 269,
+        "char" : 19,
+        "storageClass" : [
+         "override"
+        ],
+        "type" : "string()",
+        "endline" : 277,
+        "endchar" : 3
+       },
+       {
+        "name" : "PrimaryKeyType",
+        "kind" : "alias",
+        "comment" : " Private: The primary key type alias\n",
+        "line" : 282,
+        "char" : 11,
+        "type" : "typeof(__traits(getMember, this, primaryField[0]))"
+       },
+       {
+        "name" : "primaryKeyValue",
+        "kind" : "function",
+        "comment" : " Get the primary field value\n",
+        "line" : 288,
+        "char" : 18,
+        "type" : "@property PrimaryKeyType()",
+        "endline" : 290,
+        "endchar" : 3
+       },
+       {
+        "kind" : "template",
+        "comment" : " Check if a field has a certain attribute\n",
+        "line" : 295,
+        "char" : 15,
+        "name" : "fieldHas",
+        "parameters" : [
+         {
+          "name" : "T",
+          "kind" : "type"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "fieldHas",
+          "kind" : "function",
+          "comment" : " Check if a field has a certain attribute\n",
+          "line" : 295,
+          "char" : 15,
+          "type" : "bool(T fieldName, string attribute)",
+          "parameters" : [
+           {
+            "name" : "fieldName",
+            "type" : "T"
+           },
+           {
+            "name" : "attribute",
+            "type" : "string"
+           }
+          ],
+          "endline" : 313,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "name" : "valueOf",
+        "kind" : "function",
+        "comment" : " Get the value of an attribute. An atribute value is set like this:\n\n Example:\n -------------\n @(\"field\", \"custom attribute:custom value\")\n string name;\n -------------\n",
+        "line" : 324,
+        "char" : 17,
+        "storageClass" : [
+         "static"
+        ],
+        "type" : "string(string fieldName, string attribute)",
+        "parameters" : [
+         {
+          "name" : "fieldName",
+          "type" : "string"
+         },
+         {
+          "name" : "attribute",
+          "type" : "string"
+         }
+        ],
+        "endline" : 339,
+        "endchar" : 3
+       },
+       {
+        "name" : "opEquals",
+        "kind" : "function",
+        "comment" : " == operator overload. It will check if the fields of the current Item are equals to the other one.\n",
+        "line" : 344,
+        "char" : 17,
+        "storageClass" : [
+         "override"
+        ],
+        "type" : "bool(Object o)",
+        "parameters" : [
+         {
+          "name" : "o",
+          "type" : "Object"
+         }
+        ],
+        "endline" : 346,
+        "endchar" : 3
+       },
+       {
+        "kind" : "template",
+        "comment" : " Get a field value as string. Very useful in views\n",
+        "line" : 351,
+        "char" : 10,
+        "name" : "fieldAsString",
+        "parameters" : [
+         {
+          "name" : "fieldName",
+          "kind" : "value",
+          "type" : "string"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "fieldAsString",
+          "kind" : "function",
+          "comment" : " Get a field value as string. Very useful in views\n",
+          "line" : 351,
+          "char" : 10,
+          "type" : "string()",
+          "endline" : 353,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "kind" : "template",
+        "comment" : " Check if the fields are equal\n",
+        "line" : 358,
+        "char" : 16,
+        "name" : "isFieldEqual",
+        "parameters" : [
+         {
+          "name" : "fields",
+          "kind" : "value",
+          "type" : "string[][]"
+         },
+         {
+          "name" : "T",
+          "kind" : "type"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "isFieldEqual",
+          "kind" : "function",
+          "comment" : " Check if the fields are equal\n",
+          "line" : 358,
+          "char" : 16,
+          "type" : "bool(T o)",
+          "parameters" : [
+           {
+            "name" : "o",
+            "type" : "T"
+           }
+          ],
+          "endline" : 369,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "name" : "PropertyJson",
+        "kind" : "function",
+        "comment" : " Private: Get code that generate the Json\n",
+        "line" : 374,
+        "char" : 25,
+        "storageClass" : [
+         "static"
+        ],
+        "type" : "string()",
+        "endline" : 399,
+        "endchar" : 3
+       }
+      ]
+     },
+     {
+      "name" : "Item",
+      "kind" : "alias",
+      "line" : 402,
+      "char" : 2,
+      "type" : "ItemTemplate"
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "line" : 405,
+    "char" : 1,
+    "name" : "Item",
+    "parameters" : [
+     {
+      "name" : "Prototype",
+      "kind" : "type"
+     },
+     {
+      "name" : "M",
+      "kind" : "alias"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "Item",
+      "kind" : "alias",
+      "line" : 406,
+      "char" : 2,
+      "type" : "Item!(Prototype, typeof(M))"
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "comment" : " Create a crated Model. A model is responsable with manipulating Items. It save, delete and query the\n Items into a db or other storage type.\n\n\n =Extending\n\n You can extend a model like this:\n\n Example:\n -----------------\n class MyModel : Model!Prototype {\n\n \tItemCls[] customQuery() {\n \t\t....\n \t}\n\n }\n -----------------\n\n\n =Creating new Item templates\n\n ==Step 1\n\n Create a new template that take a Type as parameter;\n\n Example:\n ----------\n template CustomModel(Prototype, string modelName = \"Unknown\") {\n\n\n }\n ----------\n\n ==Step 2\n\n Add a new class in the template and set the template alias to this class;\n\n Example:\n ----------\n template CustomModel(Prototype, string modelName = \"Unknown\") {\n\n\tclass CustomModelTemplate {\n\t\tenum string name = modelName;\n\t\talias ItemCls = Item!(Prototype, CustomModelTemplate);\n\n\t}\n\n\talias CustomModel = CustomModelTemplate;\n }\n ----------\n\n ==Step 3\n\n Mix in the template that checks if your class implements all the required methods and add their implementation.\n You can find more information about those metods in <code>ModelTemplate</code> class;\n\n Example:\n ----------\n template CustomModel(Prototype, string modelName = \"Unknown\") {\n\n\tclass CustomModelTemplate {\n\t\tenum string name = modelName;\n\t\talias ItemCls = Item!(Prototype, CustomModelTemplate);\n\n\t}\n\n \tmixin MixCheckModelFields!CustomModelTemplate;\n\talias CustomModel = CustomModelTemplate;\n }\n ----------\n\n ==Step 4\n\n If you don't want to create a new template from scratch, you can extend the base Model template you can do it like this:\n\n Example:\n ----------\n template CustomModel(Prototype, string modelName = \"Unknown\") {\n\n\tclass CustomModelTemplate : Model!Prototype {\n\t\tenum string name = modelName;\n\n\t}\n\n \tmixin MixCheckModelFields!CustomModelTemplate;\n\talias CustomModel = CustomModelTemplate;\n }\n ----------\n\n\n",
+    "line" : 502,
+    "char" : 1,
+    "name" : "Model",
+    "parameters" : [
+     {
+      "name" : "Prototype",
+      "kind" : "type"
+     },
+     {
+      "name" : "modelName",
+      "kind" : "value",
+      "deco" : "Aya",
+      "defaultValue" : "\"Unknown\""
+     }
+    ],
+    "members" : [
+     {
+      "name" : "ModelTemplate",
+      "kind" : "class",
+      "comment" : " A basic model implementation without any persistence\n",
+      "line" : 507,
+      "char" : 2,
+      "members" : [
+       {
+        "name" : "ItemCls",
+        "kind" : "alias",
+        "comment" : "An alias to the item class type.\n",
+        "line" : 510,
+        "char" : 3,
+        "type" : "Item!(Prototype, ModelTemplate)"
+       },
+       {
+        "name" : "name",
+        "kind" : "variable",
+        "comment" : "The model name.\n",
+        "line" : 513,
+        "char" : 15,
+        "storageClass" : [
+         "enum"
+        ],
+        "type" : "string",
+        "init" : "modelName"
+       },
+       {
+        "name" : "items",
+        "kind" : "variable",
+        "comment" : "Protected: item container\n",
+        "line" : 516,
+        "char" : 23,
+        "type" : "ItemCls[]"
+       },
+       {
+        "name" : "save",
+        "kind" : "function",
+        "comment" : " Add or update an element\n",
+        "line" : 521,
+        "char" : 8,
+        "type" : "void(ItemCls item)",
+        "parameters" : [
+         {
+          "name" : "item",
+          "type" : "ItemCls"
+         }
+        ],
+        "endline" : 535,
+        "endchar" : 3
+       },
+       {
+        "kind" : "template",
+        "comment" : " Remove an existing item\n",
+        "line" : 540,
+        "char" : 8,
+        "name" : "remove",
+        "parameters" : [
+         {
+          "name" : "T",
+          "kind" : "type"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "remove",
+          "kind" : "function",
+          "comment" : " Remove an existing item\n",
+          "line" : 540,
+          "char" : 8,
+          "type" : "void(T item)",
+          "parameters" : [
+           {
+            "name" : "item",
+            "type" : "T"
+           }
+          ],
+          "endline" : 542,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "name" : "truncate",
+        "kind" : "function",
+        "comment" : " Remove all items\n",
+        "line" : 547,
+        "char" : 8,
+        "type" : "void()",
+        "endline" : 549,
+        "endchar" : 3
+       },
+       {
+        "name" : "createItem",
+        "kind" : "function",
+        "comment" : " Create a new item. The returned item will not be\n automatically added to the model. If you want to add it to a model\n call Item.save()\n",
+        "line" : 556,
+        "char" : 11,
+        "type" : "ItemCls()",
+        "endline" : 560,
+        "endchar" : 3
+       },
+       {
+        "name" : "all",
+        "kind" : "function",
+        "comment" : " Retrieve all items\n",
+        "line" : 565,
+        "char" : 13,
+        "type" : "ItemCls[]()",
+        "endline" : 567,
+        "endchar" : 3
+       },
+       {
+        "name" : "query",
+        "kind" : "function",
+        "comment" : " Query the model. This is unsupported for the base model, but if you want to use a database as storage,\n you should implement this method in your model.\n",
+        "line" : 573,
+        "char" : 13,
+        "type" : "ItemCls[]()",
+        "endline" : 575,
+        "endchar" : 3
+       },
+       {
+        "kind" : "template",
+        "comment" : " Count an item set\n",
+        "line" : 580,
+        "char" : 9,
+        "name" : "length",
+        "parameters" : [
+         {
+          "name" : "fieldName",
+          "kind" : "value",
+          "type" : "string"
+         },
+         {
+          "name" : "T",
+          "kind" : "type"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "length",
+          "kind" : "function",
+          "comment" : " Count an item set\n",
+          "line" : 580,
+          "char" : 9,
+          "type" : "ulong(T value)",
+          "parameters" : [
+           {
+            "name" : "value",
+            "type" : "T"
+           }
+          ],
+          "endline" : 590,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "name" : "length",
+        "kind" : "function",
+        "comment" : " Count all items\n",
+        "line" : 595,
+        "char" : 9,
+        "type" : "ulong()",
+        "endline" : 597,
+        "endchar" : 3
+       },
+       {
+        "kind" : "template",
+        "comment" : " Find all items that match the search criteria\n",
+        "line" : 602,
+        "char" : 13,
+        "name" : "getBy",
+        "parameters" : [
+         {
+          "name" : "fieldName",
+          "kind" : "value",
+          "type" : "string"
+         },
+         {
+          "name" : "T",
+          "kind" : "type"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "getBy",
+          "kind" : "function",
+          "comment" : " Find all items that match the search criteria\n",
+          "line" : 602,
+          "char" : 13,
+          "type" : "ItemCls[](T value)",
+          "parameters" : [
+           {
+            "name" : "value",
+            "type" : "T"
+           }
+          ],
+          "endline" : 614,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "kind" : "template",
+        "comment" : " Retrieve the first item that match the search criteria\n",
+        "line" : 619,
+        "char" : 11,
+        "name" : "getOneBy",
+        "parameters" : [
+         {
+          "name" : "fieldName",
+          "kind" : "value",
+          "type" : "string"
+         },
+         {
+          "name" : "T",
+          "kind" : "type"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "getOneBy",
+          "kind" : "function",
+          "comment" : " Retrieve the first item that match the search criteria\n",
+          "line" : 619,
+          "char" : 11,
+          "type" : "ItemCls(T value)",
+          "parameters" : [
+           {
+            "name" : "value",
+            "type" : "T"
+           }
+          ],
+          "endline" : 629,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "name" : "toString",
+        "kind" : "function",
+        "comment" : " Convert the items to a Json string\n",
+        "line" : 634,
+        "char" : 19,
+        "storageClass" : [
+         "override"
+        ],
+        "type" : "string()",
+        "endline" : 636,
+        "endchar" : 3
+       }
+      ]
+     },
+     {
+      "name" : "MixCheckModelFields!ModelTemplate",
+      "kind" : "mixin",
+      "comment" : "Private:\n",
+      "line" : 640,
+      "char" : 2
+     },
+     {
+      "name" : "Model",
+      "kind" : "alias",
+      "line" : 642,
+      "char" : 2,
+      "type" : "ModelTemplate"
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "comment" : " This template is used to check if a model has declared all the methods.\n\n Example:\n ----------------------\n class MyModel {\n \tmixin MixCheckFieldsModel!MyModel;\n }\n ----------------------\n\n Will show messages on compile for every missing member.\n\n",
+    "line" : 660,
+    "char" : 7,
+    "name" : "MixCheckModelFields",
+    "parameters" : [
+     {
+      "name" : "M",
+      "kind" : "type"
+     }
+    ],
+    "members" : [
+     {
+      "kind" : "template",
+      "comment" : " Generate code that checks if a certain method is declared\n",
+      "line" : 665,
+      "char" : 17,
+      "name" : "_genChkMember",
+      "parameters" : [
+       {
+        "name" : "M",
+        "kind" : "type"
+       },
+       {
+        "name" : "name",
+        "kind" : "value",
+        "type" : "string"
+       }
+      ],
+      "members" : [
+       {
+        "name" : "_genChkMember",
+        "kind" : "function",
+        "comment" : " Generate code that checks if a certain method is declared\n",
+        "line" : 665,
+        "char" : 17,
+        "type" : "string()",
+        "endline" : 671,
+        "endchar" : 2
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name" : "crated.model.mongo",
+  "kind" : "module",
+  "file" : "source/crated/model/mongo.d",
+  "comment" : " A model that use mongo db database to save the data.\n\n Authors: Szabo Bogdan <szabobogdan@yahoo.com>\n Date: November 3, 2014\n License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.\n Copyright: Public Domain\n",
+  "members" : [
+   {
+    "name" : "crated.model.base",
+    "kind" : "import",
+    "line" : 11,
+    "char" : 15
+   },
+   {
+    "name" : "std.conv",
+    "kind" : "import",
+    "line" : 12,
+    "char" : 15
+   },
+   {
+    "name" : "vibe.d",
+    "kind" : "import",
+    "line" : 13,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "dbAddress",
+    "kind" : "variable",
+    "comment" : " Mongo connection String URI.\n Find more here: http://docs.mongodb.org/manual/reference/connection-string/\n\n Example:\n ---------------\n //setup the database connection string\n crated.model.mongo.dbAddress = \"127.0.0.1\";\n\n //init the data\n alias BookModel = MongoModel!(BookPrototype, \"test.books\", \"Books\");\n ---------------\n",
+    "line" : 28,
+    "char" : 22,
+    "storageClass" : [
+     "static",
+     "shared"
+    ],
+    "deco" : "OAya",
+    "originalType" : "string"
+   },
+   {
+    "kind" : "template",
+    "comment" : " Create a mongo model. More general informations about the Models and Items can be found in crates.model.base.\n\n The MongoModel template takes three parameters:\n  - Prototype - is the item prototype that will be stored in the database\n  - string CollectionName - the collection where the items will be stored\n  - string modelName - the model name used in various situations to identify the model type\n\n Here is an example of how you can use a Mongo model:\n\n Example:\n ---------------\n class BookPrototype {\n\n \t@(\"field\", \"primary\")\n \tstring _id;\n\n \t@(\"field\", \"required\")\n \tstring name = \"unknown\";\n\n \t@(\"field\", \"required\")\n \tstring author = \"unknown\";\n }\n\n //create the mongo model\n alias BookModel = MongoModel!(BookPrototype, \"test.books\", \"Books\");\n ---------------\n",
+    "line" : 58,
+    "char" : 1,
+    "name" : "MongoModel",
+    "parameters" : [
+     {
+      "name" : "Prototype",
+      "kind" : "type"
+     },
+     {
+      "name" : "collectionName",
+      "kind" : "value",
+      "deco" : "Aya"
+     },
+     {
+      "name" : "modelName",
+      "kind" : "value",
+      "deco" : "Aya",
+      "defaultValue" : "\"Unknown\""
+     }
+    ],
+    "members" : [
+     {
+      "name" : "client",
+      "kind" : "variable",
+      "comment" : "Private:\n",
+      "line" : 61,
+      "char" : 22,
+      "type" : "MongoClient"
+     },
+     {
+      "name" : "collection",
+      "kind" : "variable",
+      "comment" : "Private:\n",
+      "line" : 63,
+      "char" : 26,
+      "type" : "MongoCollection"
+     },
+     {
+      "name" : "MongoModelTemplate",
+      "kind" : "class",
+      "comment" : " Mongo model implementation\n",
+      "line" : 68,
+      "char" : 2,
+      "members" : [
+       {
+        "name" : "ItemCls",
+        "kind" : "alias",
+        "comment" : "An alias to the item class type.\n",
+        "line" : 71,
+        "char" : 3,
+        "type" : "Item!(Prototype, MongoModelTemplate)"
+       },
+       {
+        "name" : "name",
+        "kind" : "variable",
+        "comment" : "Model name\n",
+        "line" : 74,
+        "char" : 15,
+        "storageClass" : [
+         "enum"
+        ],
+        "type" : "string",
+        "init" : "modelName"
+       },
+       {
+        "name" : "this",
+        "kind" : "constructor",
+        "comment" : "Create the object an init the connection\n",
+        "line" : 77,
+        "char" : 3,
+        "type" : "()",
+        "endline" : 80,
+        "endchar" : 3
+       },
+       {
+        "name" : "save",
+        "kind" : "function",
+        "comment" : " Add or update an element\n",
+        "line" : 85,
+        "char" : 8,
+        "type" : "void(ItemCls item)",
+        "parameters" : [
+         {
+          "name" : "item",
+          "type" : "ItemCls"
+         }
+        ],
+        "endline" : 116,
+        "endchar" : 3
+       },
+       {
+        "name" : "save",
+        "kind" : "function",
+        "comment" : " Add or update a list of elements\n",
+        "line" : 121,
+        "char" : 8,
+        "type" : "void(ItemCls[] items)",
+        "parameters" : [
+         {
+          "name" : "items",
+          "type" : "ItemCls[]"
+         }
+        ],
+        "endline" : 125,
+        "endchar" : 3
+       },
+       {
+        "kind" : "template",
+        "comment" : "Private: copy field values from query to item\n",
+        "line" : 128,
+        "char" : 16,
+        "name" : "setFieldsInto",
+        "parameters" : [
+         {
+          "name" : "fields",
+          "kind" : "value",
+          "type" : "string[][]"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "setFieldsInto",
+          "kind" : "function",
+          "comment" : "Private: copy field values from query to item\n",
+          "line" : 128,
+          "char" : 16,
+          "type" : "void(ref Bson query, const ItemCls item)",
+          "parameters" : [
+           {
+            "name" : "query",
+            "type" : "Bson",
+            "storageClass" : [
+             "ref"
+            ]
+           },
+           {
+            "name" : "item",
+            "type" : "ItemCls",
+            "storageClass" : [
+             "const"
+            ]
+           }
+          ],
+          "endline" : 139,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "name" : "truncate",
+        "kind" : "function",
+        "comment" : " Remove all items\n",
+        "line" : 144,
+        "char" : 8,
+        "type" : "void()",
+        "endline" : 147,
+        "endchar" : 3
+       },
+       {
+        "kind" : "template",
+        "comment" : " Remove an existing item\n",
+        "line" : 152,
+        "char" : 9,
+        "name" : "remove",
+        "parameters" : [
+         {
+          "name" : "T",
+          "kind" : "type"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "remove",
+          "kind" : "function",
+          "comment" : " Remove an existing item\n",
+          "line" : 152,
+          "char" : 9,
+          "type" : "void(T item)",
+          "parameters" : [
+           {
+            "name" : "item",
+            "type" : "T"
+           }
+          ],
+          "endline" : 156,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "name" : "remove",
+        "kind" : "function",
+        "comment" : " Remove one item\n",
+        "line" : 161,
+        "char" : 8,
+        "type" : "void(ItemCls item)",
+        "parameters" : [
+         {
+          "name" : "item",
+          "type" : "ItemCls"
+         }
+        ],
+        "endline" : 163,
+        "endchar" : 3
+       },
+       {
+        "name" : "remove",
+        "kind" : "function",
+        "comment" : " Remove a list of items\n",
+        "line" : 168,
+        "char" : 8,
+        "type" : "void(ItemCls[] items)",
+        "parameters" : [
+         {
+          "name" : "items",
+          "type" : "ItemCls[]"
+         }
+        ],
+        "endline" : 191,
+        "endchar" : 3
+       },
+       {
+        "kind" : "template",
+        "comment" : " Remove an item by field name\n",
+        "line" : 196,
+        "char" : 8,
+        "name" : "remove",
+        "parameters" : [
+         {
+          "name" : "field",
+          "kind" : "value",
+          "type" : "string"
+         },
+         {
+          "name" : "T",
+          "kind" : "type"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "remove",
+          "kind" : "function",
+          "comment" : " Remove an item by field name\n",
+          "line" : 196,
+          "char" : 8,
+          "type" : "void(T value)",
+          "parameters" : [
+           {
+            "name" : "value",
+            "type" : "T"
+           }
+          ],
+          "endline" : 206,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "name" : "all",
+        "kind" : "function",
+        "comment" : " Retrieve all items\n",
+        "line" : 211,
+        "char" : 13,
+        "type" : "ItemCls[]()",
+        "endline" : 222,
+        "endchar" : 3
+       },
+       {
+        "name" : "length",
+        "kind" : "function",
+        "comment" : " Count all items\n",
+        "line" : 227,
+        "char" : 9,
+        "type" : "ulong()",
+        "endline" : 229,
+        "endchar" : 3
+       },
+       {
+        "name" : "createItem",
+        "kind" : "function",
+        "comment" : " Create a new item. The returned item will not be\n automatically added to the model. If you want to add it to a model\n call Item.save()\n",
+        "line" : 236,
+        "char" : 11,
+        "type" : "ItemCls()",
+        "endline" : 240,
+        "endchar" : 3
+       },
+       {
+        "kind" : "template",
+        "comment" : " Find all items that match the search criteria\n",
+        "line" : 245,
+        "char" : 13,
+        "name" : "getBy",
+        "parameters" : [
+         {
+          "name" : "fieldName",
+          "kind" : "value",
+          "type" : "string"
+         },
+         {
+          "name" : "T",
+          "kind" : "type"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "getBy",
+          "kind" : "function",
+          "comment" : " Find all items that match the search criteria\n",
+          "line" : 245,
+          "char" : 13,
+          "type" : "ItemCls[](T value)",
+          "parameters" : [
+           {
+            "name" : "value",
+            "type" : "T"
+           }
+          ],
+          "endline" : 264,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "kind" : "template",
+        "comment" : " Retrieve the first item that match the search\n criteria\n",
+        "line" : 270,
+        "char" : 11,
+        "name" : "getOneBy",
+        "parameters" : [
+         {
+          "name" : "fieldName",
+          "kind" : "value",
+          "type" : "string"
+         },
+         {
+          "name" : "T",
+          "kind" : "type"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "getOneBy",
+          "kind" : "function",
+          "comment" : " Retrieve the first item that match the search\n criteria\n",
+          "line" : 270,
+          "char" : 11,
+          "type" : "ItemCls(T value)",
+          "parameters" : [
+           {
+            "name" : "value",
+            "type" : "T"
+           }
+          ],
+          "endline" : 288,
+          "endchar" : 3
+         }
+        ]
+       },
+       {
+        "kind" : "template",
+        "comment" : " Query the model. This is unsupported for the base model, but if you want to use a database as storage,\n you should implement this method in your model.\n",
+        "line" : 294,
+        "char" : 13,
+        "name" : "query",
+        "parameters" : [
+         {
+          "name" : "T",
+          "kind" : "type"
+         }
+        ],
+        "members" : [
+         {
+          "name" : "query",
+          "kind" : "function",
+          "comment" : " Query the model. This is unsupported for the base model, but if you want to use a database as storage,\n you should implement this method in your model.\n",
+          "line" : 294,
+          "char" : 13,
+          "type" : "ItemCls[](T query)",
+          "parameters" : [
+           {
+            "name" : "query",
+            "type" : "T"
+           }
+          ],
+          "endline" : 315,
+          "endchar" : 3
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "name" : "MixCheckModelFields!MongoModelTemplate",
+      "kind" : "mixin",
+      "comment" : "Private: check if we implemented all required fields\n",
+      "line" : 319,
+      "char" : 2
+     },
+     {
+      "name" : "MongoModel",
+      "kind" : "alias",
+      "line" : 320,
+      "char" : 2,
+      "type" : "MongoModelTemplate"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name" : "crated.settings",
+  "kind" : "module",
+  "file" : "source/crated/settings.d",
+  "comment" : " Authors: Szabo Bogdan <szabobogdan@yahoo.com>\n Date: 11 21, 2014\n License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.\n Copyright: Public Domain\n",
+  "members" : [
+   {
+    "name" : "BootstrapCssCDN",
+    "kind" : "variable",
+    "line" : 10,
+    "char" : 6,
+    "storageClass" : [
+     "enum"
+    ],
+    "deco" : "Aya",
+    "init" : "\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css\""
+   },
+   {
+    "name" : "BootstrapJsCDN",
+    "kind" : "variable",
+    "line" : 11,
+    "char" : 6,
+    "storageClass" : [
+     "enum"
+    ],
+    "deco" : "Aya",
+    "init" : "\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js\""
+   },
+   {
+    "name" : "JQueryCDN",
+    "kind" : "variable",
+    "line" : 12,
+    "char" : 6,
+    "storageClass" : [
+     "enum"
+    ],
+    "deco" : "Aya",
+    "init" : "\"https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js\""
+   }
+  ]
+ },
+ {
+  "name" : "crated.tools",
+  "kind" : "module",
+  "file" : "source/crated/tools.d",
+  "comment" : " Authors: Szabo Bogdan <szabobogdan@yahoo.com>\n Date: 11 24, 2014\n License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.\n Copyright: Public Domain\n",
+  "members" : [
+   {
+    "name" : "std.conv",
+    "kind" : "import",
+    "line" : 10,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "std.typetuple",
+    "kind" : "import",
+    "line" : 11,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "kind" : "template",
+    "comment" : " Find if type (T) is an enum.\n Example:\n --------------------------\n enum BookCategory : string {\n\t\tFiction = \"Fiction\",\n\t\tNonfiction = \"Nonfiction\"\n };\n\n auto test = IsEnum!BookCategory;\n assert(test.check == true);\n --------------------------\n\n Example:\n --------------------------\n  auto test = IsEnum!string;\n  assert(test.check == false);\n --------------------------\n",
+    "line" : 33,
+    "char" : 1,
+    "name" : "IsEnum",
+    "parameters" : [
+     {
+      "name" : "T",
+      "kind" : "type"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "check",
+      "kind" : "variable",
+      "comment" : " is true if T is enum\n",
+      "line" : 37,
+      "char" : 12,
+      "storageClass" : [
+       "enum"
+      ],
+      "deco" : "b",
+      "init" : "true"
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "line" : 40,
+    "char" : 1,
+    "name" : "IsEnum",
+    "parameters" : [
+     {
+      "name" : "T",
+      "kind" : "type"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "check",
+      "kind" : "variable",
+      "comment" : " is true if T is enum\n",
+      "line" : 44,
+      "char" : 12,
+      "storageClass" : [
+       "enum"
+      ],
+      "deco" : "b",
+      "init" : "false"
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "comment" : " Check if the method has a from string method.\n\n Example:\n --------------------\n class BookItemPrototype {\n \tprivate string name;\n\n \tthis(string name) {\n  \tthis.name = name;\n \t}\n\n \tstatic BookItemPrototype FromString(string name) {\n \t\treturn new BookItemPrototype(name);\n  }\n }\n\n assert(HasFromString!BookItemPrototype == true);\n assert(HasFromString!Object == false);\n --------------------\n\n",
+    "line" : 70,
+    "char" : 1,
+    "name" : "HasFromString",
+    "parameters" : [
+     {
+      "name" : "T",
+      "kind" : "type"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "check",
+      "kind" : "variable",
+      "comment" : " is true if T has `from string` method\n",
+      "line" : 74,
+      "char" : 12,
+      "storageClass" : [
+       "enum"
+      ],
+      "deco" : "b",
+      "init" : "__traits(hasMember, T, \"fromString\")"
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "line" : 77,
+    "char" : 1,
+    "name" : "HasFromString",
+    "parameters" : [
+     {
+      "name" : "T",
+      "kind" : "type"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "check",
+      "kind" : "variable",
+      "comment" : " is true if T has `from string` method\n",
+      "line" : 81,
+      "char" : 12,
+      "storageClass" : [
+       "enum"
+      ],
+      "deco" : "b",
+      "init" : "false"
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "comment" : " Get a class property.\n\n Example:\n --------------------\n class BookItemPrototype {\n \t@(\"field\", \"primary\")\n\tulong id;\n\n\t@(\"field\") string name = \"unknown\";\n \t@(\"field\") string author = \"unknown\";\n }\n\n assert(__traits(isIntegral, ItemProperty!(BookItemPrototype, \"id\")) == true);\n --------------------\n",
+    "line" : 100,
+    "char" : 1,
+    "name" : "ItemProperty",
+    "parameters" : [
+     {
+      "name" : "item",
+      "kind" : "type"
+     },
+     {
+      "name" : "method",
+      "kind" : "value",
+      "deco" : "Aya"
+     }
+    ],
+    "members" : []
+   },
+   {
+    "kind" : "template",
+    "comment" : "\n Get all members that have ATTR attribute.\n\n Example:\n --------------------\n class BookItemPrototype {\n \t@(\"field\", \"primary\")\n\tulong id;\n\n\t@(\"field\") string name = \"unknown\";\n \t@(\"field\") string author = \"unknown\";\n }\n\n\n enum string[][] fields = getItemFields!(\"field\", BookItemPrototype);\n\n assert(fields[0][0] == \"id\");\n assert(fields[0][1] == \"ulong\");\n assert(fields[0][2] == \"isIntegral\");\n\n --------------------\n",
+    "line" : 131,
+    "char" : 1,
+    "name" : "getItemFields",
+    "parameters" : [
+     {
+      "name" : "ATTR",
+      "kind" : "alias"
+     },
+     {
+      "name" : "Prototype",
+      "kind" : "type"
+     },
+     {
+      "name" : "addFields",
+      "kind" : "value",
+      "deco" : "b"
+     }
+    ],
+    "members" : [
+     {
+      "kind" : "template",
+      "comment" : "  Get a general type\n",
+      "line" : 136,
+      "char" : 9,
+      "name" : "Type",
+      "parameters" : [
+       {
+        "name" : "name",
+        "kind" : "value",
+        "type" : "string"
+       }
+      ],
+      "members" : [
+       {
+        "name" : "Type",
+        "kind" : "function",
+        "comment" : "  Get a general type\n",
+        "line" : 136,
+        "char" : 9,
+        "type" : "string()",
+        "endline" : 145,
+        "endchar" : 2
+       }
+      ]
+     },
+     {
+      "kind" : "template",
+      "comment" : "\n Get all the metods that have ATTR attribute\n",
+      "line" : 150,
+      "char" : 2,
+      "name" : "ItemFields",
+      "parameters" : [
+       {
+        "name" : "FIELDS",
+        "kind" : "tuple"
+       }
+      ],
+      "members" : []
+     },
+     {
+      "name" : "list",
+      "kind" : "alias",
+      "line" : 178,
+      "char" : 2,
+      "type" : "ItemFields!(__traits(allMembers, Prototype))"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name" : "crated.view.admin",
+  "kind" : "module",
+  "file" : "source/crated/view/admin.d",
+  "comment" : " Views to manage data\n\n Authors: Szabo Bogdan <szabobogdan@yahoo.com>\n Date: November 3, 2014\n License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.\n Copyright: Public Domain\n",
+  "members" : [
+   {
+    "name" : "std.conv",
+    "kind" : "import",
+    "line" : 11,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "crated.model.base",
+    "kind" : "import",
+    "line" : 12,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "crated.view.base",
+    "kind" : "import",
+    "line" : 13,
+    "char" : 15
+   },
+   {
+    "name" : "AdminView",
+    "kind" : "class",
+    "line" : 15,
+    "char" : 1,
+    "base" : "BaseView",
+    "members" : [
+     {
+      "name" : "baseUrl",
+      "kind" : "variable",
+      "line" : 17,
+      "char" : 19,
+      "storageClass" : [
+       "immutable"
+      ],
+      "deco" : "yAa",
+      "originalType" : "string",
+      "offset" : 88
+     },
+     {
+      "name" : "this",
+      "kind" : "constructor",
+      "line" : 19,
+      "char" : 2,
+      "deco" : "FxAyaC6crated4view4base8BaseViewZC6crated4view5admin9AdminView",
+      "originalType" : "(const string baseUrl, BaseView parent)",
+      "parameters" : [
+       {
+        "name" : "baseUrl",
+        "deco" : "xAya"
+       },
+       {
+        "name" : "parent",
+        "deco" : "C6crated4view4base8BaseView"
+       }
+      ],
+      "endline" : 22,
+      "endchar" : 2
+     },
+     {
+      "kind" : "template",
+      "protection" : "private",
+      "comment" : "\n",
+      "line" : 27,
+      "char" : 17,
+      "name" : "editFormFieldByAttribute",
+      "parameters" : [
+       {
+        "name" : "field",
+        "kind" : "value",
+        "deco" : "Aya"
+       },
+       {
+        "name" : "PrototypedItem",
+        "kind" : "type"
+       }
+      ],
+      "members" : [
+       {
+        "name" : "editFormFieldByAttribute",
+        "kind" : "function",
+        "comment" : "\n",
+        "line" : 27,
+        "char" : 17,
+        "type" : "string(PrototypedItem item, ulong index)",
+        "parameters" : [
+         {
+          "name" : "item",
+          "type" : "PrototypedItem"
+         },
+         {
+          "name" : "index",
+          "deco" : "m"
+         }
+        ],
+        "endline" : 57,
+        "endchar" : 2
+       }
+      ]
+     },
+     {
+      "kind" : "template",
+      "comment" : "\n",
+      "line" : 62,
+      "char" : 9,
+      "name" : "editFormFieldByType",
+      "parameters" : [
+       {
+        "name" : "field",
+        "kind" : "value",
+        "deco" : "AAya"
+       },
+       {
+        "name" : "PrototypedItem",
+        "kind" : "type"
+       }
+      ],
+      "members" : [
+       {
+        "name" : "editFormFieldByType",
+        "kind" : "function",
+        "comment" : "\n",
+        "line" : 62,
+        "char" : 9,
+        "type" : "string(PrototypedItem item, ulong index)",
+        "parameters" : [
+         {
+          "name" : "item",
+          "type" : "PrototypedItem"
+         },
+         {
+          "name" : "index",
+          "deco" : "m"
+         }
+        ],
+        "endline" : 138,
+        "endchar" : 2
+       }
+      ]
+     },
+     {
+      "kind" : "template",
+      "comment" : "\n",
+      "line" : 143,
+      "char" : 9,
+      "name" : "editFormField",
+      "parameters" : [
+       {
+        "name" : "field",
+        "kind" : "value",
+        "deco" : "AAya"
+       },
+       {
+        "name" : "primaryField",
+        "kind" : "value",
+        "deco" : "xAya"
+       },
+       {
+        "name" : "PrototypedItem",
+        "kind" : "type"
+       }
+      ],
+      "members" : [
+       {
+        "name" : "editFormField",
+        "kind" : "function",
+        "comment" : "\n",
+        "line" : 143,
+        "char" : 9,
+        "type" : "string(PrototypedItem item, ulong index)",
+        "parameters" : [
+         {
+          "name" : "item",
+          "type" : "PrototypedItem"
+         },
+         {
+          "name" : "index",
+          "deco" : "m"
+         }
+        ],
+        "endline" : 170,
+        "endchar" : 2
+       }
+      ]
+     },
+     {
+      "kind" : "template",
+      "protection" : "private",
+      "comment" : "Private:\n",
+      "line" : 174,
+      "char" : 17,
+      "name" : "editFormFields",
+      "parameters" : [
+       {
+        "name" : "fields",
+        "kind" : "value",
+        "deco" : "AAAya"
+       },
+       {
+        "name" : "primaryField",
+        "kind" : "value",
+        "deco" : "Aya"
+       },
+       {
+        "name" : "PrototypedItem",
+        "kind" : "type"
+       }
+      ],
+      "members" : [
+       {
+        "name" : "editFormFields",
+        "kind" : "function",
+        "comment" : "Private:\n",
+        "line" : 174,
+        "char" : 17,
+        "type" : "string(PrototypedItem item, ulong index = 0)",
+        "parameters" : [
+         {
+          "name" : "item",
+          "type" : "PrototypedItem"
+         },
+         {
+          "name" : "index",
+          "deco" : "m",
+          "default" : "0"
+         }
+        ],
+        "endline" : 182,
+        "endchar" : 2
+       }
+      ]
+     },
+     {
+      "kind" : "template",
+      "comment" : "\n",
+      "line" : 187,
+      "char" : 9,
+      "name" : "asEditForm",
+      "parameters" : [
+       {
+        "name" : "PrototypedItem",
+        "kind" : "type"
+       }
+      ],
+      "members" : [
+       {
+        "name" : "asEditForm",
+        "kind" : "function",
+        "comment" : "\n",
+        "line" : 187,
+        "char" : 9,
+        "type" : "string(PrototypedItem item)",
+        "parameters" : [
+         {
+          "name" : "item",
+          "type" : "PrototypedItem"
+         }
+        ],
+        "endline" : 208,
+        "endchar" : 2
+       }
+      ]
+     },
+     {
+      "kind" : "template",
+      "comment" : "\n",
+      "line" : 213,
+      "char" : 9,
+      "name" : "asAddForm",
+      "parameters" : [
+       {
+        "name" : "PrototypedItem",
+        "kind" : "type"
+       }
+      ],
+      "members" : [
+       {
+        "name" : "asAddForm",
+        "kind" : "function",
+        "comment" : "\n",
+        "line" : 213,
+        "char" : 9,
+        "type" : "string(PrototypedItem item)",
+        "parameters" : [
+         {
+          "name" : "item",
+          "type" : "PrototypedItem"
+         }
+        ],
+        "endline" : 233,
+        "endchar" : 2
+       }
+      ]
+     },
+     {
+      "kind" : "template",
+      "comment" : "\n",
+      "line" : 238,
+      "char" : 9,
+      "name" : "asAdminTable",
+      "parameters" : [
+       {
+        "name" : "PrototypedItem",
+        "kind" : "type"
+       }
+      ],
+      "members" : [
+       {
+        "name" : "asAdminTable",
+        "kind" : "function",
+        "comment" : "\n",
+        "line" : 238,
+        "char" : 9,
+        "type" : "string(PrototypedItem[] items)",
+        "parameters" : [
+         {
+          "name" : "items",
+          "type" : "PrototypedItem[]"
+         }
+        ],
+        "endline" : 265,
+        "endchar" : 2
+       }
+      ]
+     },
+     {
+      "name" : "adminTableHeader",
+      "kind" : "function",
+      "protection" : "private",
+      "comment" : "Private:\n",
+      "line" : 268,
+      "char" : 17,
+      "deco" : "FAAAyaAyaZAya",
+      "parameters" : [
+       {
+        "name" : "fields",
+        "deco" : "AAAya"
+       },
+       {
+        "name" : "primaryField",
+        "deco" : "Aya"
+       }
+      ],
+      "endline" : 278,
+      "endchar" : 2
+     },
+     {
+      "kind" : "template",
+      "protection" : "private",
+      "comment" : "Private:\n",
+      "line" : 281,
+      "char" : 17,
+      "name" : "adminTableLine",
+      "parameters" : [
+       {
+        "name" : "fields",
+        "kind" : "value",
+        "deco" : "AAAya"
+       },
+       {
+        "name" : "primaryField",
+        "kind" : "value",
+        "deco" : "Aya"
+       },
+       {
+        "name" : "PrototypedItem",
+        "kind" : "type"
+       }
+      ],
+      "members" : [
+       {
+        "name" : "adminTableLine",
+        "kind" : "function",
+        "comment" : "Private:\n",
+        "line" : 281,
+        "char" : 17,
+        "type" : "string(PrototypedItem item)",
+        "parameters" : [
+         {
+          "name" : "item",
+          "type" : "PrototypedItem"
+         }
+        ],
+        "endline" : 289,
+        "endchar" : 2
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name" : "crated.view.adminmenu",
+  "kind" : "module",
+  "file" : "source/crated/view/adminmenu.d",
+  "comment" : " Authors: Szabo Bogdan <szabobogdan@yahoo.com>\n Date: 11 23, 2014\n License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.\n Copyright: Public Domain\n",
+  "members" : [
+   {
+    "name" : "std.conv",
+    "kind" : "import",
+    "line" : 9,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "crated.model.base",
+    "kind" : "import",
+    "line" : 10,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "crated.view.base",
+    "kind" : "import",
+    "line" : 11,
+    "char" : 15
+   },
+   {
+    "name" : "AdminMenuView",
+    "kind" : "class",
+    "line" : 13,
+    "char" : 1,
+    "base" : "BaseView",
+    "members" : [
+     {
+      "name" : "dataUrls",
+      "kind" : "variable",
+      "line" : 15,
+      "char" : 23,
+      "storageClass" : [
+       "static",
+       "shared"
+      ],
+      "deco" : "OHAyaHAyaAya",
+      "originalType" : "string[string][string]"
+     },
+     {
+      "name" : "toString",
+      "kind" : "function",
+      "line" : 17,
+      "char" : 18,
+      "storageClass" : [
+       "override"
+      ],
+      "deco" : "FZAya",
+      "endline" : 49,
+      "endchar" : 2,
+      "overrides" : [
+       "crated.view.base.BaseView.toString"
+      ]
+     },
+     {
+      "name" : "this",
+      "kind" : "constructor",
+      "line" : 13,
+      "char" : 1,
+      "deco" : "FZC6crated4view9adminmenu13AdminMenuView",
+      "originalType" : "()"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "name" : "crated.view.base",
+  "kind" : "module",
+  "file" : "source/crated/view/base.d",
+  "comment" : " Basic view tools\n\n Authors: Szabo Bogdan <szabobogdan@yahoo.com>\n Date: November 3, 2014\n License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.\n Copyright: Public Domain\n",
+  "members" : [
+   {
+    "name" : "crated.settings",
+    "kind" : "import",
+    "line" : 11,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "std.string",
+    "kind" : "import",
+    "line" : 12,
+    "char" : 8,
+    "protection" : "private"
+   },
+   {
+    "name" : "BaseView",
+    "kind" : "class",
+    "line" : 14,
+    "char" : 1,
+    "members" : [
+     {
+      "name" : "cssFiles",
+      "kind" : "variable",
+      "protection" : "private",
+      "line" : 16,
+      "char" : 19,
+      "deco" : "AAya",
+      "offset" : 16
+     },
+     {
+      "name" : "jsFiles",
+      "kind" : "variable",
+      "protection" : "private",
+      "line" : 17,
+      "char" : 19,
+      "deco" : "AAya",
+      "offset" : 32
+     },
+     {
+      "name" : "content",
+      "kind" : "variable",
+      "line" : 19,
+      "char" : 9,
+      "deco" : "Aya",
+      "offset" : 48
+     },
+     {
+      "name" : "title",
+      "kind" : "variable",
+      "line" : 20,
+      "char" : 9,
+      "deco" : "Aya",
+      "offset" : 64
+     },
+     {
+      "name" : "parent",
+      "kind" : "variable",
+      "line" : 21,
+      "char" : 11,
+      "deco" : "C6crated4view4base8BaseView",
+      "originalType" : "BaseView",
+      "offset" : 80
+     },
+     {
+      "name" : "this",
+      "kind" : "constructor",
+      "line" : 23,
+      "char" : 2,
+      "deco" : "FC6crated4view4base8BaseViewZC6crated4view4base8BaseView",
+      "originalType" : "(BaseView parent = null)",
+      "parameters" : [
+       {
+        "name" : "parent",
+        "deco" : "C6crated4view4base8BaseView",
+        "default" : "null"
+       }
+      ],
+      "endline" : 26,
+      "endchar" : 2
+     },
+     {
+      "name" : "parseDhContent",
+      "kind" : "function",
+      "comment" : " Parse a dh file\n",
+      "line" : 31,
+      "char" : 16,
+      "storageClass" : [
+       "static"
+      ],
+      "deco" : "FAyaZAya",
+      "parameters" : [
+       {
+        "name" : "content",
+        "deco" : "Aya"
+       }
+      ],
+      "endline" : 63,
+      "endchar" : 2
+     },
+     {
+      "kind" : "template",
+      "comment" : " Render a dh file\n",
+      "line" : 69,
+      "char" : 9,
+      "name" : "renderDh",
+      "parameters" : [
+       {
+        "name" : "file",
+        "kind" : "value",
+        "deco" : "Aya"
+       },
+       {
+        "name" : "T",
+        "kind" : "type"
+       }
+      ],
+      "members" : [
+       {
+        "name" : "renderDh",
+        "kind" : "function",
+        "comment" : " Render a dh file\n",
+        "line" : 69,
+        "char" : 9,
+        "type" : "string(T data, string url = \"\")",
+        "parameters" : [
+         {
+          "name" : "data",
+          "type" : "T"
+         },
+         {
+          "name" : "url",
+          "type" : "string",
+          "default" : "\"\""
+         }
+        ],
+        "endline" : 90,
+        "endchar" : 2
+       }
+      ]
+     },
+     {
+      "name" : "useBootstrapCssCDN",
+      "kind" : "function",
+      "line" : 92,
+      "char" : 7,
+      "deco" : "FZv",
+      "endline" : 94,
+      "endchar" : 2
+     },
+     {
+      "name" : "useJqueryCDN",
+      "kind" : "function",
+      "line" : 96,
+      "char" : 7,
+      "deco" : "FZv",
+      "endline" : 98,
+      "endchar" : 2
+     },
+     {
+      "name" : "uses",
+      "kind" : "function",
+      "line" : 100,
+      "char" : 7,
+      "deco" : "FAyaZv",
+      "parameters" : [
+       {
+        "name" : "file",
+        "deco" : "Aya"
+       }
+      ],
+      "endline" : 108,
+      "endchar" : 2
+     },
+     {
+      "name" : "wrapWithBaseContainer",
+      "kind" : "function",
+      "line" : 110,
+      "char" : 9,
+      "deco" : "FxAyaZAya",
+      "originalType" : "string(const string content)",
+      "parameters" : [
+       {
+        "name" : "content",
+        "deco" : "xAya"
+       }
+      ],
+      "endline" : 137,
+      "endchar" : 2
+     },
+     {
+      "name" : "toString",
+      "kind" : "function",
+      "line" : 139,
+      "char" : 18,
+      "storageClass" : [
+       "override"
+      ],
+      "deco" : "FZAya",
+      "endline" : 141,
+      "endchar" : 2,
+      "overrides" : [
+       "object.Object.toString"
+      ]
+     }
+    ]
+   }
+  ]
+ }
+]
