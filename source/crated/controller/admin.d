@@ -9,8 +9,6 @@
 module crated.controller.admin;
 
 import crated.view.admin;
-
-import crated.controller.vibed;
 import vibe.d;
 
 /**
