@@ -57,7 +57,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="source\crated\controller\base.d" />
-    <Compile Include="source\crated\controller\vibed.d" />
     <Compile Include="source\crated\model\base.d" />
     <Compile Include="source\crated\model\mongo.d" />
     <Compile Include="source\crated\view\base.d" />
@@ -65,14 +64,20 @@
     <Compile Include="source\crated\controller\admin.d" />
     <Compile Include="source\crated\view\admin.d" />
     <Compile Include="source\crated\settings.d" />
+    <Compile Include="source\crated\controller\datamanager.d" />
+    <Compile Include="source\crated\view\adminmenu.d" />
+    <Compile Include="source\crated\tools.d" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dub.json" />
     <None Include="LICENSE.txt" />
     <None Include="README.md" />
     <None Include="test.sh" />
+    <None Include="assets\adminmenu.css" />
+    <None Include="assets\adminmenu.js" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="source\crated\" />
+    <Folder Include="assets\" />
   </ItemGroup>
 </Project>
