@@ -114,9 +114,6 @@ template AdminController(string baseUrl, Model, ContainerCls = BaseView) {
 			
 			res.writeBody( "Deleted! Redirecting..." , "text/html; charset=UTF-8");
 		}
-
-		//insert controller code
-		mixin MixVibedController!(AdminControllerTemplate);
 	}
 
 	alias AdminController = AdminControllerTemplate;

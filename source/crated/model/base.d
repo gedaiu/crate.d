@@ -144,6 +144,7 @@ template Item(Prototype, M) {
 		 * Copy data from an object that have the same fields
 		 */
 		void copy(string[][] fields, T)(T someItem) {
+
 			static if(fields.length == 1) {
 				bool found = true;
 
@@ -159,8 +160,8 @@ template Item(Prototype, M) {
 						someField = "";
 						found = false;
 					}
-
 				}
+
 
 				if(found) { 
 					static if( is( typeof(__traits(getMember, this, fields[0][0]) ) == typeof(someField) ) ) {
@@ -168,7 +169,11 @@ template Item(Prototype, M) {
 						__traits(getMember, this, fields[0][0]) = someField;
 					} else {
 						static if(fields[0][2] == "isEnum") {
-							__traits(getMember, this, fields[0][0]) = someField.to!string.to!(typeof(__traits(getMember, this, fields[0][0])));
+							try {
+								__traits(getMember, this, fields[0][0]) = someField.to!string.to!(typeof(__traits(getMember, this, fields[0][0])));
+							} catch(ConvException e) {
+								std.stdio.writeln(e);
+							}
 						} else {
 							__traits(getMember, this, fields[0][0]) = someField.to!(typeof(__traits(getMember, this, fields[0][0])));
 						}
