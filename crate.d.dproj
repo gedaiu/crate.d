@@ -64,7 +64,6 @@
     <Compile Include="source\crated\controller\admin.d" />
     <Compile Include="source\crated\view\admin.d" />
     <Compile Include="source\crated\settings.d" />
-    <Compile Include="source\crated\controller\datamanager.d" />
     <Compile Include="source\crated\view\adminmenu.d" />
     <Compile Include="source\crated\tools.d" />
   </ItemGroup>

@@ -15,7 +15,7 @@ import crated.view.base;
 import crated.tools;
 
 /**
- * Generate a crate.d controller.
+ * Generate a crated controller.
  * 
  * This template extends <code>ControllerCls</code> with methods that helps you to automate the vibe.d routing.
  * More info about vibe.d routing can be found here: http://vibed.org/docs#http-routing.
@@ -67,7 +67,8 @@ template Controller(ControllerCls) {
 		enum string[][] requests = getItemFields!("HttpRequest", ControllerCls, true);
 
 		/**
-		 * Set the Controller callbacks to a vibe.d router
+		 * Set the Controller callbacks to a vibe.d router. If <code>ControllerCls</code> has 
+		 * <code>addOtherRoutes(ref URLRouter router)</code>, it will be called first.
 		 */
 		void addRoutes(ref URLRouter router, bool callSuper = true) {
 

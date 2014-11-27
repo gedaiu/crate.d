@@ -3,7 +3,7 @@
   "name" : "crated.controller.admin",
   "kind" : "module",
   "file" : "source/crated/controller/admin.d",
-  "comment" : " Manage models easily\n\n Authors: Szabo Bogdan <szabobogdan@yahoo.com>\n Date: November 3, 2014\n License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.\n Copyright: Public Domain\n",
+  "comment" : " Tools for managing Model data.\n\n Authors: Szabo Bogdan <szabobogdan@yahoo.com>\n Date: November 3, 2014\n License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.\n Copyright: Public Domain\n",
   "members" : [
    {
     "name" : "crated.view.admin",
@@ -21,34 +21,8 @@
    },
    {
     "kind" : "template",
-    "comment" : " The project controller\n",
-    "line" : 18,
-    "char" : 1,
-    "name" : "AdminController",
-    "parameters" : [
-     {
-      "name" : "baseUrl",
-      "kind" : "value",
-      "deco" : "Aya"
-     },
-     {
-      "name" : "model",
-      "kind" : "alias"
-     }
-    ],
-    "members" : [
-     {
-      "name" : "AdminController",
-      "kind" : "alias",
-      "line" : 19,
-      "char" : 2,
-      "type" : "AdminController!(baseUrl, typeof(model))"
-     }
-    ]
-   },
-   {
-    "kind" : "template",
-    "line" : 22,
+    "comment" : " AdminController create <b>/edit/:id</b>, <b>/add</b>, <b>/edit</b>, <b>/delete</b>\n nodes relative to the <code>baseUrl</code> parameter. At the <b>baseUrl</b> node will be displayed\n a list wil the model elements.\n\n The <code>AdminController</code> is just a controller prototype and must be wraped with the crate.d\n Controller to be used properly. It's so, because you might want to add more nodes to the AdminController.\n Here is an example of creating an AdminController:\n\n Example:\n -----------------\n auto myController = new Controller!(AdminController!(\"/admin\", BookModel));\n -----------------\n\n If you want to use a custom container view for the admin controler you can pass it as the third parameter:\n\n Example:\n -----------------\n auto myController = new Controller!(AdminController!(\"/admin\", BookModel, MyCustomContainerView));\n -----------------\n\n",
+    "line" : 36,
     "char" : 1,
     "name" : "AdminController",
     "parameters" : [
@@ -69,23 +43,25 @@
     ],
     "members" : [
      {
-      "name" : "Prototype",
+      "name" : "ItemCls",
       "kind" : "alias",
-      "line" : 24,
+      "comment" : "Private:\n",
+      "line" : 39,
       "char" : 2,
       "type" : "Model.ItemCls"
      },
      {
       "name" : "AdminControllerTemplate",
       "kind" : "class",
-      "line" : 26,
+      "comment" : "Admin controller template class\n",
+      "line" : 42,
       "char" : 2,
       "members" : [
        {
         "name" : "index",
         "kind" : "function",
         "comment" : " The list page\n",
-        "line" : 32,
+        "line" : 48,
         "char" : 15,
         "storageClass" : [
          "static"
@@ -101,14 +77,14 @@
           "type" : "HTTPServerResponse"
          }
         ],
-        "endline" : 43,
+        "endline" : 59,
         "endchar" : 3
        },
        {
         "name" : "edit",
         "kind" : "function",
         "comment" : " The edit page\n",
-        "line" : 49,
+        "line" : 65,
         "char" : 15,
         "storageClass" : [
          "static"
@@ -124,14 +100,14 @@
           "type" : "HTTPServerResponse"
          }
         ],
-        "endline" : 62,
+        "endline" : 78,
         "endchar" : 3
        },
        {
         "name" : "add",
         "kind" : "function",
         "comment" : " The add item page\n",
-        "line" : 68,
+        "line" : 84,
         "char" : 15,
         "storageClass" : [
          "static"
@@ -147,37 +123,14 @@
           "type" : "HTTPServerResponse"
          }
         ],
-        "endline" : 80,
+        "endline" : 96,
         "endchar" : 3
        },
        {
         "name" : "save",
         "kind" : "function",
         "comment" : " The save item action\n",
-        "line" : 87,
-        "char" : 15,
-        "storageClass" : [
-         "static"
-        ],
-        "type" : "void(HTTPServerRequest req, HTTPServerResponse res)",
-        "parameters" : [
-         {
-          "name" : "req",
-          "type" : "HTTPServerRequest"
-         },
-         {
-          "name" : "res",
-          "type" : "HTTPServerResponse"
-         }
-        ],
-        "endline" : 100,
-        "endchar" : 3
-       },
-       {
-        "name" : "delete_",
-        "kind" : "function",
-        "comment" : " The delete item action\n",
-        "line" : 106,
+        "line" : 103,
         "char" : 15,
         "storageClass" : [
          "static"
@@ -195,15 +148,124 @@
         ],
         "endline" : 116,
         "endchar" : 3
+       },
+       {
+        "name" : "delete_",
+        "kind" : "function",
+        "comment" : " The delete item action\n",
+        "line" : 122,
+        "char" : 15,
+        "storageClass" : [
+         "static"
+        ],
+        "type" : "void(HTTPServerRequest req, HTTPServerResponse res)",
+        "parameters" : [
+         {
+          "name" : "req",
+          "type" : "HTTPServerRequest"
+         },
+         {
+          "name" : "res",
+          "type" : "HTTPServerResponse"
+         }
+        ],
+        "endline" : 132,
+        "endchar" : 3
        }
       ]
      },
      {
       "name" : "AdminController",
       "kind" : "alias",
-      "line" : 119,
+      "line" : 135,
       "char" : 2,
       "type" : "AdminControllerTemplate"
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "comment" : " You also can create an AdminController like this:\n\n Example:\n -----------------\n auto myModel = new BookModel;\n\n auto myController = new Controller!(AdminController!(\"/admin\", myModel));\n -----------------\n",
+    "line" : 149,
+    "char" : 1,
+    "name" : "AdminController",
+    "parameters" : [
+     {
+      "name" : "baseUrl",
+      "kind" : "value",
+      "deco" : "Aya"
+     },
+     {
+      "name" : "model",
+      "kind" : "alias"
+     },
+     {
+      "name" : "ContainerCls",
+      "kind" : "type",
+      "default" : "BaseView"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "AdminController",
+      "kind" : "alias",
+      "line" : 150,
+      "char" : 2,
+      "type" : "AdminController!(baseUrl, typeof(model), ContainerCls)"
+     }
+    ]
+   },
+   {
+    "kind" : "template",
+    "comment" : " DataManager create an AdminController for every Model passed as parameter. The DataManagerController use\n the AdminMenuview and because this view has external css and js files, you must serve the assets as static\n files.\n\n Example:\n -----------------\n alias DataManagerController = DataManager!(\"/admin\", BookModel, OtherProductsModel);\n\n auto dataManager = new Controller!DataManagerController;\n\n //serve the crated library files\n auto fsettings = new HTTPFileServerSettings;\n fsettings.serverPathPrefix = \"/assets/\";\n router.get(\"*\", serveStaticFiles(\"../../assets/\", fsettings));\n\n //add routes to manage the BookModel and OtherProductsModel\n dataManager.addRoutes(router);\n -----------------\n",
+    "line" : 174,
+    "char" : 1,
+    "name" : "DataManager",
+    "parameters" : [
+     {
+      "name" : "baseUrl",
+      "kind" : "value",
+      "deco" : "Aya"
+     },
+     {
+      "name" : "EL",
+      "kind" : "tuple"
+     }
+    ],
+    "members" : [
+     {
+      "name" : "DataManagerTemplate",
+      "kind" : "class",
+      "line" : 177,
+      "char" : 2,
+      "members" : [
+       {
+        "name" : "addOtherRoutes",
+        "kind" : "function",
+        "comment" : " Init the router\n",
+        "line" : 182,
+        "char" : 8,
+        "type" : "void(ref URLRouter router)",
+        "parameters" : [
+         {
+          "name" : "router",
+          "type" : "URLRouter",
+          "storageClass" : [
+           "ref"
+          ]
+         }
+        ],
+        "endline" : 203,
+        "endchar" : 3
+       }
+      ]
+     },
+     {
+      "name" : "DataManager",
+      "kind" : "alias",
+      "line" : 206,
+      "char" : 2,
+      "type" : "DataManagerTemplate"
      }
     ]
    }
@@ -238,7 +300,7 @@
    },
    {
     "kind" : "template",
-    "comment" : " Generate a crate.d controller.\n\n This template extends <code>ControllerCls</code> with methods that helps you to automate the vibe.d routing.\n More info about vibe.d routing can be found here: http://vibed.org/docs#http-routing.\n To create a crated Controller, you have to create a class with static methods marked with three attributes:\n\n - HttpRequest - Show that the method is a request callback\n - method - mark the request method that the callback will react. example: <code>method:GET</code>\n - node - mark the request URI that the callback will react. example: <code>node:/item/:id</code>\n\n Here is an example of a simple controller:\n\n Example:\n --------------------\n class MyControllerPrototype  {\n\n \t@(\"HttpRequest\", \"method:GET\", \"node:/item/:id\")\n \tstatic void index(HTTPServerRequest req, HTTPServerResponse res) {\n \t\t...\n \t}\n }\n\n alias MyController = Controller!MyControllerPrototype;\n\n shared static this()\n {\n \t//set the web server\n \tauto settings = new HTTPServerSettings;\n \tsettings.port = 8080;\n \tsettings.bindAddresses = [\"::1\", \"127.0.0.1\"];\n\n \tauto router = new URLRouter;\n \tauto sampleController = new MyController;\n\n \tsampleController.addRoutes(router);\n\n \tlistenHTTP(settings, router);\n \tlogInfo(\"Please open http://127.0.0.1:8080/ in your browser.\");\n }\n --------------------\n\n",
+    "comment" : " Generate a crated controller.\n\n This template extends <code>ControllerCls</code> with methods that helps you to automate the vibe.d routing.\n More info about vibe.d routing can be found here: http://vibed.org/docs#http-routing.\n To create a crated Controller, you have to create a class with static methods marked with three attributes:\n\n - HttpRequest - Show that the method is a request callback\n - method - mark the request method that the callback will react. example: <code>method:GET</code>\n - node - mark the request URI that the callback will react. example: <code>node:/item/:id</code>\n\n Here is an example of a simple controller:\n\n Example:\n --------------------\n class MyControllerPrototype  {\n\n \t@(\"HttpRequest\", \"method:GET\", \"node:/item/:id\")\n \tstatic void index(HTTPServerRequest req, HTTPServerResponse res) {\n \t\t...\n \t}\n }\n\n alias MyController = Controller!MyControllerPrototype;\n\n shared static this()\n {\n \t//set the web server\n \tauto settings = new HTTPServerSettings;\n \tsettings.port = 8080;\n \tsettings.bindAddresses = [\"::1\", \"127.0.0.1\"];\n\n \tauto router = new URLRouter;\n \tauto sampleController = new MyController;\n\n \tsampleController.addRoutes(router);\n\n \tlistenHTTP(settings, router);\n \tlogInfo(\"Please open http://127.0.0.1:8080/ in your browser.\");\n }\n --------------------\n\n",
     "line" : 60,
     "char" : 1,
     "name" : "Controller",
@@ -271,8 +333,8 @@
        {
         "name" : "addRoutes",
         "kind" : "function",
-        "comment" : " Set the Controller callbacks to a vibe.d router\n",
-        "line" : 72,
+        "comment" : " Set the Controller callbacks to a vibe.d router. If <code>ControllerCls</code> has\n <code>addOtherRoutes(ref URLRouter router)</code>, it will be called first.\n",
+        "line" : 73,
         "char" : 8,
         "type" : "void(ref URLRouter router, bool callSuper = true)",
         "parameters" : [
@@ -289,13 +351,13 @@
           "default" : "true"
          }
         ],
-        "endline" : 79,
+        "endline" : 80,
         "endchar" : 3
        },
        {
         "kind" : "template",
         "comment" : "Private:\n",
-        "line" : 82,
+        "line" : 83,
         "char" : 16,
         "name" : "addRoutes",
         "parameters" : [
@@ -310,7 +372,7 @@
           "name" : "addRoutes",
           "kind" : "function",
           "comment" : "Private:\n",
-          "line" : 82,
+          "line" : 83,
           "char" : 16,
           "type" : "void(ref URLRouter router)",
           "parameters" : [
@@ -322,7 +384,7 @@
             ]
            }
           ],
-          "endline" : 93,
+          "endline" : 94,
           "endchar" : 3
          }
         ]
@@ -331,7 +393,7 @@
         "name" : "route",
         "kind" : "function",
         "comment" : "Private:\n",
-        "line" : 96,
+        "line" : 97,
         "char" : 16,
         "type" : "void(void function(HTTPServerRequest, HTTPServerResponse) cb, string method, string path, ref URLRouter router)",
         "parameters" : [
@@ -355,14 +417,14 @@
           ]
          }
         ],
-        "endline" : 103,
+        "endline" : 104,
         "endchar" : 3
        },
        {
         "name" : "valueOf",
         "kind" : "function",
         "comment" : " Get an attribute value. An atribute value is set like this:\n\n Example:\n -------------\n @(\"field\", \"custom attribute:custom value\")\n string name;\n -------------\n",
-        "line" : 115,
+        "line" : 116,
         "char" : 17,
         "storageClass" : [
          "static"
@@ -378,7 +440,7 @@
           "type" : "string"
          }
         ],
-        "endline" : 130,
+        "endline" : 131,
         "endchar" : 3
        }
       ]
@@ -387,98 +449,9 @@
       "name" : "Controller",
       "kind" : "alias",
       "comment" : "Private:\n",
-      "line" : 134,
+      "line" : 135,
       "char" : 2,
       "type" : "ControllerTemplate"
-     }
-    ]
-   }
-  ]
- },
- {
-  "name" : "crated.controller.datamanager",
-  "kind" : "module",
-  "file" : "source/crated/controller/datamanager.d",
-  "comment" : " Manage models easily\n\n Authors: Szabo Bogdan <szabobogdan@yahoo.com>\n Date: November 3, 2014\n License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.\n Copyright: Public Domain\n",
-  "members" : [
-   {
-    "name" : "crated.view.adminmenu",
-    "kind" : "import",
-    "line" : 11,
-    "char" : 8,
-    "protection" : "private"
-   },
-   {
-    "name" : "crated.controller.base",
-    "kind" : "import",
-    "line" : 13,
-    "char" : 8,
-    "protection" : "private"
-   },
-   {
-    "name" : "crated.controller.admin",
-    "kind" : "import",
-    "line" : 14,
-    "char" : 8,
-    "protection" : "private"
-   },
-   {
-    "name" : "vibe.d",
-    "kind" : "import",
-    "line" : 15,
-    "char" : 8,
-    "protection" : "private"
-   },
-   {
-    "kind" : "template",
-    "line" : 17,
-    "char" : 1,
-    "name" : "DataManager",
-    "parameters" : [
-     {
-      "name" : "baseUrl",
-      "kind" : "value",
-      "deco" : "Aya"
-     },
-     {
-      "name" : "EL",
-      "kind" : "tuple"
-     }
-    ],
-    "members" : [
-     {
-      "name" : "DataManagerTemplate",
-      "kind" : "class",
-      "line" : 20,
-      "char" : 2,
-      "members" : [
-       {
-        "name" : "addOtherRoutes",
-        "kind" : "function",
-        "comment" : " Init the router\n",
-        "line" : 25,
-        "char" : 8,
-        "type" : "void(ref URLRouter router)",
-        "parameters" : [
-         {
-          "name" : "router",
-          "type" : "URLRouter",
-          "storageClass" : [
-           "ref"
-          ]
-         }
-        ],
-        "endline" : 46,
-        "endchar" : 3
-       }
-      ]
-     },
-     {
-      "name" : "DataManager",
-      "kind" : "alias",
-      "line" : 49,
-      "char" : 2,
-      "type" : "DataManagerTemplate"
      }
     ]
    }

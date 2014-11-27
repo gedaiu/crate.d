@@ -3,7 +3,6 @@ import vibe.d;
 import crated.model.mongo;
 import crated.controller.base;
 import crated.controller.admin;
-import crated.controller.datamanager;
 
 import std.stdio;
 
