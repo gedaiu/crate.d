@@ -66,6 +66,7 @@
     <Compile Include="source\crated\settings.d" />
     <Compile Include="source\crated\view\adminmenu.d" />
     <Compile Include="source\crated\tools.d" />
+    <Compile Include="source\crated\model\calendar.d" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dub.json" />
