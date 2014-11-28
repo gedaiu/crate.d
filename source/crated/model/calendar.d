@@ -84,17 +84,20 @@ unittest {
  * the event. If the current time is <code>startDate - boundary</code> the startDate will be automaticaly postponed
  * with <code>postpone</code> duration.
  */
-class CalendarUnknownEventPrototype
+class CalendarUnknownEventPrototype : CalendarEventPrototype
 {
-	private SysTime _startDate;
+	private alias _startDate = super.startDate;
+	private alias _endDate = super.endDate;
 
 	///Event start date
 	@property @("field")
 	SysTime startDate() {
 		auto now = Clock.currTime;
 
-		if(now + boundary >= _startDate) _startDate = now + postpone;
-
+		if(now + boundary >= _startDate) {
+			_startDate = now + postpone;
+			_endDate = _startDate + duration;
+		}
 
 		return _startDate;
 	}
@@ -106,6 +109,7 @@ class CalendarUnknownEventPrototype
 		if(now + boundary >= start) start = now + postpone;
 
 		_startDate = start;
+		_endDate = _startDate + duration;
 	}
 
 	@property @("field")
@@ -121,6 +125,7 @@ class CalendarUnknownEventPrototype
 	body
 	{
 		duration = end - startDate;
+		_endDate = _startDate + duration;
 	}
 	
 	@("field")
@@ -529,4 +534,125 @@ unittest {
 	
 	assert(!testEvent.isEventOn( SysTime(DateTime(2014,1,14, 12,0,0))));
 	assert(!testEvent.isEventOn( SysTime(DateTime(2014,1,14, 14,0,0)) - dur!"seconds"(1)));
+}
+
+/**
+ * This represent a chain of events where each event does not overlap with his successor.
+ */
+class CalendarEventChainPrototype {
+	CalendarEventPrototype[] events;
+
+	/**
+	 * Check events for collisions and solve them.
+	 */
+	void update() {
+
+		if(events.length == 0) return;
+
+		auto prevEvent = events[0];
+		
+		foreach(i; 1..events.length) {
+			if(events[i].startDate < prevEvent.endDate) {
+				auto tmpDuration = events[i].duration;
+
+				events[i].startDate = prevEvent.endDate;
+				events[i].endDate = prevEvent.endDate + tmpDuration;
+			}
+
+			prevEvent = events[i];
+		}
+
+	}
+}
+
+
+
+unittest {
+	//test a valid chain
+	auto chain = new CalendarEventChainPrototype;
+	
+	auto event1 = new CalendarEventPrototype;
+	event1.startDate = SysTime(DateTime(2014,1,1,10,0,0));
+	event1.endDate = SysTime(DateTime(2014,1,1,11,0,0));
+	
+	auto event2 = new CalendarEventPrototype;
+	event2.startDate = SysTime(DateTime(2014,1,1,11,0,0));
+	event2.endDate = SysTime(DateTime(2014,1,1,12,0,0));
+	
+	chain.events = [event1, event2];
+	chain.update;
+	
+	assert(chain.events[0].startDate == SysTime(DateTime(2014,1,1,10,0,0)));
+	assert(chain.events[0].endDate == SysTime(DateTime(2014,1,1,11,0,0)));
+	assert(chain.events[1].startDate == SysTime(DateTime(2014,1,1,11,0,0)));
+	assert(chain.events[1].endDate == SysTime(DateTime(2014,1,1,12,0,0)));
+}
+
+unittest {
+	//test another valid chain
+	auto chain = new CalendarEventChainPrototype;
+	
+	auto event1 = new CalendarEventPrototype;
+	event1.startDate = SysTime(DateTime(2014,1,1,10,0,0));
+	event1.endDate = SysTime(DateTime(2014,1,1,11,0,0));
+	
+	auto event2 = new CalendarEventPrototype;
+	event2.startDate = SysTime(DateTime(2014,1,2,10,0,0));
+	event2.endDate = SysTime(DateTime(2014,1,2,11,0,0));
+	
+	chain.events = [event1, event2];
+	chain.update;
+	
+	assert(chain.events[0].startDate == SysTime(DateTime(2014,1,1,10,0,0)));
+	assert(chain.events[0].endDate == SysTime(DateTime(2014,1,1,11,0,0)));
+	assert(chain.events[1].startDate == SysTime(DateTime(2014,1,2,10,0,0)));
+	assert(chain.events[1].endDate == SysTime(DateTime(2014,1,2,11,0,0)));
+}
+
+unittest {
+	//test two overlaping events
+	auto chain = new CalendarEventChainPrototype;
+	
+	auto event1 = new CalendarEventPrototype;
+	event1.startDate = SysTime(DateTime(2014,1,1,10,0,0));
+	event1.endDate = SysTime(DateTime(2014,1,1,11,0,0));
+	
+	auto event2 = new CalendarEventPrototype;
+	event2.startDate = SysTime(DateTime(2014,1,1,10,0,0));
+	event2.endDate = SysTime(DateTime(2014,1,1,11,0,0));
+	
+	chain.events = [event1, event2];
+	chain.update;
+	
+	assert(chain.events[0].startDate == SysTime(DateTime(2014,1,1,10,0,0)));
+	assert(chain.events[0].endDate == SysTime(DateTime(2014,1,1,11,0,0)));
+	assert(chain.events[1].startDate == SysTime(DateTime(2014,1,1,11,0,0)));
+	assert(chain.events[1].endDate == SysTime(DateTime(2014,1,1,12,0,0)));
+}
+
+unittest {
+	//test two overlaping events with an unknown event
+	auto chain = new CalendarEventChainPrototype;
+	
+	auto event1 = new CalendarUnknownEventPrototype;
+	event1.startDate = SysTime(DateTime(2014,1,1,10,0,0));
+	event1.duration = dur!"hours"(1);
+	
+	auto event2 = new CalendarEventPrototype;
+	event2.startDate = SysTime(DateTime(2014,1,1,10,0,0));
+	event2.endDate = SysTime(DateTime(2014,1,1,11,0,0));
+	
+	chain.events = [event1, event2];
+
+	auto now = Clock.currTime + event1.postpone - dur!"seconds"(1);
+	auto now2 = now + dur!"seconds"(1);
+
+	chain.update;
+
+	auto a = chain.events[0].startDate;         
+
+	assert(chain.events[0].startDate >= now                  && chain.events[0].startDate <= now2);
+	assert(chain.events[0].endDate >= now + dur!"hours"(1)   && chain.events[0].endDate <= now2 + dur!"hours"(1));
+	assert(chain.events[1].startDate >= now + dur!"hours"(1) && chain.events[1].startDate <= now2 + dur!"hours"(1));
+	assert(chain.events[1].endDate >= now + dur!"hours"(2)   && chain.events[1].endDate <= now2 + dur!"hours"(2));
 }
