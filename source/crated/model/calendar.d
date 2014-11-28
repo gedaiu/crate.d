@@ -292,7 +292,7 @@ class CalendarRulePrototype {
 	 */
 	@safe nothrow bool isValidDay(SysTime date) {
 		auto day = date.dayOfWeek;
-
+		
 		if(day == 0 && sunday)    return true;
 		if(day == 1 && monday)    return true;
 		if(day == 2 && tuesday)   return true;
@@ -300,8 +300,47 @@ class CalendarRulePrototype {
 		if(day == 4 && thursday)  return true;
 		if(day == 5 && friday)    return true;
 		if(day == 6 && saturday)  return true;
-
+		
 		return false;
+	}
+
+	/**
+	 * Generate intervals for the current rule.
+	 */
+	 Interval!SysTime[] generateIntervalsBetween(SysTime start, SysTime startInterval, SysTime endInterval) {
+		SysTime firstDay = start - dur!"days"(start.dayOfWeek);
+		firstDay.hour = 0;
+		firstDay.minute = 0;
+		firstDay.second = 0;
+		firstDay.fracSec = FracSec.zero;
+		
+		if(weekStartOnMonday) firstDay +=  dur!"days"(1);
+
+		auto currentDay = start;
+		currentDay.hour = 0;
+		currentDay.minute = 0;
+		currentDay.second = 0;
+		currentDay.fracSec = FracSec.zero;
+
+		Interval!SysTime[] intervals;
+
+		while(currentDay < endInterval) {
+
+			if(isValidWeek(start, currentDay) && isValidDay(currentDay)) {
+				auto tmpStart = SysTime( DateTime(cast(Date) currentDay, startTime) );
+				auto tmpEnd = SysTime( DateTime(cast(Date) currentDay, endTime) );
+
+				if(isInsideDateInterval(startInterval, endInterval, tmpStart) && isInsideDateInterval(startInterval, endInterval, tmpEnd)) {
+					auto tmpInterval = Interval!SysTime(tmpStart, tmpEnd);
+
+					intervals ~= tmpInterval;
+				}
+			}
+
+			currentDay += dur!"days"(1);
+		}
+
+		return intervals;
 	}
 
 	invariant() {
@@ -382,6 +421,25 @@ unittest {
 	assert( testProgram.isValidWeek(start, start + dur!"weeks"(3)));
 }
 
+unittest {
+	//check interval generation
+	auto testProgram = new CalendarRulePrototype;
+	testProgram.startTime = TimeOfDay(10,0,0);
+	testProgram.endTime = TimeOfDay(11,0,0);
+	testProgram.repeatAfterWeeks = 2;
+
+	testProgram.monday = true;
+
+	SysTime start = SysTime(DateTime(2014,1,1));
+
+	auto res = testProgram.generateIntervalsBetween(start, start, SysTime(DateTime(2014,3,1)));
+
+	assert(res.length == 2);
+	assert(res[0] == Interval!SysTime(SysTime(DateTime(2014,1,20,10,0,0)), SysTime(DateTime(2014,1,20,11,0,0))));
+	assert(res[1] == Interval!SysTime(SysTime(DateTime(2014,2,10,10,0,0)), SysTime(DateTime(2014,2,10,11,0,0))));
+}
+
+
 /**
  * This represents a repetable event.
  */
@@ -402,6 +460,24 @@ class CalendarRepetableEventPrototype : CalendarEventPrototype {
 		}
 
 		return result;
+	}
+
+	/**
+	 * Generate intervals for the current event.
+	 * 
+	 * TODO: write a test
+	 */
+	Interval!SysTime[] generateIntervalsBetween(SysTime startInterval, SysTime endInterval) {
+		if(startInterval < startDate) startInterval = startDate;
+		if(endInterval > endDate) endInterval = endDate;
+
+		Interval!SysTime[] intervals;
+
+		foreach(rule; rules) {
+			intervals ~= rule.generateIntervalsBetween(startDate, startInterval, endInterval);
+		}
+
+		return intervals;
 	}
 }
 
