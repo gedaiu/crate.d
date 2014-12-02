@@ -14,3 +14,7 @@ tests/crMongoList/crmongolist
 tests/crSimpleList/crsimplelist
 
 __test__library__
+
+examples/webCalendar/calendarexample
+
+examples/webBookstore/webbookstore

@@ -11,6 +11,8 @@ Project("{3947E667-4C90-4C3A-BEB9-7148D6FE0D7C}") = "webBookstore", "examples\we
 EndProject
 Project("{3947E667-4C90-4C3A-BEB9-7148D6FE0D7C}") = "documentationViewer", "examples\documentationViewer\documentationViewer.dproj", "{178B4A05-610D-43CD-812E-CFA9C76C59E2}"
 EndProject
+Project("{3947E667-4C90-4C3A-BEB9-7148D6FE0D7C}") = "webCalendar", "examples\webCalendar\webCalendar.dproj", "{FE25D782-0E4F-4EBC-AA97-98207C93FD3F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,9 +50,15 @@ Global
 		{DB4CDBD0-F649-4863-B185-350E7C013528}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DB4CDBD0-F649-4863-B185-350E7C013528}.Unittest|Any CPU.ActiveCfg = Unittest|Any CPU
 		{DB4CDBD0-F649-4863-B185-350E7C013528}.Unittest|Any CPU.Build.0 = Unittest|Any CPU
+		{FE25D782-0E4F-4EBC-AA97-98207C93FD3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE25D782-0E4F-4EBC-AA97-98207C93FD3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE25D782-0E4F-4EBC-AA97-98207C93FD3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE25D782-0E4F-4EBC-AA97-98207C93FD3F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE25D782-0E4F-4EBC-AA97-98207C93FD3F}.Unittest|Any CPU.ActiveCfg = Unittest|Any CPU
+		{FE25D782-0E4F-4EBC-AA97-98207C93FD3F}.Unittest|Any CPU.Build.0 = Unittest|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = crate.d.dproj
+		StartupItem = examples\webCalendar\webCalendar.dproj
 		Policies = $0
 		$0.StandardHeader = $1
 		$1.Text = @Authors: ${AuthorName} <${AuthorEmail}>\nDate: ${Month} ${Day}, ${Year}\nLicense: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.\nCopyright: Public Domain

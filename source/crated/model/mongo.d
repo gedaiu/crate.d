@@ -93,7 +93,7 @@ template MongoModel(Prototype, string collectionName, string modelName = "Unknow
 			static if(typeof(itemId).stringof == "string" && ItemCls.primaryField[0] == "_id") {
 				if(itemId == "") {
 					auto id = BsonObjectID.generate;
-
+					
 					query["_id"] = id;
 					item._id = id.toString;
 				} else {
@@ -129,7 +129,13 @@ template MongoModel(Prototype, string collectionName, string modelName = "Unknow
 
 			static if(fields.length == 1) {
 				if(query[fields[0][0]].type == Bson.Type.null_) {
-					query[fields[0][0]] = __traits(getMember, item, fields[0][0]);
+					//date time 
+					static if(fields[0][1] == "SysTime" || fields[0][1] == "DateTime" || fields[0][1] == "Date") {
+						BsonDate date = BsonDate( __traits(getMember, item, fields[0][0]) );
+						query[fields[0][0]] = date;
+					} else {
+						query[fields[0][0]] = __traits(getMember, item, fields[0][0]);
+					}
 				}
 				
 			} else if(fields.length > 0) {

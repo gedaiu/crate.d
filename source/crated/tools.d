@@ -9,41 +9,57 @@ module crated.tools;
 
 import std.conv;
 import std.typetuple;
-
+import std.traits;
 
 /**
-	 * Find if type (T) is an enum.
-	 * Example:
-	 * --------------------------
-	 * enum BookCategory : string {
-	 *		Fiction = "Fiction",
-	 *		Nonfiction = "Nonfiction"
-	 * };
-	 *  
-	 * auto test = IsEnum!BookCategory;
-	 * assert(test.check == true);
-	 * --------------------------
-	 * 
-	 * Example:
-	 * --------------------------
-	 *  auto test = IsEnum!string;
-	 *  assert(test.check == false);
-	 * --------------------------
-	 */
-template IsEnum(T) if(is(T == enum)) {
+ * Find if type (T) is an enum.
+ * Example:
+ * --------------------------
+ * enum BookCategory : string {
+ *		Fiction = "Fiction",
+ *		Nonfiction = "Nonfiction"
+ * };
+ *  
+ * auto test = IsEnum!BookCategory;
+ * assert(test.check == true);
+ * --------------------------
+ * 
+ * Example:
+ * --------------------------
+ *  auto test = IsEnum!string;
+ *  assert(test.check == false);
+ * --------------------------
+ */
+template IsEnum(T) if(is(T == enum )) {
 	/**
-		 * is true if T is enum
-		 */
+	 * is true if T is enum
+	 */
 	enum bool check = true;
 } 
 
-template IsEnum(T) if(!is(T == enum)) {
+template IsEnum(T) if(!is(T == enum )) {
 	/**
-		 * is true if T is enum
-		 */
+	 * is false if T is const
+	 */
 	enum bool check = false;
 }
 
+/**
+ * Find if type (T) is const.
+ */
+template IsConst(T) if(is(T == const )) {
+	/**
+	 * is true if T is const
+	 */
+	enum bool check = true;
+} 
+
+template IsConst(T) if(!is(T == const )) {
+	/**
+	 * is false if T is not const
+	 */
+	enum bool check = false;
+}
 
 /**
  * Check if the method has a from string method.
@@ -136,8 +152,10 @@ template getItemFields(alias ATTR, Prototype, bool addFields) {
 	string Type(string name)() {
 		
 		alias isEnum = IsEnum!(typeof(ItemProperty!(Prototype, name)));
-		
-		static if(isEnum.check) return "isEnum";
+		alias isConst = IsConst!(typeof(ItemProperty!(Prototype, name)));
+
+		static if(isConst.check)	return "isConst"; 
+		else static if(isEnum.check)	return "isEnum"; 
 		else static if(__traits(isIntegral, ItemProperty!(Prototype, name))) return "isIntegral";
 		else static if(__traits(isFloating, ItemProperty!(Prototype, name))) return "isFloating";
 		else static if( is(ItemProperty!(Prototype, name) == enum) )  return "isEnum";

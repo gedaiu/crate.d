@@ -43,7 +43,6 @@ class AdminView : BaseView {
                                              <span class='glyphicon glyphicon-fire' aria-hidden='true'></span>
                                        </span>
 						        </div>";
-					
 				} else {
 					return "<input class='"~cls~" form-control' id='formElement"~index.to!string~"' type='" ~ fieldType ~ "' name='" ~ field ~ "' value='" ~ item.fieldAsString!field ~ "'/>";
 
@@ -101,8 +100,22 @@ class AdminView : BaseView {
 					
 				} else {
 					return "<input class='"~cls~" form-control "~cls~"' id='formElement"~index.to!string~"' step='0.01' type='number' name='" ~ field[0] ~ "' value='" ~ value ~ "'>";
-
 				}
+
+			case "SysTime":
+				if(required) {				
+					return "<div class='input-group'>
+						               <input class='"~cls~" form-control "~cls~"' id='formElement"~index.to!string~"' type='datetime-local' name='" ~ field[0] ~ "' value='" ~ value ~ "' required>
+						               <span class='input-group-addon'>
+                                             <span class='glyphicon glyphicon-fire' aria-hidden='true'></span>
+                                       </span>
+						        </div>";
+					
+				} else {
+					return "<input class='"~cls~" form-control "~cls~"' id='formElement"~index.to!string~"' type='datetime-local' name='" ~ field[0] ~ "' value='" ~ value ~ "'>";
+				}
+
+			
 
 			default:
 				
@@ -113,6 +126,9 @@ class AdminView : BaseView {
 
 					auto values = PrototypedItem.enumValues[field[0]];
 
+					std.stdio.writeln("???", values);
+
+
 					foreach(v; values) {
 						a ~= "<option " ~ ( value == v ? `selected`:``) ~ ">"~v~"</option>";
 					}
@@ -120,6 +136,8 @@ class AdminView : BaseView {
 					a ~= "</select>";
 
 					return a;
+				} else if(field[2] == "isConst") { 
+					return "";
 				} else {
 					if(required) {				
 						return "<div class='input-group'>
@@ -146,7 +164,7 @@ class AdminView : BaseView {
 		if(field[0] == primaryField) { 
 			a ~= "<input type='hidden' name='" ~ field[0] ~ "' value='" ~ item.fieldAsString!(field[0]) ~ "' />";
 			
-		} else {
+		} else if(field[2] != "isConst") {
 			string cls;
 
 			if(index == 1) cls = "class='text-primary'";
@@ -164,8 +182,7 @@ class AdminView : BaseView {
 
 			a ~= inputField ~ `</div>`;
 		}
-
-		
+				
 		return a;
 	}
 

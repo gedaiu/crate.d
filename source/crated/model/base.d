@@ -127,6 +127,7 @@ template Item(Prototype, M) {
 		 * Default constructor
 		 */
 		this(M parent) {
+			super();
 			myModel = parent;
 		}
 
@@ -134,8 +135,9 @@ template Item(Prototype, M) {
 		 * Copy constructor
 		 */
 		this(T)(T someItem, M parent) {
-			copy!fields(someItem);
 			this(parent);
+			copy!fields(someItem);
+
 		}
 
 		/**
@@ -146,6 +148,7 @@ template Item(Prototype, M) {
 			static if(fields.length == 1) {
 				bool found = true;
 
+				//get the desired field value from someItem
 				static if(__traits(hasMember, someItem, fields[0][0])) {
 					auto someField = __traits(getMember, someItem, fields[0][0]);
 				} else {
@@ -160,19 +163,28 @@ template Item(Prototype, M) {
 					}
 				}
 
-
 				if(found) { 
 					static if( is( typeof(__traits(getMember, this, fields[0][0]) ) == typeof(someField) ) ) {
-
 						__traits(getMember, this, fields[0][0]) = someField;
 					} else {
 						static if(fields[0][2] == "isEnum") {
 							try {
-								__traits(getMember, this, fields[0][0]) = someField.to!string.to!(typeof(__traits(getMember, this, fields[0][0])));
+								static if(__traits(compiles, 
+								                   __traits(getMember, this, fields[0][0]) = someField.to!string.to!(typeof(__traits(getMember, this, fields[0][0]))))) {
+
+									__traits(getMember, this, fields[0][0]) = someField.to!string.to!(typeof(__traits(getMember, this, fields[0][0])));
+								} else {
+									pragma(msg, "`", Prototype, "`.`", fields[0][0], "` can not be set at runtime.");
+								} 
 							} catch(ConvException e) {
 								std.stdio.writeln(e);
 							}
-						} else {
+
+						} else static if(fields[0][1] == "SysTime") {
+							import std.datetime;
+
+							__traits(getMember, this, fields[0][0]) = SysTime.fromISOExtString(someField.to!string);
+						} else static if(fields[0][2] != "isConst") {
 							__traits(getMember, this, fields[0][0]) = someField.to!(typeof(__traits(getMember, this, fields[0][0])));
 						}
 					}
@@ -347,7 +359,13 @@ template Item(Prototype, M) {
 		 * Get a field value as string. Very useful in views
 		 */
 		string fieldAsString(string fieldName)() {
-			return __traits(getMember, this, fieldName).to!string;
+			auto val = __traits(getMember, this, fieldName);
+
+			static if( typeof(val).stringof == "SysTime" ) {
+				return val.toISOExtString;
+			} else {
+				return val.to!string;
+			}
 		}
 
 		/**
@@ -385,6 +403,8 @@ template Item(Prototype, M) {
 					jsonCode ~= "` ~ ( this." ~ field[0] ~ ".to!string[$-1..$] == \"i\" ? 
 				                         `\"` ~  this." ~ field[0] ~ ".to!string ~ `\"` : 
 				                                 this." ~ field[0] ~ ".to!string ) ~ `";
+				} else if(field[1] == "SysTime") {
+					jsonCode ~= "\"` ~ this." ~ field[0] ~ ".toISOExtString" ~ " ~ `\"";
 				} else {
 					//is something else
 					jsonCode ~= "\"` ~ this." ~ field[0] ~ ".to!string" ~ " ~ `\"";

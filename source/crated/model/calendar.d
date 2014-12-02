@@ -20,7 +20,6 @@ enum EventType {
  */
 class CalendarEventPrototype
 {
-
 	///Event start date
 	@("field") 
 	SysTime startDate;
@@ -30,7 +29,13 @@ class CalendarEventPrototype
 	SysTime endDate;
 
 	@("field")
-	enum EventType type = EventType.Basic;
+	static const EventType type = EventType.Basic;
+
+	this() {
+		startDate = Clock.currTime;
+		startDate.fracSec = FracSec.zero;
+		endDate = startDate + dur!"hours"(1);
+	}
 
 	/**
 	 * return event duration
@@ -138,7 +143,7 @@ class CalendarUnknownEventPrototype : CalendarEventPrototype
 	Duration boundary = dur!"minutes"(15);
 
 	@("field")
-	enum EventType type = EventType.Unknown;
+	static const EventType type = EventType.Unknown;
 
 
 	///Invariant to check the event consistency
@@ -564,8 +569,6 @@ class CalendarEventChainPrototype {
 
 	}
 }
-
-
 
 unittest {
 	//test a valid chain
