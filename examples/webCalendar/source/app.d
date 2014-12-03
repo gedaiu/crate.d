@@ -8,7 +8,7 @@ import crated.controller.admin;
 import std.stdio;
 
 /**
- * A book item prototype
+ * An event prototype
  */
 class MyEventPrototype : CalendarEventPrototype {
 
@@ -17,8 +17,18 @@ class MyEventPrototype : CalendarEventPrototype {
 	
 	@("field", "required") 
 	string name = "unknown";
-	
+}
 
+/**
+ * An event prototype
+ */
+class MyUnknownEventPrototype : CalendarUnknownEventPrototype {
+	
+	@("field", "primary")
+	string _id;
+	
+	@("field", "required") 
+	string name = "unknown";
 }
 
 /**
@@ -50,5 +60,5 @@ shared static this()
 	dataManager.addRoutes(router);
 
 	listenHTTP(settings, router);
-	logInfo("Please open http://127.0.0.1:8080/ in your browser.");
+	logInfo("Please open http://127.0.0.1:8080/admin/Calendar in your browser.");
 }

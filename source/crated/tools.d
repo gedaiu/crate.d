@@ -115,7 +115,12 @@ template HasFromString(T) if(!is(T == class) && !is(T == struct)) {
  */
 template ItemProperty(item, string method) {
 	static if(__traits(hasMember, item, method)) {
-		alias ItemProperty = TypeTuple!(__traits(getMember, item, method));
+		static if(__traits(getProtection, mixin("item." ~ method)).stringof[1..$-1] == "public") {
+			alias ItemProperty = TypeTuple!(__traits(getMember, item, method));
+		} else {
+			alias ItemProperty = TypeTuple!();
+		}
+
 	} else {
 		alias ItemProperty = TypeTuple!();
 	}
@@ -147,41 +152,101 @@ template ItemProperty(item, string method) {
 template getItemFields(alias ATTR, Prototype, bool addFields) {
 	
 	/**
-		 *  Get a general type
-		 */
+	 *  Get a general type
+	 */
 	string Type(string name)() {
-		
+
 		alias isEnum = IsEnum!(typeof(ItemProperty!(Prototype, name)));
 		alias isConst = IsConst!(typeof(ItemProperty!(Prototype, name)));
 
-		static if(isConst.check)	return "isConst"; 
+		static if(isConst.check)	    return "isConst"; 
 		else static if(isEnum.check)	return "isEnum"; 
 		else static if(__traits(isIntegral, ItemProperty!(Prototype, name))) return "isIntegral";
 		else static if(__traits(isFloating, ItemProperty!(Prototype, name))) return "isFloating";
 		else static if( is(ItemProperty!(Prototype, name) == enum) )  return "isEnum";
 		else return "";
 	}
-	
+
+	/**
+	 * Get the type of a Prototype fieald
+	 */
+	string FieldType(string name)() {
+
+		static if(is( FunctionTypeOf!(ItemProperty!(Prototype, name)) == function )) { 
+
+			static if( is( ReturnType!(ItemProperty!(Prototype, name)) == void ) && arity!(ItemProperty!(Prototype, name)) == 1 ) {
+
+				auto t = ParameterTypeTuple!(ItemProperty!(Prototype, name))[0].stringof;
+
+				if(t[0..6] == "const(") {
+					t = t[6..$-1];
+				}
+
+				return t;
+
+			} else {
+				return ReturnType!(ItemProperty!(Prototype, name)).stringof;
+			}
+
+		} else {
+			return typeof(ItemProperty!(Prototype, name)).stringof[1..$-1];
+		}
+
+	}
+
+	/**
+	 * Get all field attributes 
+	 */
+	template GetAttributes(string name) {
+
+		template GetFuncAttributes(TL...) {
+
+			static if(TL.length == 1) {
+				alias GetFuncAttributes = TypeTuple!(__traits(getAttributes, TL[0]));
+			} else static if(TL.length > 1) {
+				alias GetFuncAttributes = TypeTuple!(GetFuncAttributes!(TL[0..$/2]), GetFuncAttributes!(TL[$/2..$]));
+			} else {
+				alias GetFuncAttributes = TypeTuple!();
+			}
+		}
+
+		static if(is( FunctionTypeOf!(ItemProperty!(Prototype, name)) == function )) { 
+
+			static if(__traits(getOverloads, Prototype, name).length == 1) {
+				alias GetAttributes = TypeTuple!(__traits(getAttributes, ItemProperty!(Prototype, name)));
+			} else {
+				alias GetAttributes = TypeTuple!(GetFuncAttributes!(TypeTuple!(__traits(getOverloads, Prototype, name))));
+			}
+
+		} else {
+			alias GetAttributes = TypeTuple!(__traits(getAttributes, ItemProperty!(Prototype, name)));
+		}
+
+
+	}
+
+
+
 	/** 
 	 * Get all the metods that have ATTR attribute
 	 */
-	template ItemFields(FIELDS...) {	
+	template ItemFields(FIELDS...) {
+
 		static if (FIELDS.length > 1) {
 			alias ItemFields = TypeTuple!(
-				ItemFields!(FIELDS[0 .. $/2]),
-				ItemFields!(FIELDS[$/2 .. $])
+					ItemFields!(FIELDS[0 .. $/2]),
+					ItemFields!(FIELDS[$/2 .. $])
 				); 
-		} else static if (FIELDS.length == 1 && FIELDS[0] != "modelFields") {
-			static if(__traits(hasMember, Prototype, FIELDS[0])) {
+		} else static if (FIELDS.length == 1 && FIELDS[0] != "modelFields" ) {
 
-				static if(staticIndexOf!(ATTR, __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0]))) >= 0) {
-					
+			static if(ItemProperty!(Prototype, FIELDS[0]).length == 1) {
+				static if(staticIndexOf!(ATTR, GetAttributes!(FIELDS[0])) >= 0) {
 					static if(addFields) {
-						alias ItemFields = TypeTuple!([FIELDS[0], __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0])) ]);
-						
+						alias ItemFields = TypeTuple!([FIELDS[0], __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0])) ]);	
 					} else {
-						alias ItemFields = TypeTuple!([FIELDS[0], typeof(ItemProperty!(Prototype, FIELDS[0])).stringof[1..$-1], Type!(FIELDS[0]) ]);
+						alias ItemFields = TypeTuple!([FIELDS[0], FieldType!(FIELDS[0]), Type!(FIELDS[0]) ]);
 					}
+
 				} else {
 					alias ItemFields = TypeTuple!();
 				}

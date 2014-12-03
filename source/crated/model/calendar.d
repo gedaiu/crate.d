@@ -21,45 +21,45 @@ enum EventType {
 class CalendarEventPrototype
 {
 	///Event start date
-	@("field") 
-	SysTime startDate;
+	protected SysTime _startDate;
+
+	@property               void startDate(const SysTime startDate) { _startDate = startDate; }
+	@property @("field") SysTime startDate() const { return _startDate; }
 
 	///Event end date
-	@("field")
-	SysTime endDate;
+	protected SysTime _endDate;
+
+	@property               void endDate(const SysTime endDate) { _endDate = endDate; }
+	@property @("field") SysTime endDate() const { return _endDate; }
 
 	@("field")
 	static const EventType type = EventType.Basic;
 
 	this() {
-		startDate = Clock.currTime;
-		startDate.fracSec = FracSec.zero;
-		endDate = startDate + dur!"hours"(1);
+		_startDate = Clock.currTime;
+		_startDate.fracSec = FracSec.zero;
+		_endDate = _startDate + dur!"hours"(1);
 	}
 
-	/**
-	 * return event duration
-	 */
-	Duration duration() {
-		return endDate - startDate;
-	}
+	///return event duration
+	@property Duration duration() { return endDate - startDate; }
+
+	///ditto
+	@property void duration(Duration duration) { endDate = startDate + duration; }
 
 	///Invariant to check the event consistency
 	invariant() {
-		assert(startDate <= endDate, "`startDate` > `endDate`");
+		assert(_startDate <= _endDate, "`startDate` > `endDate`");
 	}
 }
 
 unittest {
 	auto testEvent = new CalendarEventPrototype;
-
-	testEvent.startDate = Clock.currTime;
-	testEvent.endDate = Clock.currTime - dur!"hours"(1);
-
 	bool failed = false;
 
 	try {
-		assert(testEvent);
+		testEvent.startDate = Clock.currTime;
+		testEvent.endDate = Clock.currTime - dur!"hours"(1);
 	} catch (core.exception.AssertError e) {
 		failed = true;
 	}
@@ -91,50 +91,56 @@ unittest {
  */
 class CalendarUnknownEventPrototype : CalendarEventPrototype
 {
-	private alias _startDate = super.startDate;
-	private alias _endDate = super.endDate;
+	alias startDate = super.startDate;
+	alias endDate = super.endDate;
+	alias duration = super.duration;
 
 	///Event start date
-	@property @("field")
-	SysTime startDate() {
+	@property @("field") override SysTime startDate() const {
 		auto now = Clock.currTime;
+		now.fracSec = FracSec.zero;
 
 		if(now + boundary >= _startDate) {
-			_startDate = now + postpone;
-			_endDate = _startDate + duration;
+			const auto sDate = now + postpone;
+			return sDate;
+		} else {
+			return _startDate;
 		}
-
-		return _startDate;
 	}
 
-	@property @("field")
-	void startDate(SysTime start) {
+	@property override void startDate(const SysTime start) {
 		auto now = Clock.currTime;
 		
-		if(now + boundary >= start) start = now + postpone;
+		if(now + boundary >= start) {
+			_startDate = now + postpone;
+		} else {
+			_startDate = start;
+		}
 
-		_startDate = start;
-		_endDate = _startDate + duration;
+		_endDate = _startDate + _duration;
 	}
 
 	@property @("field")
-	SysTime endDate() {
-		return startDate + duration;
+	override SysTime endDate() const {
+		return startDate + _duration;
 	}
 
 	@property
-	void endDate(SysTime end)
-	in {
-		assert(end >= startDate);
-	}
+	override void endDate(const SysTime end)
 	body
 	{
-		duration = end - startDate;
-		_endDate = _startDate + duration;
+		_duration = end - startDate;
+		_endDate = _startDate + _duration;
 	}
 	
-	@("field")
-	Duration duration = dur!"hours"(1);
+
+	///return event duration
+	@property @("field") override Duration duration() { return _duration; }
+	
+	///ditto
+	@property override void duration(Duration customDuration) { _duration = customDuration; }
+
+	protected Duration _duration = dur!"hours"(1);
 
 	@("field")
 	Duration postpone = dur!"minutes"(15);
@@ -558,10 +564,13 @@ class CalendarEventChainPrototype {
 		
 		foreach(i; 1..events.length) {
 			if(events[i].startDate < prevEvent.endDate) {
-				auto tmpDuration = events[i].duration;
+
+				if(events[i].type != EventType.Unknown) {
+					auto tmpDuration = events[i].duration;
+					events[i].endDate = prevEvent.endDate + tmpDuration;
+				}
 
 				events[i].startDate = prevEvent.endDate;
-				events[i].endDate = prevEvent.endDate + tmpDuration;
 			}
 
 			prevEvent = events[i];
