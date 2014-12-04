@@ -182,8 +182,16 @@ template Item(Prototype, M) {
 
 						} else static if(fields[0][1] == "SysTime") {
 							import std.datetime;
-
+							
 							__traits(getMember, this, fields[0][0]) = SysTime.fromISOExtString(someField.to!string);
+						} else static if(fields[0][1] == "Duration") {
+							import std.datetime;
+
+							try {
+								__traits(getMember, this, fields[0][0]) = dur!"hnsecs"(someField.to!string.to!long);
+							} catch(Exception e) {
+								std.stdio.writeln(fields[0][0], " can not be set as Duration.");
+							}
 						} else static if(fields[0][2] != "isConst") {
 							__traits(getMember, this, fields[0][0]) = someField.to!(typeof(__traits(getMember, this, fields[0][0])));
 						}

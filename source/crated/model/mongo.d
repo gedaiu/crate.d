@@ -133,6 +133,9 @@ template MongoModel(Prototype, string collectionName, string modelName = "Unknow
 					static if(fields[0][1] == "SysTime" || fields[0][1] == "DateTime" || fields[0][1] == "Date") {
 						BsonDate date = BsonDate( __traits(getMember, item, fields[0][0]) );
 						query[fields[0][0]] = date;
+					} else static if(fields[0][1] == "Duration") {
+						Bson date = Bson( __traits(getMember, item, fields[0][0]).total!"hnsecs" );
+						query[fields[0][0]] = date;
 					} else {
 						query[fields[0][0]] = __traits(getMember, item, fields[0][0]);
 					}
