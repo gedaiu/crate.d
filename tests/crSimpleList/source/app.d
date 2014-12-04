@@ -8,6 +8,8 @@ class BookItemPrototype {
 
 	@("field") string name = "unknown";
 	@("field") string author = "unknown";
+
+	this() {}
 }
 
 /**

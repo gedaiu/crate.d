@@ -11,29 +11,44 @@ import std.datetime;
 
 
 enum EventType {
+	Undefined,
 	Basic,
 	Unknown
 };
 
+abstract class CalendarEvent {
+
+	static const EventType type = EventType.Undefined;
+
+	@property 
+	void startDate(const SysTime startDate);
+
+	@property
+	SysTime startDate() const;
+
+	@property               
+	void endDate(const SysTime endDate);
+
+	@property
+	SysTime endDate() const;
+
+	@property 
+	Duration duration();
+
+	@property 
+	void duration(Duration duration);
+}
+
 /**
  * Basic functionality for a calendar event
  */
-class CalendarEventPrototype
+class CalendarEventPrototype : CalendarEvent
 {
 	///Event start date
 	protected SysTime _startDate;
 
-	@property               void startDate(const SysTime startDate) { _startDate = startDate; }
-	@property @("field") SysTime startDate() const { return _startDate; }
-
 	///Event end date
 	protected SysTime _endDate;
-
-	@property               void endDate(const SysTime endDate) { _endDate = endDate; }
-	@property @("field") SysTime endDate() const { return _endDate; }
-
-	@("field")
-	static const EventType type = EventType.Basic;
 
 	this() {
 		_startDate = Clock.currTime;
@@ -41,11 +56,24 @@ class CalendarEventPrototype
 		_endDate = _startDate + dur!"hours"(1);
 	}
 
-	///return event duration
-	@property Duration duration() { return endDate - startDate; }
+	@property override {
+		void startDate(const SysTime startDate) { _startDate = startDate; }
 
-	///ditto
-	@property void duration(Duration duration) { endDate = startDate + duration; }
+		@("field") 
+		SysTime startDate() const { return _startDate; }
+
+		void endDate(const SysTime endDate) { _endDate = endDate; }
+		@("field") SysTime endDate() const { return _endDate; }
+
+		@("field")
+		static const EventType type = EventType.Basic;
+
+		///return event duration
+		Duration duration() { return endDate - startDate; }
+
+		///ditto
+		void duration(Duration duration) { endDate = startDate + duration; }
+	}
 
 	///Invariant to check the event consistency
 	invariant() {
@@ -89,58 +117,67 @@ unittest {
  * the event. If the current time is <code>startDate - boundary</code> the startDate will be automaticaly postponed
  * with <code>postpone</code> duration.
  */
-class CalendarUnknownEventPrototype : CalendarEventPrototype
+class CalendarUnknownEventPrototype : CalendarEvent
 {
-	alias startDate = super.startDate;
-	alias endDate = super.endDate;
-	alias duration = super.duration;
+	this() {
+		_startDate = Clock.currTime;
+		_startDate.fracSec = FracSec.zero;
+		_duration = dur!"hours"(1);
+	}
+
+	protected SysTime _startDate;
+	protected SysTime _endDate;
 
 	///Event start date
-	@property @("field") override SysTime startDate() const {
-		auto now = Clock.currTime;
-		now.fracSec = FracSec.zero;
+	@property override { 
 
-		if(now + boundary >= _startDate) {
-			const auto sDate = now + postpone;
-			return sDate;
-		} else {
-			return _startDate;
+		@("field") 
+		SysTime startDate() const {
+			auto now = Clock.currTime;
+			now.fracSec = FracSec.zero;
+
+			if(now + boundary >= _startDate) {
+				const auto sDate = now + postpone;
+				return sDate;
+			} else {
+				return _startDate;
+			}
 		}
-	}
 
-	@property override void startDate(const SysTime start) {
-		auto now = Clock.currTime;
+		void startDate(const SysTime start) {
+			auto now = Clock.currTime;
+			
+			if(now + boundary >= start) {
+				_startDate = now + postpone;
+			} else {
+				_startDate = start;
+			}
+
+			_endDate = _startDate + _duration;
+		}
+
+		@("field")
+		SysTime endDate() const {
+			return startDate + _duration;
+		}
+
+		void endDate(const SysTime end)	{
+			_duration = end - startDate;
+			_endDate = _startDate + _duration;
+		}
 		
-		if(now + boundary >= start) {
-			_startDate = now + postpone;
-		} else {
-			_startDate = start;
-		}
 
-		_endDate = _startDate + _duration;
+		///return event duration
+		@("field") Duration duration() const { return _duration; }
+		
+		///ditto
+		void duration(Duration customDuration) { _duration = customDuration; }
+
+		@("field")
+		static const EventType type = EventType.Unknown;
 	}
 
-	@property @("field")
-	override SysTime endDate() const {
-		return startDate + _duration;
-	}
-
-	@property
-	override void endDate(const SysTime end)
-	body
-	{
-		_duration = end - startDate;
-		_endDate = _startDate + _duration;
-	}
-	
-
-	///return event duration
-	@property @("field") override Duration duration() { return _duration; }
-	
-	///ditto
-	@property override void duration(Duration customDuration) { _duration = customDuration; }
-
-	protected Duration _duration = dur!"hours"(1);
+	protected Duration _duration;
 
 	@("field")
 	Duration postpone = dur!"minutes"(15);
@@ -148,8 +185,6 @@ class CalendarUnknownEventPrototype : CalendarEventPrototype
 	@("field")
 	Duration boundary = dur!"minutes"(15);
 
-	@("field")
-	static const EventType type = EventType.Unknown;
 
 
 	///Invariant to check the event consistency
@@ -551,7 +586,7 @@ unittest {
  * This represent a chain of events where each event does not overlap with his successor.
  */
 class CalendarEventChainPrototype {
-	CalendarEventPrototype[] events;
+	CalendarEvent[] events;
 
 	/**
 	 * Check events for collisions and solve them.

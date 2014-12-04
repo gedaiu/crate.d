@@ -6,6 +6,9 @@ unittest {
 }
 
 class BookItemPrototype {
+
+	this() {}
+
 	@("field", "primary") string _id;
 	@("field") string name;
 	@("field") string author;
