@@ -150,16 +150,39 @@ template ItemProperty(item, string method) {
  * --------------------
  */
 template getItemFields(alias ATTR, Prototype, bool addFields) {
-	
+
+	template isConstField(alias name) {
+
+		template CheckOverloads(TL...) {
+			static if(TL.length == 1) {
+				alias localIsConst = IsConst!(ReturnType!(TL[0]));
+				enum bool check = localIsConst.check;
+			} else static if(TL.length >1) {
+				alias localIsConst = IsConst!(ReturnType!(TL[0]));
+				enum bool check = localIsConst.check && CheckOverloads!(TL[1..$]).check;
+
+			} else {
+				enum bool check = false;
+			}
+		}
+
+		static if(is( FunctionTypeOf!(ItemProperty!(Prototype, name)) == function )) {
+			enum bool check = CheckOverloads!(__traits(getOverloads, Prototype, name)).check;
+		} else { 
+			alias localIsConst = IsConst!(typeof(__traits(getMember, Prototype, name)));
+			enum bool check = localIsConst.check;
+		}
+	}
+
 	/**
 	 *  Get a general type
 	 */
 	string Type(string name)() {
 
 		alias isEnum = IsEnum!(typeof(ItemProperty!(Prototype, name)));
-		alias isConst = IsConst!(typeof(ItemProperty!(Prototype, name)));
+		alias isConst = isConstField!name;
 
-		static if(isConst.check)	    return "isConst"; 
+		static if(isConst.check)        return "isConst"; 
 		else static if(isEnum.check)	return "isEnum"; 
 		else static if(__traits(isIntegral, ItemProperty!(Prototype, name))) return "isIntegral";
 		else static if(__traits(isFloating, ItemProperty!(Prototype, name))) return "isFloating";
@@ -191,7 +214,6 @@ template getItemFields(alias ATTR, Prototype, bool addFields) {
 		} else {
 			return typeof(ItemProperty!(Prototype, name)).stringof[1..$-1];
 		}
-
 	}
 
 	/**
