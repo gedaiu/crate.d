@@ -36,6 +36,8 @@ class BookPrototype {
 	
 	@("field") 
 	bool inStock = true;
+
+	this() {};
 }
 
 /**
@@ -63,6 +65,8 @@ class OtherProductsPrototype {
 
 	@("field") 
 	bool inStock = true;
+
+	this() {}
 }
 
 /**

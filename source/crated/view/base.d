@@ -9,7 +9,62 @@
 module crated.view.base;
 
 import crated.settings;
-import std.string;
+import std.string, std.conv;
+
+
+
+class ViewType {
+	string[string] attributes;
+
+	/**
+	 * Allows to access attributes using dot sintax
+	 */
+	@property const(string) opDispatch(string prop)() const { 
+		if(prop in attributes) return attributes[prop]; 
+
+		return "";
+	}
+
+	/// ditto
+	@property ref string opDispatch(string prop)() { 
+		if(prop !in attributes) attributes[prop] = ""; 
+
+		return attributes[prop]; 
+	}
+
+	/**
+	 * Create fields for an HTML form
+	 */
+	string asForm(bool isRequired = false) {
+
+		string id = opDispatch!"id";
+		string cls = opDispatch!"cls";
+		string name = opDispatch!"name";
+		string value = opDispatch!"value";
+		string type = opDispatch!"type";
+		string step = opDispatch!"step";
+
+		if(isRequired) {				
+			return "<div class='input-group'>
+				               <input class='form-control "~cls~"' id='"~id~"' type='"~type~"' step='"~step~"' name='" ~ name ~ "' value='" ~ value ~ "' required>
+				               <span class='input-group-addon'>
+                                     <span class='glyphicon glyphicon-fire' aria-hidden='true'></span>
+                               </span>
+				        </div>";
+		} else {
+			return "<input class='form-control "~cls~"' id='"~id~"' type='"~type~"' step='"~step~"' name='" ~ name ~ "' value='" ~ value ~ "' required>";
+		}
+
+	}
+
+	/**
+	 * Returns a string that is easy to understand for the user
+	 */
+	string asPreview() {
+		return opDispatch!"value";
+	}
+}
+
 
 class BaseView {
 

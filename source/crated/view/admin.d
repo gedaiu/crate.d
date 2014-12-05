@@ -69,53 +69,37 @@ class AdminView : BaseView {
 
 		if(index == 1) cls ~= "input-lg";
 
+		import crated.view.base;
+
+		ViewType view;
+
+
 		switch(field[1]) {
 			case "bool":
 				return " <input type='checkbox' class='"~cls~"' id='formElement"~index.to!string~"' value='true' name='" ~ field[0] ~ "' " ~ (value == "true" ? `checked`:``) ~ `>`;
 
 			case "byte": case "short": case "int": case "long": case "cent": case "ubyte": case "ushort":
 			case "uint": case "ulong": case "ucent":
-				if(required) {				
-					return "<div class='input-group'>
-						               <input class='"~cls~" form-control "~cls~"' id='formElement"~index.to!string~"' type='number' name='" ~ field[0] ~ "' value='" ~ value ~ "' "~field[0]~" required>
-										     <span class='input-group-addon'>
-                                             <span class='glyphicon glyphicon-fire' aria-hidden='true'></span>
-                                       </span>
-						        </div>";
-					
-				} else {
-					return "<input class='"~cls~" form-control "~cls~"' id='formElement"~index.to!string~"' type='number' name='" ~ field[0] ~ "' value='" ~ value ~ "' "~field[0]~">";
 
-				}
-
+				view = new ViewType;
+				view.type = "number";
+				break;
 
 			case "float": case "double": case "real":
-				if(required) {				
-					return "<div class='input-group'>
-						               <input class='"~cls~" form-control "~cls~"' id='formElement"~index.to!string~"' step='0.01' type='number' name='" ~ field[0] ~ "' value='" ~ value ~ "' required>
-						               <span class='input-group-addon'>
-                                             <span class='glyphicon glyphicon-fire' aria-hidden='true'></span>
-                                       </span>
-						        </div>";
-					
-				} else {
-					return "<input class='"~cls~" form-control "~cls~"' id='formElement"~index.to!string~"' step='0.01' type='number' name='" ~ field[0] ~ "' value='" ~ value ~ "'>";
-				}
+
+				view = new ViewType;
+				view.type = "number";
+				view.step = "0.01";
+				break;
 
 			case "SysTime":
-				if(required) {				
-					return "<div class='input-group'>
-						               <input class='"~cls~" form-control "~cls~"' id='formElement"~index.to!string~"' type='datetime-local' name='" ~ field[0] ~ "' value='" ~ value ~ "' required>
-						               <span class='input-group-addon'>
-                                             <span class='glyphicon glyphicon-fire' aria-hidden='true'></span>
-                                       </span>
-						        </div>";
-					
-				} else {
-					return "<input class='"~cls~" form-control "~cls~"' id='formElement"~index.to!string~"' type='datetime-local' name='" ~ field[0] ~ "' value='" ~ value ~ "'>";
-				}
+				
+				view = new crated.view.datetime.ViewSysTime;
+				break;
 
-			
+			case "Duration":
+
+				return "";
 
 			default:
 				
@@ -125,9 +109,6 @@ class AdminView : BaseView {
 					import std.traits;
 
 					auto values = PrototypedItem.enumValues[field[0]];
-
-					std.stdio.writeln("???", values);
-
 
 					foreach(v; values) {
 						a ~= "<option " ~ ( value == v ? `selected`:``) ~ ">"~v~"</option>";
@@ -139,19 +120,20 @@ class AdminView : BaseView {
 				} else if(field[2] == "isConst") { 
 					return "";
 				} else {
-					if(required) {				
-						return "<div class='input-group'>
-						               <input id='formElement"~index.to!string~"' class='form-control "~cls~"' name='" ~ field[0] ~ "' value='" ~ value ~ "' required/>
-						               <span class='input-group-addon'>
-                                             <span class='glyphicon glyphicon-fire' aria-hidden='true'></span>
-                                       </span>
-						        </div>";
-
-					} else {
-						return "<input id='formElement"~index.to!string~"' class='form-control "~cls~"' name='" ~ field[0] ~ "' value='" ~ value ~ "'/>";
-				
-					}
+					view = new ViewType;
+					view.type = "text";
 				}
+		}
+
+		view.cls = cls;
+		view.id = "formElement" ~ index.to!string;
+		view.name = field[0];
+		view.value = value;
+				
+		if(required) {				
+			return view.asForm(true);
+		} else {
+			return view.asForm;
 		}
 	}
 

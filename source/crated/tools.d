@@ -92,8 +92,8 @@ template HasFromString(T) if(is(T == class) || is(T == struct)) {
 
 template HasFromString(T) if(!is(T == class) && !is(T == struct)) {
 	/**
-		 * is true if T has `from string` method
-		 */
+	 * is true if T has `from string` method
+	 */
 	enum bool check = false;
 }
 

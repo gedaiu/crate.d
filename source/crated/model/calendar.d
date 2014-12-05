@@ -163,6 +163,9 @@ class CalendarUnknownEventPrototype : CalendarEvent
 
 		void endDate(const SysTime end)	{
 			_duration = end - startDate;
+
+			if(_duration.total!"seconds" <= 0) _duration = dur!"seconds"(0); 
+
 			_endDate = _startDate + _duration;
 		}
 		
@@ -228,6 +231,16 @@ unittest {
 	event.endDate = event.startDate + dur!"hours"(10);
 	
 	assert(event.duration == dur!"hours"(10));
+}
+
+unittest {
+	//duration from end date
+	auto event = new CalendarUnknownEventPrototype;
+	
+	event.startDate = SysTime(DateTime(2100,1,1));
+	event.endDate = event.startDate - dur!"hours"(10);
+	
+	assert(event.duration.total!"seconds" == 0);
 }
 
 unittest {
