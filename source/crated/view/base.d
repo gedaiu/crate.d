@@ -12,9 +12,13 @@ import crated.settings;
 import std.string, std.conv;
 
 
-
+/**
+ * 
+ */
 class ViewType {
 	string[string] attributes;
+
+	BaseView container;
 
 	/**
 	 * Allows to access attributes using dot sintax
@@ -54,7 +58,6 @@ class ViewType {
 		} else {
 			return "<input class='form-control "~cls~"' id='"~id~"' type='"~type~"' step='"~step~"' name='" ~ name ~ "' value='" ~ value ~ "' required>";
 		}
-
 	}
 
 	/**
@@ -63,6 +66,60 @@ class ViewType {
 	string asPreview() {
 		return opDispatch!"value";
 	}
+}
+
+class ViewBool : ViewType {
+	
+	/**
+	 * Create a checkbox for an HTML form
+	 */
+	override string asForm(bool isRequired = false) {
+		string id = opDispatch!"id";
+		string cls = opDispatch!"cls";
+		string name = opDispatch!"name";
+		string value = opDispatch!"value";
+		string type = opDispatch!"type";
+		string step = opDispatch!"step";
+		
+		return " <input type='checkbox' class='"~cls~"' id='"~id~"' value='true' name='" ~ name ~ "' " ~ (value == "true" ? `checked`:``) ~ `>`;
+	}
+}
+
+
+/**
+ * 
+ */
+class ViewList : ViewType {
+
+	string[] values;
+
+	/**
+	 * Create fields for an HTML form
+	 */
+	override string asForm(bool isRequired = false) {
+		string id = opDispatch!"id";
+		string cls = opDispatch!"cls";
+		string name = opDispatch!"name";
+		string value = opDispatch!"value";
+		string type = opDispatch!"type";
+		string step = opDispatch!"step";
+
+		string a = "<select id='"~id~"' class='form-control "~cls~"' name='" ~ name ~ "'>";
+		
+		foreach(v; values) {
+			a ~= "<option " ~ ( value == v ? `selected`:``) ~ ">"~v~"</option>";
+		}
+		
+		a ~= "</select>";
+		
+		return a;
+	
+	}
+
+	void addItem(T)(T item) {
+		values ~= item.to!string;
+	}
+
 }
 
 

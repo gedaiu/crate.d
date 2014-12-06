@@ -76,6 +76,7 @@
     <None Include="test.sh" />
     <None Include="assets\adminmenu.css" />
     <None Include="assets\adminmenu.js" />
+    <None Include="assets\datetime.js" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="source\crated\" />

@@ -146,7 +146,8 @@ class CalendarUnknownEventPrototype : CalendarEvent
 
 		void startDate(const SysTime start) {
 			auto now = Clock.currTime;
-			
+			now.fracSec = FracSec.zero;
+
 			if(now + boundary >= start) {
 				_startDate = now + postpone;
 			} else {
@@ -156,7 +157,6 @@ class CalendarUnknownEventPrototype : CalendarEvent
 			_endDate = _startDate + _duration;
 		}
 
-		@("field")
 		SysTime endDate() const {
 			return startDate + _duration;
 		}

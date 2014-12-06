@@ -24,9 +24,9 @@ class AdminView : BaseView {
 	/**
 	 * 
 	 */
-	private string editFormFieldByAttribute(string field, PrototypedItem)(PrototypedItem item, ulong index) {
-		bool required;
-		if(PrototypedItem.fieldHas(field, "required")) required = true;
+	private ViewType getViewByAttribute(string field, PrototypedItem)(PrototypedItem item, ulong index) {
+	
+		ViewType view;
 
 		string fieldType = PrototypedItem.valueOf(field, "type");
 		string cls;
@@ -36,29 +36,26 @@ class AdminView : BaseView {
 		switch(fieldType) {
 			case "color": case "date": case "datetime": case "datetime-local": case "email": case "month":
 			case "number": case "range": case "tel": case "time": case "url": case "week":
-				if(required) {				
-					return "<div class='input-group'>
-						               <input class='"~cls~" form-control' id='formElement"~index.to!string~"' type='" ~ fieldType ~ "' name='" ~ field ~ "' value='" ~ item.fieldAsString!field ~ "' required>
-									   <span class='input-group-addon'>
-                                             <span class='glyphicon glyphicon-fire' aria-hidden='true'></span>
-                                       </span>
-						        </div>";
-				} else {
-					return "<input class='"~cls~" form-control' id='formElement"~index.to!string~"' type='" ~ fieldType ~ "' name='" ~ field ~ "' value='" ~ item.fieldAsString!field ~ "'/>";
+				view = new ViewType;
+				view.container = parent;
+				view.type = fieldType;
+				view.cls = cls;
+				view.id = "formElement" ~ index.to!string;
+				view.name = field;
+				view.value = item.fieldAsString!(field);
 
-				}
-
-
+				break;
 			default:
-
-				return "";
+				break;
 		}
+
+		return view;
 	}
 
 	/**
 	 * 
 	 */
-	string editFormFieldByType(string[] field, PrototypedItem)(PrototypedItem item, ulong index) {
+	ViewType editFormFieldByType(string[] field, PrototypedItem)(PrototypedItem item, ulong index) {
 		bool required;
 		string requiredIcon;
 
@@ -76,51 +73,52 @@ class AdminView : BaseView {
 
 		switch(field[1]) {
 			case "bool":
-				return " <input type='checkbox' class='"~cls~"' id='formElement"~index.to!string~"' value='true' name='" ~ field[0] ~ "' " ~ (value == "true" ? `checked`:``) ~ `>`;
+				view = new ViewBool;
+				view.container = parent;
+
+				break;
 
 			case "byte": case "short": case "int": case "long": case "cent": case "ubyte": case "ushort":
 			case "uint": case "ulong": case "ucent":
-
 				view = new ViewType;
+				view.container = parent;
 				view.type = "number";
+
 				break;
 
 			case "float": case "double": case "real":
-
 				view = new ViewType;
+				view.container = parent;
 				view.type = "number";
 				view.step = "0.01";
+
 				break;
 
 			case "SysTime":
-				
 				view = new crated.view.datetime.ViewSysTime;
+				view.container = parent;
+
 				break;
 
 			case "Duration":
+				view = new crated.view.datetime.ViewDuration;
+				view.container = parent;
 
-				return "";
+				break;
 
 			default:
 				
 				if(field[2] == "isEnum") {
-					string a = "<select id='formElement"~index.to!string~"' class='form-control "~cls~"' name='" ~ field[0] ~ "'>";
+					view = new ViewList;
+					view.container = parent;
 
-					import std.traits;
-
-					auto values = PrototypedItem.enumValues[field[0]];
-
-					foreach(v; values) {
-						a ~= "<option " ~ ( value == v ? `selected`:``) ~ ">"~v~"</option>";
+					foreach(v; PrototypedItem.enumValues[field[0]]) {
+						(cast(ViewList) view).addItem(value);
 					}
-
-					a ~= "</select>";
-
-					return a;
-				} else if(field[2] == "isConst") { 
-					return "";
 				} else {
 					view = new ViewType;
+					view.container = parent;
+
 					view.type = "text";
 				}
 		}
@@ -130,11 +128,17 @@ class AdminView : BaseView {
 		view.name = field[0];
 		view.value = value;
 				
-		if(required) {				
-			return view.asForm(true);
-		} else {
-			return view.asForm;
-		}
+		return view;
+	}
+
+	/// Private: 
+	private ViewType getTypeFor(string[] field, PrototypedItem)(PrototypedItem item, ulong index = 0) {
+		ViewType inputField = getViewByAttribute!(field[0])(item, index);
+		
+		//build the value based on the property type
+		if(inputField is null) inputField = editFormFieldByType!(field)(item, index);
+
+		return inputField;
 	}
 
 	/**
@@ -143,26 +147,25 @@ class AdminView : BaseView {
 	string editFormField(string[] field, const string primaryField, PrototypedItem)(PrototypedItem item, ulong index) {
 		string a;
 
-		if(field[0] == primaryField) { 
+		static if(field[0] == primaryField) { 
 			a ~= "<input type='hidden' name='" ~ field[0] ~ "' value='" ~ item.fieldAsString!(field[0]) ~ "' />";
 			
-		} else if(field[2] != "isConst") {
-			string cls;
+		} else static if(field[2] != "isConst") {
+			ViewType inputField = getTypeFor!(field)(item, index);
 
-			if(index == 1) cls = "class='text-primary'";
+			if(inputField !is null) {
+				string cls;
 
-			a ~= `<div class="form-group">`;
-			a ~= "<label "~cls~" for='formElement"~index.to!string~"'>" ~ field[0] ~ "</label>";
+				if(index == 1) cls = "class='text-primary'";
 
-			string inputField = editFormFieldByAttribute!(field[0])(item, index);
+				a ~= `<div class="form-group">`;
+				a ~= "<label "~cls~" for='formElement"~index.to!string~"'>" ~ field[0] ~ "</label>";
 
+				bool required;
+				if(PrototypedItem.fieldHas(field[0], "required")) required = true;
 
-			//build the value based on the property type
-			if(inputField == "") {
-				inputField = editFormFieldByType!(field)(item, index);
+				a ~= inputField.asForm(required) ~ `</div>`;
 			}
-
-			a ~= inputField ~ `</div>`;
 		}
 				
 		return a;
@@ -276,12 +279,19 @@ class AdminView : BaseView {
 		return a ~ "<th></th></tr></thead>";
 	}
 
+	/// Private: 
+	private string preview(string[] field, T)(T item) {
+		ViewType inputField = getTypeFor!(field)(item);
+
+		return inputField.asPreview;
+	}
+
 	/// Private:
 	private string adminTableLine(string[][] fields, string primaryField, PrototypedItem)(PrototypedItem item) {
 		static if(fields.length > 1) {
 			return adminTableLine!(fields[0..$/2], primaryField)(item) ~ adminTableLine!(fields[$/2..$], primaryField)(item);
 		} else static if(fields[0][0] != primaryField) {
-			return "<td>" ~ item.fieldAsString!(fields[0][0]) ~ "</td>";
+			return "<td>" ~ preview!(fields[0])(item) ~ "</td>";
 		} else {
 			return "";
 		}

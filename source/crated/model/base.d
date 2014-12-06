@@ -182,8 +182,30 @@ template Item(Prototype, M) {
 
 						} else static if(fields[0][1] == "SysTime") {
 							import std.datetime;
+
+							SysTime d;
+							if(fields[0][0] ~ "[tzOffset]" in someItem) {
+
+								auto mm = someItem[fields[0][0] ~ "[tzOffset]"].to!long;
+
+								auto h = std.math.abs(mm) / 60;
+								auto m = std.math.abs(mm) - h * 60;
+								string sh = (h < 10 ? "0":"") ~ h.to!string;
+								string sm = (m < 10 ? "0":"") ~ m.to!string;
 							
-							__traits(getMember, this, fields[0][0]) = SysTime.fromISOExtString(someField.to!string);
+								if( mm <= 0 ) {
+									d = SysTime.fromISOExtString(someField.to!string ~ "+" ~ sh ~ ":" ~ sm);
+								} else {
+									d = SysTime.fromISOExtString(someField.to!string ~ "-" ~ sh ~ ":" ~ sm);
+								}
+
+							} else {
+								d = SysTime.fromISOExtString(someField.to!string);
+							}
+
+							__traits(getMember, this, fields[0][0]) = d;
+
+							__traits(getMember, this, fields[0][0]).fracSec = FracSec.zero;
 						} else static if(fields[0][1] == "Duration") {
 							import std.datetime;
 
@@ -199,6 +221,20 @@ template Item(Prototype, M) {
 				} else {
 					static if( is( typeof(__traits(getMember, this, fields[0][0]) ) == bool ) ) {
 						__traits(getMember, this, fields[0][0]) = false;
+					}
+
+					static if( is( typeof(__traits(getMember, this, fields[0][0]) ) == core.time.Duration ) ) {
+						import core.time;
+
+						Duration d = dur!"seconds"(0);
+
+						if(fields[0][0] ~ "[seconds]" in someItem) d += dur!"seconds"(someItem[fields[0][0] ~ "[seconds]"].to!string.to!long);
+						if(fields[0][0] ~ "[minutes]" in someItem) d += dur!"minutes"(someItem[fields[0][0] ~ "[minutes]"].to!string.to!long);
+						if(fields[0][0] ~ "[hours]" in someItem) d += dur!"hours"(someItem[fields[0][0] ~ "[hours]"].to!string.to!long);
+						if(fields[0][0] ~ "[days]" in someItem) d += dur!"days"(someItem[fields[0][0] ~ "[days]"].to!string.to!long);
+						if(fields[0][0] ~ "[weeks]" in someItem) d += dur!"weeks"(someItem[fields[0][0] ~ "[weeks]"].to!string.to!long);
+
+						__traits(getMember, this, fields[0][0]) = d;
 					}
 				}
 
@@ -371,6 +407,8 @@ template Item(Prototype, M) {
 
 			static if( typeof(val).stringof == "SysTime" ) {
 				return val.toISOExtString;
+			} else static if( typeof(val).stringof == "Duration" ) {
+				return (val.total!"hnsecs").to!string;
 			} else {
 				return val.to!string;
 			}
