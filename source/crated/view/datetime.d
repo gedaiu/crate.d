@@ -78,27 +78,30 @@ class ViewDuration : ViewType {
 			required = "required";
 		}
 
+		long weeks, days, hours, minutes, seconds;
+		value.split!("weeks", "days", "hours", "minutes", "seconds")(weeks, days, hours, minutes, seconds);
+
 		return "
 				<div class='row'>
 					<div class='col-xs-2'>
 						<label class='text-info' for='"~id~"weeks'>weeks</label>
-						<input class='form-control "~cls~"' id='"~id~"weeks'   type='number' name='"~name~"[weeks]'   value='" ~ (value.weeks).to!string   ~ "' "~required~">
+						<input class='form-control "~cls~"' id='"~id~"weeks'   type='number' name='"~name~"[weeks]'   value='" ~ weeks.to!string   ~ "' "~required~">
 					</div>
 					<div class='col-xs-2'>
 						<label class='text-info' for='"~id~"days'>days</label>
-						<input class='form-control "~cls~"' id='"~id~"days'    type='number' name='"~name~"[days]'    value='" ~ (value.days).to!string    ~ "' "~required~">
+						<input class='form-control "~cls~"' id='"~id~"days'    type='number' name='"~name~"[days]'    value='" ~ days.to!string    ~ "' "~required~">
 					</div>
 					<div class='col-xs-2'>
 						<label class='text-info' for='"~id~"hours'>hours</label>
-						<input class='form-control "~cls~"' id='"~id~"hours'   type='number' name='"~name~"[hours]'   value='" ~ (value.hours).to!string   ~ "' "~required~">
+						<input class='form-control "~cls~"' id='"~id~"hours'   type='number' name='"~name~"[hours]'   value='" ~ hours.to!string   ~ "' "~required~">
 					</div>
 					<div class='col-xs-2'>
 						<label class='text-info' for='"~id~"minutes'>minutes</label>
-						<input class='form-control "~cls~"' id='"~id~"minutes' type='number' name='"~name~"[minutes]' value='" ~ (value.minutes).to!string ~ "' "~required~">
+						<input class='form-control "~cls~"' id='"~id~"minutes' type='number' name='"~name~"[minutes]' value='" ~ minutes.to!string ~ "' "~required~">
 					</div>
 					<div class='col-xs-2'>
 						<label class='text-info' for='"~id~"seconds'>seconds</label>
-						<input class='form-control "~cls~"' id='"~id~"seconds' type='number' name='"~name~"[seconds]' value='" ~ (value.seconds).to!string ~ "' "~required~">
+						<input class='form-control "~cls~"' id='"~id~"seconds' type='number' name='"~name~"[seconds]' value='" ~ seconds.to!string ~ "' "~required~">
 					</div></div>
 		";
 

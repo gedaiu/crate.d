@@ -183,12 +183,10 @@ class CalendarUnknownEventPrototype : CalendarEvent
 	protected Duration _duration;
 
 	@("field")
-	Duration postpone = dur!"minutes"(15);
-
-	@("field")
 	Duration boundary = dur!"minutes"(15);
 
-
+	@("field")
+	Duration postpone = dur!"minutes"(15);
 
 	///Invariant to check the event consistency
 	invariant() {
@@ -260,8 +258,8 @@ unittest {
 	auto start = Clock.currTime;
 	
 	event.startDate = start;
-	
-	assert(event.startDate >= start + dur!"minutes"(15) && event.startDate <= start + dur!"minutes"(15) + dur!"seconds"(1));
+
+	assert(event.startDate >= start + dur!"minutes"(14) && event.startDate <= start + dur!"minutes"(15) + dur!"seconds"(1));
 }
 
 /**
