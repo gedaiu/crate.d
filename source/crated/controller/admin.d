@@ -179,7 +179,13 @@ template DataManager(string baseUrl, EL...)
 {
 	
 	class DataManagerTemplate  {
-		
+
+		@("HttpRequest", "method:GET", "node:" ~ baseUrl)
+		static void index(HTTPServerRequest req, HTTPServerResponse res) {
+
+			res.writeBody( "nothing here" , "text/html; charset=UTF-8");
+		}
+
 		/**
 		 * Init the router
 		 */

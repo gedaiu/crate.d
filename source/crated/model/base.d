@@ -23,6 +23,8 @@ import std.traits;
 import std.algorithm;
 import std.conv;
 import std.typetuple;
+import std.datetime;
+import core.time;
 
 import crated.tools;
 
@@ -137,7 +139,6 @@ template Item(Prototype, M) {
 		this(T)(T someItem, M parent) {
 			this(parent);
 			copy!fields(someItem);
-
 		}
 
 		/**
@@ -163,7 +164,7 @@ template Item(Prototype, M) {
 					}
 				}
 
-				if(found) { 
+				if(found && fields[0][0] in someItem) { 
 					static if( is( typeof(__traits(getMember, this, fields[0][0]) ) == typeof(someField) ) ) {
 						__traits(getMember, this, fields[0][0]) = someField;
 					} else {
@@ -247,20 +248,24 @@ template Item(Prototype, M) {
 		/**
 		 * A pair of a field name and type to be accessed at runtime
 		 */
+		static if(!__traits(hasMember, Prototype, "fields")) 
 		static enum string[][] fields = getItemFields!("field", Prototype, false);
 
 
 		/**
 		 * A pair of a field name and type to be accessed at runtime
 		 */
+		static if(!__traits(hasMember, Prototype, "primaryField")) 
 		static enum string[] primaryField = getItemFields!("primary", Prototype, false)[0];
 
 		//TODO: make attributes of type string[string][string] to avoid runtime string parsing in valueOf method
 		///The field attributes.
+		static if(!__traits(hasMember, Prototype, "attributes")) 
 		enum string[][] attributes = getItemFields!("field", Prototype, true);
 
 		//TODO: remove the string mixin
 		///All the enum fields with their keys
+		static if(!__traits(hasMember, Prototype, "enumValues")) 
 		enum string[][string] enumValues = mixin("[ ``: [] " ~ getEnumValues ~ "]");
 
 		/**
@@ -333,8 +338,11 @@ template Item(Prototype, M) {
 		/**
 		 * Private: The primary key type alias
 		 */
-		private alias PrimaryKeyType = typeof(__traits(getMember, this, primaryField[0]));
-
+		static if(__traits(hasMember, Prototype, "_PrimaryKeyType")) {
+			mixin("private alias PrimaryKeyType = " ~ _PrimaryKeyType ~ ";");
+		} else {
+			private alias PrimaryKeyType = typeof(__traits(getMember, this, primaryField[0]));
+		}
 		/**
 		 * Get the primary field value
 		 */
@@ -706,8 +714,6 @@ template Model(Prototype, string modelName = "Unknown") {
 	alias Model = ModelTemplate;
 }
 
-
-
 /**
  * This template is used to check if a model has declared all the methods.
  * 
@@ -746,4 +752,125 @@ mixin template MixCheckModelFields(M) {
 	mixin(_genChkMember!(M, "query"));
 	mixin(_genChkMember!(M, "getBy"));
 	mixin(_genChkMember!(M, "getOneBy"));
+}
+
+
+template UnifyPrototypes(PrototypeList...) if(PrototypeList.length > 1) {
+
+	alias B = PrototypeList[0];
+
+	/**
+	 * Get the type value for each prototype
+	 */
+	private template GetTypes(L...) {
+			
+		static if(L.length > 1) {
+			alias GetTypes = TypeTuple!(GetTypes!(L[0..$/2]), GetTypes!(L[$/2..$]));
+		} else static if(L.length == 1) {
+			static assert(__traits(hasMember, L[0], "type"), "A Prototype must have type member to be unifiable.");
+			alias GetTypes = TypeTuple!((L[0].type).to!string);
+		} else {
+			alias GetTypes = TypeTuple!();
+		}
+	}
+
+	///Private:
+	private mixin template GenPrototypeAlias(L...) {
+		static if(L.length == 1) {
+			mixin("alias Cls" ~ (L[0].type).to!string ~ " = L[0]; ");
+		} else static if(L.length > 1) {
+			mixin GenPrototypeAlias!(L[0..$/2]);
+			mixin GenPrototypeAlias!(L[$/2..$]);
+		}
+	}
+
+	///Private:
+	private mixin template AddMethods(alias Name, alias Type) {
+
+		mixin(`@property ` ~ Type ~ ` ` ~ Name ~ `() const { throw new Exception("unimplemented method"); }`);
+		mixin(`@property void ` ~ Name ~ `(` ~ Type ~ ` val) {}`);
+	}
+
+	///Private:
+	private mixin template CreateProxy(T, F...) {
+
+		static if(F[0].length == 1) {
+
+			static if(F[0][0][2] != "isConst") {
+				mixin AddMethods!(F[0][0][0], F[0][0][1]);
+			}
+		} else static if(F[0].length > 1) {
+			mixin CreateProxy!(T, F[0][0..$/2]);
+			mixin CreateProxy!(T, F[0][$/2..$]);
+		}
+
+	}
+
+	class PrototypeUnificaition {
+		static const bool isUnified = true;
+		static const string[] types = [ GetTypes!PrototypeList ];
+
+		///The field attributes.
+		enum string[][] attributes = getUnifiedItemFields!("field", true, PrototypeList);
+
+		///A pair of a field name and type to be accessed at runtime
+		static enum string[] primaryField = getUnifiedItemFields!("primary", false, PrototypeList)[0];
+
+		///A pair of a field name and type to be accessed at runtime
+		static enum string[][] fields = getUnifiedItemFields!("field", false, PrototypeList);
+
+		///
+		protected enum _PrimaryKeyType = primaryField[1];
+
+		enum Types = PrototypeList.length;
+
+		mixin GenPrototypeAlias!(PrototypeList);
+
+		Unqual!(typeof(__traits(getMember, PrototypeList[0], "type"))) type = PrototypeList[0].type;
+
+		mixin CreateProxy!(PrototypeUnificaition, fields);
+
+
+		this() {}
+	}
+
+	alias UnifyPrototypes = PrototypeUnificaition;
+}
+
+
+unittest {
+	class A {
+		@("primary", "field")
+		ulong id;
+		
+		@("field")
+		string name;
+		
+		@("field")
+		static const type = "A";
+	}
+
+	class B {
+		@("primary", "field")
+		ulong id;
+		
+		@("field")
+		string nick;
+		
+		@("field")
+		static const type = "B";
+	}
+
+	alias U = UnifyPrototypes!(A, B);
+	alias M = Model!U;
+
+	M model = new M;
+
+	alias T = Item!(U, M);
+
+	assert(test.types[0] == "A");
+	assert(test.types[1] == "B");
+	assert(test.primaryField[0] == "id");
+	assert(test.primaryField[1] == "ulong");
+
 }

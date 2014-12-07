@@ -140,6 +140,93 @@ template ItemProperty(item, string method) {
  * 	@("field") string author = "unknown";
  * }
  * 
+ * enum string[][] fields = getItemFields!("field", BookItemPrototype);
+ * 
+ * assert(fields[0][0] == "id");
+ * assert(fields[0][1] == "ulong");
+ * assert(fields[0][2] == "isIntegral");
+ * 
+ * --------------------
+ */
+template getUnifiedItemFields(alias ATTR, bool addFields, PrototypeList...) { 
+
+	///Private: 
+	private template IterateFields(L...) {
+		static if(L.length == 1) {
+			alias IterateFields = getItemFields!(ATTR, L[0], addFields);
+		} else static if(L.length > 1) {
+			alias IterateFields = TypeTuple!(IterateFields!(L[0..$/2]) , IterateFields!(L[$/2..$]));
+		} else {
+			alias IterateFields = TypeTuple!();
+		}
+	}
+
+	//Private: 
+	private template FieldExist(alias E, F...) {
+		template isEQ(EL...) {
+			static if(EL.length == 0) {
+				enum b = false;
+				alias isEQ = b;
+			} else {
+				static if(EL[0][0] == E[0]) {
+
+					enum b = true;
+					alias isEQ = b;
+				} else {
+
+					enum b = false;
+					alias isEQ = b;
+				}
+			}
+		}
+
+		static if(F[0].length > 0 && isEQ!(TypeTuple!(F[0][0]))) {
+			enum b = true;
+			alias FieldExist = b;
+		} else static if(F[0].length > 0) {
+			enum b = false || FieldExist!(E, TypeTuple!(F[0][1..$]));
+			alias FieldExist = b;
+		} else {
+			enum b = false;
+			alias FieldExist = b;
+		}
+	}
+
+	///Private: 
+	private template RemoveDuplicates(F...) {
+		static if(!FieldExist!(F[0][0], TypeTuple!(F[0][1..$]))) {
+			alias E = TypeTuple!( [ F[0][0] ]);
+		} else {
+			alias E = TypeTuple!();
+		}
+
+		static if(F[0].length > 1) {
+			alias RemoveDuplicates = TypeTuple!(E, RemoveDuplicates!(F[0][1..$]));
+		} else {
+			alias RemoveDuplicates = E;
+		}
+	}
+
+	alias list = IterateFields!PrototypeList;
+
+	enum string[][] fields = std.array.join([ RemoveDuplicates!(std.array.join([ list ])) ]);
+
+	alias getUnifiedItemFields = fields;
+}
+
+/** 
+ * Get all members that have ATTR attribute.
+ * 
+ * Example: 
+ * --------------------
+ * class BookItemPrototype {
+ * 	@("field", "primary")
+ *	ulong id;
+ *
+ *	@("field") string name = "unknown";
+ * 	@("field") string author = "unknown";
+ * }
+ * 
  * 
  * enum string[][] fields = getItemFields!("field", BookItemPrototype);
  * 
@@ -190,6 +277,8 @@ template getItemFields(alias ATTR, Prototype, bool addFields) {
 		else return "";
 	}
 
+
+	//TODO: use Unqual! to get the type
 	/**
 	 * Get the type of a Prototype fieald
 	 */
@@ -243,8 +332,6 @@ template getItemFields(alias ATTR, Prototype, bool addFields) {
 		} else {
 			alias GetAttributes = TypeTuple!(__traits(getAttributes, ItemProperty!(Prototype, name)));
 		}
-
-
 	}
 
 
@@ -279,7 +366,6 @@ template getItemFields(alias ATTR, Prototype, bool addFields) {
 		} else alias ItemFields = TypeTuple!();
 	}
 
-
 	alias list = ItemFields!(__traits(allMembers, Prototype));
 
 	/**
@@ -289,8 +375,6 @@ template getItemFields(alias ATTR, Prototype, bool addFields) {
 		enum string[][] fields = [ list ];
 		alias getItemFields = fields;
 	} else {
-		pragma(msg, Prototype, " has no ", ATTR , " attribute.");		
-		enum string[][] fields=[];
-		alias getItemFields = fields;
+		static assert(false, Prototype.stringof ~ " has no "~ ATTR ~" attribute.");
 	}
 }

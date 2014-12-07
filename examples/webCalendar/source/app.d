@@ -40,7 +40,9 @@ shared static this()
 	crated.model.mongo.dbAddress = "127.0.0.1";
 
 	//init the data	
-	alias CalendarModel = MongoModel!(MyUnknownEventPrototype, "test.calendar", "Calendar");
+	alias UnifiedEvent = UnifyPrototypes!(MyEventPrototype, MyUnknownEventPrototype);
+
+	alias CalendarModel = MongoModel!(UnifiedEvent, "test.calendar", "Calendar");
 
 	alias DataManagerController = DataManager!("/admin", CalendarModel);
 
