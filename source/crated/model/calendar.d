@@ -18,7 +18,7 @@ enum EventType {
 
 abstract class CalendarEvent {
 
-	static const EventType type = EventType.Undefined;
+	static const EventType itemType = EventType.Undefined;
 
 	@property 
 	void startDate(const SysTime startDate);
@@ -66,7 +66,7 @@ class CalendarEventPrototype : CalendarEvent
 		@("field") SysTime endDate() const { return _endDate; }
 
 		@("field")
-		static const EventType type = EventType.Basic;
+		static const EventType itemType = EventType.Basic;
 
 		///return event duration
 		Duration duration() { return endDate - startDate; }
@@ -177,7 +177,7 @@ class CalendarUnknownEventPrototype : CalendarEvent
 		void duration(Duration customDuration) { _duration = customDuration; }
 
 		@("field")
-		static const EventType type = EventType.Unknown;
+		static const EventType itemType = EventType.Unknown;
 	}
 
 	protected Duration _duration;
@@ -611,7 +611,7 @@ class CalendarEventChainPrototype {
 		foreach(i; 1..events.length) {
 			if(events[i].startDate < prevEvent.endDate) {
 
-				if(events[i].type != EventType.Unknown) {
+				if(events[i].itemType != EventType.Unknown) {
 					auto tmpDuration = events[i].duration;
 					events[i].endDate = prevEvent.endDate + tmpDuration;
 				}

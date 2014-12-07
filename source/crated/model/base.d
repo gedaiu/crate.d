@@ -138,6 +138,12 @@ template Item(Prototype, M) {
 		 */
 		this(T)(T someItem, M parent) {
 			this(parent);
+
+			//set the type first if is unified
+			static if(__traits(hasMember, this, "isUnified")) {
+				copy!([["itemType", typeof(this.itemType).stringof , ""]])(someItem);
+			}
+
 			copy!fields(someItem);
 		}
 
@@ -220,7 +226,7 @@ template Item(Prototype, M) {
 								std.stdio.writeln(fields[0][0], " can not be set as Duration.");
 							}
 						} else static if(fields[0][2] != "isConst") {
-							__traits(getMember, this, fields[0][0]) = someField.to!(typeof(__traits(getMember, this, fields[0][0])));
+							__traits(getMember, this, fields[0][0]) = someField.to!string.to!(typeof(__traits(getMember, this, fields[0][0])));
 						}
 					}
 				} else {
@@ -771,8 +777,8 @@ template UnifyPrototypes(PrototypeList...) if(PrototypeList.length > 1) {
 		static if(L.length > 1) {
 			alias GetTypes = TypeTuple!(GetTypes!(L[0..$/2]), GetTypes!(L[$/2..$]));
 		} else static if(L.length == 1) {
-			static assert(__traits(hasMember, L[0], "type"), "A Prototype must have type member to be unifiable.");
-			alias GetTypes = TypeTuple!((L[0].type).to!string);
+			static assert(__traits(hasMember, L[0], "itemType"), "A Prototype must have `itemType` member to be unifiable.");
+			alias GetTypes = TypeTuple!((L[0].itemType).to!string);
 		} else {
 			alias GetTypes = TypeTuple!();
 		}
@@ -781,7 +787,7 @@ template UnifyPrototypes(PrototypeList...) if(PrototypeList.length > 1) {
 	///Private:
 	private mixin template GenPrototypeAlias(L...) {
 		static if(L.length == 1) {
-			mixin("alias Cls" ~ (L[0].type).to!string ~ " = L[0]; ");
+			mixin("alias Cls" ~ (L[0].itemType).to!string ~ " = L[0]; ");
 		} else static if(L.length > 1) {
 			mixin GenPrototypeAlias!(L[0..$/2]);
 			mixin GenPrototypeAlias!(L[$/2..$]);
@@ -791,7 +797,7 @@ template UnifyPrototypes(PrototypeList...) if(PrototypeList.length > 1) {
 	///Private:
 	private mixin template AddMethods(alias Name, alias Type) {
 
-		mixin(`@property ` ~ Type ~ ` ` ~ Name ~ `() const { throw new Exception("unimplemented method"); }`);
+		mixin(`@property ` ~ Type ~ ` ` ~ Name ~ `() const { throw new Exception(this.itemType.to!string ~ " '`~Name~`' unimplemented method"); }`);
 		mixin(`@property void ` ~ Name ~ `(` ~ Type ~ ` val) {}`);
 	}
 
@@ -830,7 +836,7 @@ template UnifyPrototypes(PrototypeList...) if(PrototypeList.length > 1) {
 
 		mixin GenPrototypeAlias!(PrototypeList);
 
-		Unqual!(typeof(__traits(getMember, PrototypeList[0], "type"))) type = PrototypeList[0].type;
+		Unqual!(typeof(__traits(getMember, PrototypeList[0], "itemType"))) itemType = PrototypeList[0].itemType;
 
 		mixin CreateProxy!(PrototypeUnificaition, fields);
 
@@ -851,7 +857,7 @@ unittest {
 		string name;
 		
 		@("field")
-		static const type = "A";
+		static const itemType = "A";
 	}
 
 	class B {
@@ -862,7 +868,7 @@ unittest {
 		string nick;
 		
 		@("field")
-		static const type = "B";
+		static const itemType = "B";
 	}
 
 	alias U = UnifyPrototypes!(A, B);
