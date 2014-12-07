@@ -149,6 +149,10 @@ template Item(Prototype, M) {
 			static if(fields.length == 1) {
 				bool found = true;
 
+				static if(T.stringof == "Json") {
+					found = (fields[0][0] in someItem) !is null;
+				}
+
 				//get the desired field value from someItem
 				static if(__traits(hasMember, someItem, fields[0][0])) {
 					auto someField = __traits(getMember, someItem, fields[0][0]);
@@ -164,7 +168,7 @@ template Item(Prototype, M) {
 					}
 				}
 
-				if(found && fields[0][0] in someItem) { 
+				if(found) { 
 					static if( is( typeof(__traits(getMember, this, fields[0][0]) ) == typeof(someField) ) ) {
 						__traits(getMember, this, fields[0][0]) = someField;
 					} else {
@@ -867,10 +871,10 @@ unittest {
 	M model = new M;
 
 	alias T = Item!(U, M);
+	T test = new T(model);
 
 	assert(test.types[0] == "A");
 	assert(test.types[1] == "B");
 	assert(test.primaryField[0] == "id");
 	assert(test.primaryField[1] == "ulong");
-
 }
