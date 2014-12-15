@@ -58,7 +58,7 @@ Global
 		{FE25D782-0E4F-4EBC-AA97-98207C93FD3F}.Unittest|Any CPU.Build.0 = Unittest|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = examples\webCalendar\webCalendar.dproj
+		StartupItem = crate.d.dproj
 		Policies = $0
 		$0.StandardHeader = $1
 		$1.Text = @Authors: ${AuthorName} <${AuthorEmail}>\nDate: ${Month} ${Day}, ${Year}\nLicense: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.\nCopyright: Public Domain
@@ -187,5 +187,14 @@ Global
 		$23.NamingStyle = PascalCase
 		$23.IncludeInstanceMembers = True
 		$23.IncludeStaticEntities = True
+		$0.TextStylePolicy = $25
+		$25.inheritsSet = null
+		$25.scope = text/x-d
+		$0.DFormattingPolicy = $26
+		$26.inheritsSet = Mono
+		$26.inheritsScope = text/x-d
+		$26.scope = text/x-d
+		$0.VersionControlPolicy = $27
+		$27.inheritsSet = Mono
 	EndGlobalSection
 EndGlobal

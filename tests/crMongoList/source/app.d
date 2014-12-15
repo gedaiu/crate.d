@@ -1,11 +1,13 @@
 import std.stdio : writeln;
 import crated.model.mongo;
+import std.traits;
+import vibe.d;
 
 unittest {
 	crated.model.mongo.dbAddress = "127.0.0.1";
 }
 
-class BookItemPrototype {
+class Book {
 
 	this() {}
 
@@ -14,112 +16,118 @@ class BookItemPrototype {
 	@("field") string author;
 }
 
+Book createBook(string type, string[string] data) {
+	auto myBook = new Book;
+
+	if("_id" in data) myBook._id = data["_id"];
+	if("name" in data) myBook.name = data["name"];
+	if("author" in data) myBook.author = data["author"];
+
+	return myBook;
+}
+
+alias BookModel = MongoModel!(createBook, "test.BookModel");
+mixin ModelHelper!BookModel;
 
 unittest {
-	auto books = new MongoModel!(BookItemPrototype, "test.books");
-	books.truncate;
+	BookModel.truncate;
 }
 
 //test save
 unittest {
-	auto books = new MongoModel!(BookItemPrototype, "test.books");
-	auto item = books.createItem;
+	auto item = BookModel.CreateItem;
 	item.save;
 		
-	assert(books.length == 1);
+	assert(BookModel.length == 1);
 
-	auto savedItem = books.all[0];
-	assert(item == savedItem);
+	auto savedItem = BookModel.all[0];
+
+	assert(item.convert!Json == savedItem.convert!Json);
 }
 
 //test truncate
 unittest {
-	auto books = new MongoModel!(BookItemPrototype, "test.books");
-	auto item = books.createItem;
+	auto item = BookModel.CreateItem;
 	item.save;
 	
-	books.truncate;
+	BookModel.truncate;
 	
-	assert(books.length == 0);
+	assert(BookModel.length == 0);
 }
 
 //test remove
 unittest {
-	auto books = new MongoModel!(BookItemPrototype, "test.books");
-	auto item = books.createItem;
+	auto item = BookModel.CreateItem;
 	item.save;
 	
-	assert(books.length == 1);
+	assert(BookModel.length == 1);
 	
 	item.remove;
 	
-	assert(books.length == 0);
+	assert(BookModel.length == 0);
 }
 
 unittest {
-	auto books = new MongoModel!(BookItemPrototype, "test.books");
-	auto item = books.createItem;
+	auto item = BookModel.CreateItem;
 	item.save;
 	
-	assert(books.length == 1);
+	assert(BookModel.length == 1);
 	
-	books.remove!"_id"(item._id);
+	BookModel.remove!"_id"(item._id);
 	
-	assert(books.length == 0);
+	assert(BookModel.length == 0);
 }
 
 //save and delete multiple values
 unittest {
-	auto books = new MongoModel!(BookItemPrototype, "test.books");
-	auto item1 = books.createItem;
-	auto item2 = books.createItem;
+	auto item1 = BookModel.CreateItem;
+	auto item2 = BookModel.CreateItem;
 
-	books.save([item1, item2]);
+	BookModel.save([item1, item2]);
 	
-	assert(books.length == 2);
+	assert(BookModel.length == 2);
 	
-	books.remove([item1, item2]);
+	BookModel.remove([item1, item2]);
 	
-	assert(books.length == 0);
+	assert(BookModel.length == 0);
 }
 
 //a complex test
 unittest {	
 	//create the connection
-	auto books = new MongoModel!(BookItemPrototype, "test.books");
-	books.truncate;
+	BookModel.truncate;
 
 	//the setup
-	auto item1 = books.createItem;
+	auto item1 = BookModel.CreateItem;
 	item1.name = "Prelude to Foundation";
 	item1.author = "Isaac Asimov";
 	item1.save;
 	
-	auto item2 = books.createItem;
+	auto item2 = BookModel.CreateItem;
 	item2.name = "The Hunger Games";
 	item2.author = "Suzanne Collins";
 	item2.save;
 	
-	auto item3 = books.createItem;
+	auto item3 = BookModel.CreateItem;
 	item3.name = "The Adventures of Huckleberry Finn";
 	item3.author = "Mark Twain";
 	item3.save;
 	
-	auto item4 = books.createItem;
+	auto item4 = BookModel.CreateItem;
 	item4.name = "The Adventures of Tom Sawyer";
 	item4.author = "Mark Twain";
 	item4.save;
 
 	//checks
-	auto marksBooks = books.getBy!"author"("Mark Twain");
-	assert(marksBooks.length == 2);
-	assert(marksBooks[0].author == "Mark Twain", "invalid author name");
-	assert(marksBooks[1].author == "Mark Twain", "invalid author name");
+	auto marksBookModel = BookModel.getBy!"author"("Mark Twain");
+	assert(marksBookModel.length == 2);
+	assert(marksBookModel[0].author == "Mark Twain", "invalid author name");
+	assert(marksBookModel[1].author == "Mark Twain", "invalid author name");
 	
-	auto oneItem    = books.getOneBy!"author"("Mark Twain");
+	auto oneItem    = BookModel.getOneBy!"author"("Mark Twain");
 	assert(oneItem.author == "Mark Twain", "ca not get by author");
 	
-	auto all        = books.all;
+	auto all        = BookModel.all;
 	assert(all.length == 4, "can't get all elements");
 
 	//do a query
@@ -127,7 +135,7 @@ unittest {
 
 	Json q = Json.emptyObject;
 	q["author"] = "Mark Twain";
-	auto queryResult = books.query(q);
+	auto queryResult = BookModel.query(q);
 
 	assert(queryResult.length == 2);
 	assert(queryResult[0].author == "Mark Twain", "invalid author name");

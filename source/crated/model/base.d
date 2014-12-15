@@ -23,8 +23,11 @@ import std.traits;
 import std.algorithm;
 import std.conv;
 import std.typetuple;
+import std.typecons;
 import std.datetime;
 import core.time;
+
+import vibe.d;
 
 import crated.tools;
 
@@ -108,385 +111,103 @@ class CratedModelException : Exception {
  * 
  * =Creating new Item templates
  */
-template Item(Prototype, M) {
+
+
+
+template AbstractModel(Prototype) {
 
 	/**
-	 * The Prototype wrapper. Every Item is created by wrapping a Prototype class with this class. <code>ItemTemplate</code>
-	 * contains methods to manipulate the Prototype like save and delete. 
+	 * Abstract model definition
 	 */
-	class ItemTemplate : Prototype {
-		/**
-		 * Private: The parent model
-		 */
-		private M myModel;
-
-		/**
-		 * An alias to the model type
-		 */
-		alias modelCls = M;
-
-		/**
-		 * Default constructor
-		 */
-		this(M parent) {
-			super();
-			myModel = parent;
-		}
-
-		/**
-		 * Copy constructor
-		 */
-		this(T)(T someItem, M parent) {
-			this(parent);
-
-			//set the type first if is unified
-			static if(__traits(hasMember, this, "isUnified")) {
-				copy!([["itemType", typeof(this.itemType).stringof , ""]])(someItem);
-			}
-
-			copy!fields(someItem);
-		}
-
-		/**
-		 * Copy data from an object that have the same fields
-		 */
-		void copy(string[][] fields, T)(T someItem) {
-
-			static if(fields.length == 1) {
-				bool found = true;
-
-				static if(T.stringof == "Json") {
-					found = (fields[0][0] in someItem) !is null;
-				}
-
-				//get the desired field value from someItem
-				static if(__traits(hasMember, someItem, fields[0][0])) {
-					auto someField = __traits(getMember, someItem, fields[0][0]);
-				} else {
-
-					string someField;
-
-					try {
-						someField = someItem[fields[0][0]].to!string;
-					} catch (Exception e) {
-						someField = "";
-						found = false;
-					}
-				}
-
-				if(found) { 
-					static if( is( typeof(__traits(getMember, this, fields[0][0]) ) == typeof(someField) ) ) {
-						__traits(getMember, this, fields[0][0]) = someField;
-					} else {
-						static if(fields[0][2] == "isEnum") {
-							try {
-								static if(__traits(compiles, 
-								                   __traits(getMember, this, fields[0][0]) = someField.to!string.to!(typeof(__traits(getMember, this, fields[0][0]))))) {
-
-									__traits(getMember, this, fields[0][0]) = someField.to!string.to!(typeof(__traits(getMember, this, fields[0][0])));
-								} else {
-									pragma(msg, "`", Prototype, "`.`", fields[0][0], "` can not be set at runtime.");
-								} 
-							} catch(ConvException e) {
-								std.stdio.writeln(e);
-							}
-
-						} else static if(fields[0][1] == "SysTime") {
-							import std.datetime;
-
-							SysTime d;
-							if(fields[0][0] ~ "[tzOffset]" in someItem) {
-
-								auto mm = someItem[fields[0][0] ~ "[tzOffset]"].to!long;
-
-								auto h = std.math.abs(mm) / 60;
-								auto m = std.math.abs(mm) - h * 60;
-								string sh = (h < 10 ? "0":"") ~ h.to!string;
-								string sm = (m < 10 ? "0":"") ~ m.to!string;
-							
-								if( mm <= 0 ) {
-									d = SysTime.fromISOExtString(someField.to!string ~ "+" ~ sh ~ ":" ~ sm);
-								} else {
-									d = SysTime.fromISOExtString(someField.to!string ~ "-" ~ sh ~ ":" ~ sm);
-								}
-
-							} else {
-								d = SysTime.fromISOExtString(someField.to!string);
-							}
-
-							__traits(getMember, this, fields[0][0]) = d;
-
-							__traits(getMember, this, fields[0][0]).fracSec = FracSec.zero;
-						} else static if(fields[0][1] == "Duration") {
-							import std.datetime;
-
-							try {
-								__traits(getMember, this, fields[0][0]) = dur!"hnsecs"(someField.to!string.to!long);
-							} catch(Exception e) {
-								std.stdio.writeln(fields[0][0], " can not be set as Duration.");
-							}
-						} else static if(fields[0][2] != "isConst") {
-							__traits(getMember, this, fields[0][0]) = someField.to!string.to!(typeof(__traits(getMember, this, fields[0][0])));
-						}
-					}
-				} else {
-					static if( is( typeof(__traits(getMember, this, fields[0][0]) ) == bool ) ) {
-						__traits(getMember, this, fields[0][0]) = false;
-					}
-
-					static if( is( typeof(__traits(getMember, this, fields[0][0]) ) == core.time.Duration ) ) {
-						import core.time;
-
-						Duration d = dur!"seconds"(0);
-
-						if(fields[0][0] ~ "[seconds]" in someItem) d += dur!"seconds"(someItem[fields[0][0] ~ "[seconds]"].to!string.to!long);
-						if(fields[0][0] ~ "[minutes]" in someItem) d += dur!"minutes"(someItem[fields[0][0] ~ "[minutes]"].to!string.to!long);
-						if(fields[0][0] ~ "[hours]" in someItem) d += dur!"hours"(someItem[fields[0][0] ~ "[hours]"].to!string.to!long);
-						if(fields[0][0] ~ "[days]" in someItem) d += dur!"days"(someItem[fields[0][0] ~ "[days]"].to!string.to!long);
-						if(fields[0][0] ~ "[weeks]" in someItem) d += dur!"weeks"(someItem[fields[0][0] ~ "[weeks]"].to!string.to!long);
-
-						__traits(getMember, this, fields[0][0]) = d;
-					}
-				}
-
-			} else if(fields.length > 0) {
-				copy!(fields[0..$/2])(someItem);
-				copy!(fields[$/2..$])(someItem);
-			}
-		}
-
-		/**
-		 * A pair of a field name and type to be accessed at runtime
-		 */
-		static if(!__traits(hasMember, Prototype, "fields")) 
-		static enum string[][] fields = getItemFields!("field", Prototype, false);
-
-
-		/**
-		 * A pair of a field name and type to be accessed at runtime
-		 */
-		static if(!__traits(hasMember, Prototype, "primaryField")) 
-		static enum string[] primaryField = getItemFields!("primary", Prototype, false)[0];
-
-		//TODO: make attributes of type string[string][string] to avoid runtime string parsing in valueOf method
-		///The field attributes.
-		static if(!__traits(hasMember, Prototype, "attributes")) 
-		enum string[][] attributes = getItemFields!("field", Prototype, true);
-
-		//TODO: remove the string mixin
-		///All the enum fields with their keys
-		static if(!__traits(hasMember, Prototype, "enumValues")) 
-		enum string[][string] enumValues = mixin("[ ``: [] " ~ getEnumValues ~ "]");
-
-		/**
-		 * Generate the values for the enums from the current item
-		 */
-		private static string getEnumValues(ulong i = 0)() {
-
-			//exit condition
-			static if(i >= fields.length) {
-				return "";
-			} else {
-				enum auto field = fields[i];
-				
-				//check for D types
-				static if(field[2] == "isEnum") {
-					import std.traits;
+	abstract class Model {
 					
-					string vals = "";
-					
-					string glue = "";
-					foreach(v; EnumMembers!(typeof(__traits(getMember, Prototype, field[0])))) {
-						if(v.stringof[1..$-1] != "") {
-							vals ~= glue ~ `"` ~ v.stringof[1..$-1] ~ `"`; 
-							glue = ", ";
-						}
-					}
-					
-					return `, "` ~ field[0] ~ `": [` ~ vals ~ `]` ~ getEnumValues!(i + 1);
-				} else {
-					return getEnumValues!(i + 1);
-				}
-			}
-		}
+		static {
+						
+			///init the connection
+			void connect();
 
-		/**
-		 * The parent model
-		 */
-		@property
-		M parent() {
-			return myModel;
-		}
+			/**
+			 * Add or update an element
+			 */
+			void save(Prototype item);
 
-		/**
-		 * Save item
-		 */
-		void save() {
-			myModel.save(this);
-		}
+			/**
+			 * Add or update a list of elements
+			 */
+			void save(Prototype[] items);
 
-		/**
-		 * Delete item from the parent model
-		 */
-		void remove() {
-			myModel.remove(this);
-		}
+			/**
+			 * Remove an existing item
+			 */
+			void remove(T)(T item);
 
-		/**
-		 * Convert item to string
-		 */
-		override string toString() {
-			string jsonString = "{ ";
-			
-			mixin("jsonString ~= `" ~ PropertyJson() ~ "`;");
-			
-			jsonString ~= " }";
+			/**
+			 * Remove one item
+			 */
+			void remove(Prototype item);
 
-			return jsonString;
-		}
+			/**
+			 * Remove a list of items
+			 */
+			void remove(Prototype[] items);
 
-		/**
-		 * Private: The primary key type alias
-		 */
-		static if(__traits(hasMember, Prototype, "_PrimaryKeyType")) {
-			mixin("private alias PrimaryKeyType = " ~ _PrimaryKeyType ~ ";");
-		} else {
-			private alias PrimaryKeyType = typeof(__traits(getMember, this, primaryField[0]));
-		}
-		/**
-		 * Get the primary field value
-		 */
-		@property
-		PrimaryKeyType primaryKeyValue() {
-			return __traits(getMember, this, primaryField[0]);
-		}
-		
-		/**
-		 * Check if a field has a certain attribute
-		 */
-		static bool fieldHas(T)(T fieldName, string attribute) {
-			foreach(list; attributes) {
+			/**
+			 * Remove an item by field name
+			 */
+			void remove(string field, T)(T value);
 
-				if(list[0] == fieldName.to!string) {
-					
-					foreach(i; 1..list.length) {
-						auto index = list[i].indexOf(":");
+			/**
+			 * Remove all items
+			 */
+			void truncate();
 
-						if(list[i] == attribute) return true;
+			/**
+			 * Retrieve all items
+			 */
+			Prototype[] all();
 
-						if(index > 0 && list[i][0..index] == attribute) {
-							return true;
-						}
-					}
-				}
-			}
+			/**
+			 * Count all items
+			 */
+			ulong length();
 
-			return false;
-		}
+			/**
+			 * Create a new item. The returned item will not be 
+			 * automatically added to the model. If you want to add it to a model
+			 * call Item.save()
+			 */
+			static Prototype CreateItem(string type = "")();			
 
-		/**
-		 * Get the value of an attribute. An atribute value is set like this:
-		 * 
-		 * Example: 
-		 * -------------
-		 * @("field", "custom attribute:custom value")
-		 * string name;
-		 * -------------
-		 */
-		static string valueOf(string fieldName, string attribute) {
-			foreach(list; attributes) {
-				if(list[0] == fieldName) {
-
-					foreach(i; 1..list.length) {
-						auto index = list[i].indexOf(":");
-
-						if(index > 0 && list[i][0..index] == attribute) {
-							return list[i][index+1..$];
-						}
-					}
-				}
-			}
-
-			return "";
-		}
-
-		/**
-		 * == operator overload. It will check if the fields of the current Item are equals to the other one.
-		 */
-		override bool opEquals(Object o) {
-			return isFieldEqual!(fields)(cast(typeof(this)) o);
-		}
-		
-		/**
-		 * Get a field value as string. Very useful in views
-		 */
-		string fieldAsString(string fieldName)() {
-			auto val = __traits(getMember, this, fieldName);
-
-			static if( typeof(val).stringof == "SysTime" ) {
-				return val.toISOExtString;
-			} else static if( typeof(val).stringof == "Duration" ) {
-				return (val.total!"hnsecs").to!string;
-			} else {
-				return val.to!string;
-			}
-		}
-
-		/**
-		 * Check if the fields are equal
-		 */
-		private bool isFieldEqual(string[][] fields, T)(T o) {
-			static if(fields.length == 1) {
-				static if( is( typeof(__traits(getMember, this, fields[0][0]) ) == typeof(__traits(getMember, o, fields[0][0]) ) ) ) {
-					return __traits(getMember, this, fields[0][0]) == __traits(getMember, o, fields[0][0]);
-				} else {
-					return __traits(getMember, this, fields[0][0]) == __traits(getMember, o, fields[0][0]).to!(typeof(__traits(getMember, this, fields[0][0])));
-				}
-				
-			} else if(fields.length > 0) {
-				return isFieldEqual!(fields[0..$/2])(o) && isFieldEqual!(fields[$/2..$])(o);
-			}
-		}
-
-		/**
-		 * Private: Get code that generate the Json
-		 */
-		private static string PropertyJson() {
-			string jsonCode;
-			
-			string glue = "";
-			foreach (field; fields) {
-				jsonCode ~= glue ~ "\"" ~ field[0] ~ "\": ";
+			/**
+			 * Create an item from some dictionary
+			 */
+			static Prototype CreateItem(T)(T data) if(!is(T == string));
 
 
-				if(field[2] == "isIntegral") {
-					//is int
-					jsonCode ~= "` ~ this." ~ field[0] ~ ".to!string" ~ " ~ `";
-				} else if(field[2] == "isFloating") {
-					//is float
-					jsonCode ~= "` ~ ( this." ~ field[0] ~ ".to!string[$-1..$] == \"i\" ? 
-				                         `\"` ~  this." ~ field[0] ~ ".to!string ~ `\"` : 
-				                                 this." ~ field[0] ~ ".to!string ) ~ `";
-				} else if(field[1] == "SysTime") {
-					jsonCode ~= "\"` ~ this." ~ field[0] ~ ".toISOExtString" ~ " ~ `\"";
-				} else {
-					//is something else
-					jsonCode ~= "\"` ~ this." ~ field[0] ~ ".to!string" ~ " ~ `\"";
-				}
-								
-				glue = ",\n";
-			}
-			
-			return jsonCode;
+			/**
+			 * Find all items that match the search criteria 
+			 */
+			Prototype[] getBy(string fieldName, T)(T value);
+
+			/**
+			 * Retrieve the first item that match the search
+			 * criteria
+			 */
+			Prototype getOneBy(string fieldName, T)(T value);
+
+			/**
+			 * Query the model. This is unsupported for the base model, but if you want to use a database as storage,
+			 * you should implement this method in your model.
+			 */
+			Prototype[] query(T)(T query);
 		}
 	}
 
-	alias Item = ItemTemplate;
+	alias AbstractModel = Model;
 }
 
-template Item(Prototype, alias M) {
-	alias Item = Item!(Prototype, typeof(M));
-}
+
+
 
 /**
  * Create a crated Model. A model is responsable with manipulating Items. It save, delete and query the 
@@ -581,306 +302,263 @@ template Item(Prototype, alias M) {
  * 
  * 
  */
-template Model(Prototype, string modelName = "Unknown") {
+template Model(alias CreatePrototype, string modelName = "Unknown") {
+
+	alias Prototype = ReturnType!CreatePrototype;
+
+
+	mixin ModelHelper!ModelTemplate;
 
 	/**
 	 * A basic model implementation without any persistence
 	 */
-	class ModelTemplate {
+		class ModelTemplate : AbstractModel!(Prototype) {
 
 		///An alias to the item class type.
-		alias ItemCls = Item!(Prototype, ModelTemplate);
+		alias ItemCls = Prototype;
 
-		///The model name.
-		enum string name = modelName;
+		static {
+			///Private:
+			mixin PrototypeReflection!Prototype;
 
-		///Protected: item container
-		protected ItemCls[] items;
+			///The model name.
+			enum string name = modelName;
 
-		/**
-		 * Add or update an element
-		 */
-		void save(ItemCls item) {
-			auto itemId = __traits(getMember, item, (ItemCls.primaryField[0]));
-			bool added = false;
+			///Protected: item container
+			protected Prototype[] items;
 
-			foreach(i; 0..items.length) {
-				auto currentId = __traits(getMember, items[i], (ItemCls.primaryField[0]));
+			/**
+			 * Add or update an element
+			 */
+			void save(Prototype item) {
+				auto itemId = primaryField(item);
+				bool added = false;
 
-				if(itemId == currentId) {
-					items[i] = item;
-					return;
+				foreach(i; 0..items.length) {
+					auto currentId = primaryField(items[i]);
+
+					if(itemId == currentId) {
+						items[i] = item;
+						return;
+					}
+				}
+
+				items ~= [item];
+			}
+
+			/**
+			 * Add or update a list of elements
+			 */
+			void save(Prototype[] items) {
+				foreach(item; items) {
+					save(item);
 				}
 			}
 
-			items ~= [item];
-		}
-
-		/**
-		 * Remove an existing item
-		 */
-		void remove(T)(T item) {
-			throw new CratedModelException("unimplemented base method");
-		}
-	
-		/**
-		 * Remove all items
-		 */
-		void truncate() {
-			items = [];
-		}
-
-		/**
-		 * Create a new item. The returned item will not be 
-		 * automatically added to the model. If you want to add it to a model
-		 * call Item.save()
-		 */
-		ItemCls createItem() {
-			ItemCls item = new ItemCls(this);
-
-			return item;
-		}
-
-		/**
-		 * Retrieve all items
-		 */
-		ItemCls[] all() {
-			return items;
-		}
-
-		/**
-		 * Query the model. This is unsupported for the base model, but if you want to use a database as storage,
-		 * you should implement this method in your model.
-		 */
-		ItemCls[] query() {
-			throw new CratedModelException("unsupported method");
-		}
-
-		/**
-		 * Count an item set 
-		 */
-		ulong length(string fieldName, T)(T value) {
-			ulong sum = 0;
-
-			auto list = all;
-
-			foreach(i; 0..list.length) {
-				sum += __traits(getMember, list[i], fieldName) == value ? 1 : 0;
+			/**
+			 * Remove an existing item
+			 */
+			void remove(T)(T item) {
+				throw new CratedModelException("unimplemented base method");
+			}
+		
+			/**
+			 * Remove all items
+			 */
+			void truncate() {
+				items = [];
 			}
 
-			return sum;
-		}
+			/**
+			 * Create a new item. The returned item will not be 
+			 * automatically added to the model. If you want to add it to a model
+			 * call Item.save()
+			 */
 
-		/**
-		 * Count all items
-		 */
-		ulong length() {
-			return all.length;
-		}
+			static Prototype CreateItem(string type = "")() {
+				string[string] data;
+				
+				Prototype item = CreatePrototype(type, data);
+				
+				return item;
+			}
+			
+			
+			/**
+			 * Create an item from some dictionary
+			 */
+			static Prototype CreateItem(T)(T data) if(!is(T == string)) {
+				if(collection.name != collectionName) connect;
+				
+				string type = "";
+				if("type" in data) type = data["type"].to!string;
+				
+				string[string] dataAsString = toDict(data);
+				auto itm = CreatePrototype(type, dataAsString);
+				
+				return itm;
+			}
 
-		/**
-		 * Find all items that match the search criteria 
-		 */
-		ItemCls[] getBy(string fieldName, T)(T value) {
-			ItemCls[] r;
+			/**
+			 * Retrieve all items
+			 */
+			Prototype[] all() {
+				return items;
+			}
 
-			auto list = all;
+			/**
+			 * Query the model. This is unsupported for the base model, but if you want to use a database as storage,
+			 * you should implement this method in your model.
+			 */
+			Prototype[] query() {
+				throw new CratedModelException("unsupported method");
+			}
 
-			foreach(i; 0..list.length) {
-				if(__traits(getMember, list[i], fieldName) == value) {
-					r ~= [ list[i] ];
+			/**
+			 * Count an item set 
+			 */
+			ulong length(string fieldName, T)(T value) {
+				ulong sum = 0;
+
+				auto list = all;
+
+				foreach(i; 0..list.length) {
+					sum += __traits(getMember, list[i], fieldName) == value ? 1 : 0;
 				}
+
+				return sum;
 			}
 
-			return r;
-		}
+			/**
+			 * Count all items
+			 */
+			ulong length() {
+				return all.length;
+			}
 
-		/**
-		 * Retrieve the first item that match the search criteria
-		 */
-		ItemCls getOneBy(string fieldName, T)(T value) {
-			auto list = all;
+			/**
+			 * Find all items that match the search criteria 
+			 */
+			Prototype[] getBy(string fieldName, T)(T value) {
+				Prototype[] r;
 
-			foreach(i; 0..list.length) {
-				if(__traits(getMember, list[i], fieldName) == value) {
-					return list[i];
+				auto list = all;
+
+				foreach(i; 0..list.length) {
+					if(__traits(getMember, list[i], fieldName) == value) {
+						r ~= [ list[i] ];
+					}
 				}
+
+				return r;
 			}
 
-			return null;
-		}
+			/**
+			 * Retrieve the first item that match the search criteria
+			 */
+			Prototype getOneBy(string fieldName, T)(T value) {
+				auto list = all;
 
-		/**
-		 * Convert the items to a Json string
-		 */
-		override string toString() {
-			return items.to!string;
+				foreach(i; 0..list.length) {
+					if(__traits(getMember, list[i], fieldName) == value) {
+						return list[i];
+					}
+				}
+
+				return null;
+			}
+
+			/**
+			 * Convert the items to a Json string
+			 */
+			string toString() {
+				return items.to!string;
+			}
+
 		}
 	}
-
-	///Private: 
-	mixin MixCheckModelFields!ModelTemplate;
 
 	alias Model = ModelTemplate;
 }
 
-/**
- * This template is used to check if a model has declared all the methods.
- * 
- * Example:
- * ----------------------
- * class MyModel {
- * 	mixin MixCheckFieldsModel!MyModel;
- * }
- * ----------------------
- * 
- * Will show messages on compile for every missing member.
- * 
- */
-mixin template MixCheckModelFields(M) {
+mixin template ModelHelper(Model) {
 
-	/**
-	 * Generate code that checks if a certain method is declared 
-	 */
-	private string _genChkMember(M, string name)() {
-		static if(!__traits(hasMember, M, name)) {
-			pragma(msg, "Have you forgot to declare method ["~name~"] for [", M ,"]?");
-		}
-		
-		return "";
+	void save(Model.ItemCls item) {
+		Model.save(item);
+	}
+	
+	void save(Model.ItemCls[] itemList) {
+		Model.save(itemList);
 	}
 
-
-	mixin(_genChkMember!(M, "createItem"));
-
-	mixin(_genChkMember!(M, "save"));
-	mixin(_genChkMember!(M, "remove"));
-	mixin(_genChkMember!(M, "truncate"));
-
-	mixin(_genChkMember!(M, "all"));
-
-	mixin(_genChkMember!(M, "query"));
-	mixin(_genChkMember!(M, "getBy"));
-	mixin(_genChkMember!(M, "getOneBy"));
-}
-
-
-template UnifyPrototypes(PrototypeList...) if(PrototypeList.length > 1) {
-
-	alias B = PrototypeList[0];
-
-	/**
-	 * Get the type value for each prototype
-	 */
-	private template GetTypes(L...) {
-			
-		static if(L.length > 1) {
-			alias GetTypes = TypeTuple!(GetTypes!(L[0..$/2]), GetTypes!(L[$/2..$]));
-		} else static if(L.length == 1) {
-			static assert(__traits(hasMember, L[0], "itemType"), "A Prototype must have `itemType` member to be unifiable.");
-			alias GetTypes = TypeTuple!((L[0].itemType).to!string);
-		} else {
-			alias GetTypes = TypeTuple!();
-		}
+	void remove(Model.ItemCls item) {
+		Model.remove(item);
+	}
+	
+	void remove(Model.ItemCls[] itemList) {
+		Model.remove(itemList);
 	}
 
-	///Private:
-	private mixin template GenPrototypeAlias(L...) {
-		static if(L.length == 1) {
-			mixin("alias Cls" ~ (L[0].itemType).to!string ~ " = L[0]; ");
-		} else static if(L.length > 1) {
-			mixin GenPrototypeAlias!(L[0..$/2]);
-			mixin GenPrototypeAlias!(L[$/2..$]);
-		}
-	}
+	//private
+	private void fillFields(T, FIELDS...)(ref T data, Model.ItemCls item) {
 
-	///Private:
-	private mixin template AddMethods(alias Name, alias Type) {
+		static if(FIELDS[0].length == 1) {
 
-		mixin(`@property ` ~ Type ~ ` ` ~ Name ~ `() const { throw new Exception(this.itemType.to!string ~ " '`~Name~`' unimplemented method"); }`);
-		mixin(`@property void ` ~ Name ~ `(` ~ Type ~ ` val) {}`);
-	}
+			//if is a bson id
+			static if(Model.primaryFieldName == FIELDS[0][0][0] && FIELDS[0][0][1] == "string" && is(T == Bson)) {
+				BsonObjectID id;
+				string val = __traits(getMember, item, FIELDS[0][0][0]);
 
-	///Private:
-	private mixin template CreateProxy(T, F...) {
+				if(val == "") {
+					id = BsonObjectID.generate;
+					__traits(getMember, item, FIELDS[0][0][0]) = id.to!string;
+				} else {
+					id = BsonObjectID.fromString(__traits(getMember, item, FIELDS[0][0][0]));
+				}
 
-		static if(F[0].length == 1) {
+				data[FIELDS[0][0][0]] = id;
 
-			static if(F[0][0][2] != "isConst") {
-				mixin AddMethods!(F[0][0][0], F[0][0][1]);
+			} else {
+				data[FIELDS[0][0][0]] = __traits(getMember, item, FIELDS[0][0][0]);
 			}
-		} else static if(F[0].length > 1) {
-			mixin CreateProxy!(T, F[0][0..$/2]);
-			mixin CreateProxy!(T, F[0][$/2..$]);
+
+		} else static if(FIELDS[0].length > 1) {
+			fillFields!(T, FIELDS[0][0..$/2])(data, item);
+			fillFields!(T, FIELDS[0][$/2..$])(data, item);
 		}
-
 	}
 
-	class PrototypeUnificaition {
-		static const bool isUnified = true;
-		static const string[] types = [ GetTypes!PrototypeList ];
+	T convert(T)(Model.ItemCls item) if(is(T==Json) || is(T==Bson)) {
+		T data = T.emptyObject;
 
-		///The field attributes.
-		enum string[][] attributes = getUnifiedItemFields!("field", true, PrototypeList);
-
-		///A pair of a field name and type to be accessed at runtime
-		static enum string[] primaryField = getUnifiedItemFields!("primary", false, PrototypeList)[0];
-
-		///A pair of a field name and type to be accessed at runtime
-		static enum string[][] fields = getUnifiedItemFields!("field", false, PrototypeList);
-
-		///
-		protected enum _PrimaryKeyType = primaryField[1];
-
-		enum Types = PrototypeList.length;
-
-		mixin GenPrototypeAlias!(PrototypeList);
-
-		Unqual!(typeof(__traits(getMember, PrototypeList[0], "itemType"))) itemType = PrototypeList[0].itemType;
-
-		mixin CreateProxy!(PrototypeUnificaition, fields);
-
-
-		this() {}
+		fillFields!(T, Model.fields)(data, item);
+		
+		return data;
 	}
 
-	alias UnifyPrototypes = PrototypeUnificaition;
 }
 
-
-unittest {
-	class A {
-		@("primary", "field")
-		ulong id;
+/*
+///Private: copy field values from query to item
+private void setFieldsInto(string[][] fields)(ref Bson query, const Prototype item) {
+	
+	static if(fields.length == 1) {
+		if(query[fields[0][0]].type == Bson.Type.null_) {
+			//date time 
+			static if(fields[0][1] == "SysTime" || fields[0][1] == "DateTime" || fields[0][1] == "Date") {
+				BsonDate date = BsonDate( __traits(getMember, item, fields[0][0]) );
+				query[fields[0][0]] = date;
+			} else static if(fields[0][1] == "Duration") {
+				Bson date = Bson( __traits(getMember, item, fields[0][0]).total!"hnsecs" );
+				query[fields[0][0]] = date;
+			} else {
+				query[fields[0][0]] = __traits(getMember, item, fields[0][0]);
+			}
+		}
 		
-		@("field")
-		string name;
-		
-		@("field")
-		static const itemType = "A";
+	} else if(fields.length > 0) {
+		setFieldsInto!(fields[0..$/2])(query, item);
+		setFieldsInto!(fields[$/2..$])(query, item);
 	}
-
-	class B {
-		@("primary", "field")
-		ulong id;
-		
-		@("field")
-		string nick;
-		
-		@("field")
-		static const itemType = "B";
-	}
-
-	alias U = UnifyPrototypes!(A, B);
-	alias M = Model!U;
-
-	M model = new M;
-
-	alias T = Item!(U, M);
-	T test = new T(model);
-
-	assert(test.types[0] == "A");
-	assert(test.types[1] == "B");
-	assert(test.primaryField[0] == "id");
-	assert(test.primaryField[1] == "ulong");
 }
+*/

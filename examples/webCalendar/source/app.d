@@ -7,29 +7,31 @@ import crated.controller.admin;
 
 import std.stdio;
 
-/**
- * An event prototype
- */
-class MyEventPrototype : CalendarEventPrototype {
-
+abstract class MyEvent : CalendarEvent {
 	@("field", "primary")
 	string _id;
-	
+
 	@("field", "required") 
 	string name = "unknown";
+
+	this() {}
 }
 
-/**
- * An event prototype
- */
-class MyUnknownEventPrototype : CalendarUnknownEventPrototype {
-	
-	@("field", "primary")
-	string _id;
-	
-	@("field", "required") 
-	string name = "unknown";
+MyEvent createEvent(string type) {
+	if(type == EventType.Basic.to!string) {
+		return new CalendarEventPrototype!MyEvent;
+	}
+
+	if(type == EventType.Unknown.to!string) {
+		return new CalendarUnknownEventPrototype!MyEvent;
+	}
+
+	throw new Exception("Unknown " ~ type);
 }
+
+alias CalendarModel = MongoModel!(createEvent, "test.calendar", "Calendar");
+
+alias DataManagerController = DataManager!("/admin", CalendarModel);
 
 /**
  *  Vibe.d init
@@ -38,13 +40,6 @@ shared static this()
 {	
 	//setup the database connection string
 	crated.model.mongo.dbAddress = "127.0.0.1";
-
-	//init the data	
-	alias UnifiedEvent = UnifyPrototypes!(MyEventPrototype, MyUnknownEventPrototype);
-
-	alias CalendarModel = MongoModel!(UnifiedEvent, "test.calendar", "Calendar");
-
-	alias DataManagerController = DataManager!("/admin", CalendarModel);
 
 	auto dataManager = new Controller!DataManagerController;
 

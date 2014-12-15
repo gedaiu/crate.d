@@ -40,49 +40,55 @@ abstract class CalendarEvent {
 }
 
 /**
- * Basic functionality for a calendar event
+ * Implementation for a basic calendar event
  */
-class CalendarEventPrototype : CalendarEvent
-{
-	///Event start date
-	protected SysTime _startDate;
 
-	///Event end date
-	protected SysTime _endDate;
+template CalendarEventPrototype(T : CalendarEvent) {
 
-	this() {
-		_startDate = Clock.currTime;
-		_startDate.fracSec = FracSec.zero;
-		_endDate = _startDate + dur!"hours"(1);
+	class CalendarEventPrototypeImplementation : T
+	{
+		///Event start date
+		protected SysTime _startDate;
+
+		///Event end date
+		protected SysTime _endDate;
+
+		this() {
+			_startDate = Clock.currTime;
+			_startDate.fracSec = FracSec.zero;
+			_endDate = _startDate + dur!"hours"(1);
+		}
+
+		@property override {
+			void startDate(const SysTime startDate) { _startDate = startDate; }
+
+			@("field") 
+			SysTime startDate() const { return _startDate; }
+
+			void endDate(const SysTime endDate) { _endDate = endDate; }
+			@("field") SysTime endDate() const { return _endDate; }
+
+			@("field")
+			static const EventType itemType = EventType.Basic;
+
+			///return event duration
+			Duration duration() { return endDate - startDate; }
+
+			///ditto
+			void duration(Duration duration) { endDate = startDate + duration; }
+		}
+
+		///Invariant to check the event consistency
+		invariant() {
+			assert(_startDate <= _endDate, "`startDate` > `endDate`");
+		}
 	}
 
-	@property override {
-		void startDate(const SysTime startDate) { _startDate = startDate; }
-
-		@("field") 
-		SysTime startDate() const { return _startDate; }
-
-		void endDate(const SysTime endDate) { _endDate = endDate; }
-		@("field") SysTime endDate() const { return _endDate; }
-
-		@("field")
-		static const EventType itemType = EventType.Basic;
-
-		///return event duration
-		Duration duration() { return endDate - startDate; }
-
-		///ditto
-		void duration(Duration duration) { endDate = startDate + duration; }
-	}
-
-	///Invariant to check the event consistency
-	invariant() {
-		assert(_startDate <= _endDate, "`startDate` > `endDate`");
-	}
+	alias CalendarEventPrototype = CalendarEventPrototypeImplementation;
 }
 
 unittest {
-	auto testEvent = new CalendarEventPrototype;
+	auto testEvent = new CalendarEventPrototype!CalendarEvent;
 	bool failed = false;
 
 	try {
@@ -96,7 +102,7 @@ unittest {
 }
 
 unittest {
-	auto testEvent = new CalendarEventPrototype;
+	auto testEvent = new CalendarEventPrototype!CalendarEvent;
 	
 	testEvent.startDate = Clock.currTime;
 	testEvent.endDate = Clock.currTime + dur!"hours"(1);
@@ -117,86 +123,92 @@ unittest {
  * the event. If the current time is <code>startDate - boundary</code> the startDate will be automaticaly postponed
  * with <code>postpone</code> duration.
  */
-class CalendarUnknownEventPrototype : CalendarEvent
-{
-	this() {
-		_startDate = Clock.currTime;
-		_startDate.fracSec = FracSec.zero;
-		_duration = dur!"hours"(1);
-	}
 
-	protected SysTime _startDate;
-	protected SysTime _endDate;
+template CalendarUnknownEventPrototype(T : CalendarEvent) {
 
-	///Event start date
-	@property override { 
-
-		@("field") 
-		SysTime startDate() const {
-			auto now = Clock.currTime;
-			now.fracSec = FracSec.zero;
-
-			if(now + boundary >= _startDate) {
-				const auto sDate = now + postpone;
-				return sDate;
-			} else {
-				return _startDate;
-			}
+	class CalendarUnknownEventPrototypeImplementation : T
+	{
+		this() {
+			_startDate = Clock.currTime;
+			_startDate.fracSec = FracSec.zero;
+			_duration = dur!"hours"(1);
 		}
 
-		void startDate(const SysTime start) {
-			auto now = Clock.currTime;
-			now.fracSec = FracSec.zero;
+		protected SysTime _startDate;
+		protected SysTime _endDate;
 
-			if(now + boundary >= start) {
-				_startDate = now + postpone;
-			} else {
-				_startDate = start;
+		///Event start date
+		@property override { 
+
+			@("field") 
+			SysTime startDate() const {
+				auto now = Clock.currTime;
+				now.fracSec = FracSec.zero;
+
+				if(now + boundary >= _startDate) {
+					const auto sDate = now + postpone;
+					return sDate;
+				} else {
+					return _startDate;
+				}
 			}
 
-			_endDate = _startDate + _duration;
+			void startDate(const SysTime start) {
+				auto now = Clock.currTime;
+				now.fracSec = FracSec.zero;
+
+				if(now + boundary >= start) {
+					_startDate = now + postpone;
+				} else {
+					_startDate = start;
+				}
+
+				_endDate = _startDate + _duration;
+			}
+
+			SysTime endDate() const {
+				return startDate + _duration;
+			}
+
+			void endDate(const SysTime end)	{
+				_duration = end - startDate;
+
+				if(_duration.total!"seconds" <= 0) _duration = dur!"seconds"(0); 
+
+				_endDate = _startDate + _duration;
+			}
+			
+
+			///return event duration
+			@("field") Duration duration() const { return _duration; }
+			
+			///ditto
+			void duration(Duration customDuration) { _duration = customDuration; }
+
+			@("field")
+			static const EventType itemType = EventType.Unknown;
 		}
 
-		SysTime endDate() const {
-			return startDate + _duration;
-		}
-
-		void endDate(const SysTime end)	{
-			_duration = end - startDate;
-
-			if(_duration.total!"seconds" <= 0) _duration = dur!"seconds"(0); 
-
-			_endDate = _startDate + _duration;
-		}
-		
-
-		///return event duration
-		@("field") Duration duration() const { return _duration; }
-		
-		///ditto
-		void duration(Duration customDuration) { _duration = customDuration; }
+		protected Duration _duration;
 
 		@("field")
-		static const EventType itemType = EventType.Unknown;
+		Duration boundary = dur!"minutes"(15);
+
+		@("field")
+		Duration postpone = dur!"minutes"(15);
+
+		///Invariant to check the event consistency
+		invariant() {
+			assert(boundary >= postpone, "`boundary` < `postpone`");
+		}
 	}
 
-	protected Duration _duration;
-
-	@("field")
-	Duration boundary = dur!"minutes"(15);
-
-	@("field")
-	Duration postpone = dur!"minutes"(15);
-
-	///Invariant to check the event consistency
-	invariant() {
-		assert(boundary >= postpone, "`boundary` < `postpone`");
-	}
+	alias CalendarUnknownEventPrototype = CalendarUnknownEventPrototypeImplementation;
 }
 
 unittest {
 	//test boundary consistence
-	auto event = new CalendarUnknownEventPrototype;
+	auto event = new CalendarUnknownEventPrototype!CalendarEvent;
 	
 	event.boundary = dur!"minutes"(1);
 
@@ -213,7 +225,7 @@ unittest {
 
 unittest {
 	//end date estimation test
-	auto event = new CalendarUnknownEventPrototype;
+	auto event = new CalendarUnknownEventPrototype!CalendarEvent;
 	
 	event.startDate = SysTime(DateTime(2100,1,1));
 	event.duration = dur!"hours"(10);
@@ -223,7 +235,7 @@ unittest {
 
 unittest {
 	//duration from end date
-	auto event = new CalendarUnknownEventPrototype;
+	auto event = new CalendarUnknownEventPrototype!CalendarEvent;
 	
 	event.startDate = SysTime(DateTime(2100,1,1));
 	event.endDate = event.startDate + dur!"hours"(10);
@@ -233,7 +245,7 @@ unittest {
 
 unittest {
 	//duration from end date
-	auto event = new CalendarUnknownEventPrototype;
+	auto event = new CalendarUnknownEventPrototype!CalendarEvent;
 	
 	event.startDate = SysTime(DateTime(2100,1,1));
 	event.endDate = event.startDate - dur!"hours"(10);
@@ -243,7 +255,7 @@ unittest {
 
 unittest {
 	//start date postpone
-	auto event = new CalendarUnknownEventPrototype;
+	auto event = new CalendarUnknownEventPrototype!CalendarEvent;
 	
 	auto start = Clock.currTime + dur!"minutes"(16);
 	event.startDate = start;
@@ -253,7 +265,7 @@ unittest {
 
 unittest {
 	//start date postpone
-	auto event = new CalendarUnknownEventPrototype;
+	auto event = new CalendarUnknownEventPrototype!CalendarEvent;
 	
 	auto start = Clock.currTime;
 	
@@ -505,7 +517,7 @@ unittest {
 /**
  * This represents a repetable event.
  */
-class CalendarRepetableEventPrototype : CalendarEventPrototype {
+class CalendarRepetableEventPrototype : CalendarEventPrototype!(CalendarEvent) {
 
 	@("field") CalendarRulePrototype[] rules;
 
@@ -629,11 +641,11 @@ unittest {
 	//test a valid chain
 	auto chain = new CalendarEventChainPrototype;
 	
-	auto event1 = new CalendarEventPrototype;
+	auto event1 = new CalendarEventPrototype!CalendarEvent;
 	event1.startDate = SysTime(DateTime(2014,1,1,10,0,0));
 	event1.endDate = SysTime(DateTime(2014,1,1,11,0,0));
 	
-	auto event2 = new CalendarEventPrototype;
+	auto event2 = new CalendarEventPrototype!CalendarEvent;
 	event2.startDate = SysTime(DateTime(2014,1,1,11,0,0));
 	event2.endDate = SysTime(DateTime(2014,1,1,12,0,0));
 	
@@ -650,11 +662,11 @@ unittest {
 	//test another valid chain
 	auto chain = new CalendarEventChainPrototype;
 	
-	auto event1 = new CalendarEventPrototype;
+	auto event1 = new CalendarEventPrototype!CalendarEvent;
 	event1.startDate = SysTime(DateTime(2014,1,1,10,0,0));
 	event1.endDate = SysTime(DateTime(2014,1,1,11,0,0));
 	
-	auto event2 = new CalendarEventPrototype;
+	auto event2 = new CalendarEventPrototype!CalendarEvent;
 	event2.startDate = SysTime(DateTime(2014,1,2,10,0,0));
 	event2.endDate = SysTime(DateTime(2014,1,2,11,0,0));
 	
@@ -671,11 +683,11 @@ unittest {
 	//test two overlaping events
 	auto chain = new CalendarEventChainPrototype;
 	
-	auto event1 = new CalendarEventPrototype;
+	auto event1 = new CalendarEventPrototype!CalendarEvent;
 	event1.startDate = SysTime(DateTime(2014,1,1,10,0,0));
 	event1.endDate = SysTime(DateTime(2014,1,1,11,0,0));
 	
-	auto event2 = new CalendarEventPrototype;
+	auto event2 = new CalendarEventPrototype!CalendarEvent;
 	event2.startDate = SysTime(DateTime(2014,1,1,10,0,0));
 	event2.endDate = SysTime(DateTime(2014,1,1,11,0,0));
 	
@@ -692,11 +704,11 @@ unittest {
 	//test two overlaping events with an unknown event
 	auto chain = new CalendarEventChainPrototype;
 	
-	auto event1 = new CalendarUnknownEventPrototype;
+	auto event1 = new CalendarUnknownEventPrototype!CalendarEvent;
 	event1.startDate = SysTime(DateTime(2014,1,1,10,0,0));
 	event1.duration = dur!"hours"(1);
 	
-	auto event2 = new CalendarEventPrototype;
+	auto event2 = new CalendarEventPrototype!CalendarEvent;
 	event2.startDate = SysTime(DateTime(2014,1,1,10,0,0));
 	event2.endDate = SysTime(DateTime(2014,1,1,11,0,0));
 	

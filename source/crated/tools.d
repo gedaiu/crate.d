@@ -11,6 +11,8 @@ import std.conv;
 import std.typetuple;
 import std.traits;
 
+import vibe.d;
+
 /**
  * Find if type (T) is an enum.
  * Example:
@@ -124,94 +126,6 @@ template ItemProperty(item, string method) {
 	} else {
 		alias ItemProperty = TypeTuple!();
 	}
-}
-
-
-/** 
- * Get all members that have ATTR attribute.
- * 
- * Example: 
- * --------------------
- * class BookItemPrototype {
- * 	@("field", "primary")
- *	ulong id;
- *
- *	@("field") string name = "unknown";
- * 	@("field") string author = "unknown";
- * }
- * 
- * enum string[][] fields = getItemFields!("field", BookItemPrototype);
- * 
- * assert(fields[0][0] == "id");
- * assert(fields[0][1] == "ulong");
- * assert(fields[0][2] == "isIntegral");
- * 
- * --------------------
- */
-template getUnifiedItemFields(alias ATTR, bool addFields, PrototypeList...) { 
-
-	///Private: 
-	private template IterateFields(L...) {
-		static if(L.length == 1) {
-			alias IterateFields = getItemFields!(ATTR, L[0], addFields);
-		} else static if(L.length > 1) {
-			alias IterateFields = TypeTuple!(IterateFields!(L[0..$/2]) , IterateFields!(L[$/2..$]));
-		} else {
-			alias IterateFields = TypeTuple!();
-		}
-	}
-
-	//Private: 
-	private template FieldExist(alias E, F...) {
-		template isEQ(EL...) {
-			static if(EL.length == 0) {
-				enum b = false;
-				alias isEQ = b;
-			} else {
-				static if(EL[0][0] == E[0]) {
-
-					enum b = true;
-					alias isEQ = b;
-				} else {
-
-					enum b = false;
-					alias isEQ = b;
-				}
-			}
-		}
-
-		static if(F[0].length > 0 && isEQ!(TypeTuple!(F[0][0]))) {
-			enum b = true;
-			alias FieldExist = b;
-		} else static if(F[0].length > 0) {
-			enum b = false || FieldExist!(E, TypeTuple!(F[0][1..$]));
-			alias FieldExist = b;
-		} else {
-			enum b = false;
-			alias FieldExist = b;
-		}
-	}
-
-	///Private: 
-	private template RemoveDuplicates(F...) {
-		static if(!FieldExist!(F[0][0], TypeTuple!(F[0][1..$]))) {
-			alias E = TypeTuple!( [ F[0][0] ]);
-		} else {
-			alias E = TypeTuple!();
-		}
-
-		static if(F[0].length > 1) {
-			alias RemoveDuplicates = TypeTuple!(E, RemoveDuplicates!(F[0][1..$]));
-		} else {
-			alias RemoveDuplicates = E;
-		}
-	}
-
-	alias list = IterateFields!PrototypeList;
-
-	enum string[][] fields = std.array.join([ RemoveDuplicates!(std.array.join([ list ])) ]);
-
-	alias getUnifiedItemFields = fields;
 }
 
 /** 
@@ -377,4 +291,50 @@ template getItemFields(alias ATTR, Prototype, bool addFields) {
 	} else {
 		static assert(false, Prototype.stringof ~ " has no "~ ATTR ~" attribute.");
 	}
+}
+
+
+
+template PrimaryFieldType(Prototype) {
+	enum fields = getItemFields!("primary", Prototype, false);
+	
+	alias PrimaryFieldType = typeof(ItemProperty!(Prototype, fields[0][0]));
+}
+
+mixin template PrototypeReflection(Prototype) {
+
+	OriginalType!(PrimaryFieldType!Prototype) primaryField(const Prototype item) {
+		enum fields = getItemFields!("primary", Prototype, false);
+
+		return __traits(getMember, item, fields[0][0]);
+	}
+
+	enum string primaryFieldName = getItemFields!("primary", Prototype, false)[0][0];
+
+	/**
+	 * A pair of a field name and type to be accessed at runtime
+	 */
+	enum string[][] fields = getItemFields!("field", Prototype, false);
+
+	/**
+	 * A pair of a field name and type to be accessed at runtime
+	 */
+	//static enum string[] primaryField = getItemFields!("primary", Prototype, false)[0];
+	
+	//TODO: make attributes of type string[string][string] to avoid runtime string parsing in valueOf method
+	///The field attributes.
+	enum string[][] attributes = getItemFields!("field", Prototype, true);
+}
+
+string[string] toDict(T)(T data) {
+	string[string] dict;
+
+	static if(is(T == Json) || is(T == Bson)) {
+
+		foreach(string key, T val; data) {
+			dict[key] = val.to!string;
+		}
+	}
+
+	return dict;
 }
