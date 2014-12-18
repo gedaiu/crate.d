@@ -72,7 +72,7 @@ template MongoModel(alias CreatePrototype, string collectionName, string modelNa
 	/**
 	 * Mongo model implementation
 	 */
-	class MongoModelTemplate {
+	class MongoModelTemplate : AbstractModel!(Prototype) {
 	
 		alias ItemCls = Prototype;
 
@@ -80,9 +80,6 @@ template MongoModel(alias CreatePrototype, string collectionName, string modelNa
 		enum string name = modelName;
 
 		static {
-
-			///Private:
-			mixin PrototypeReflection!Prototype;
 
 			///init the connection
 			void connect() {
@@ -327,7 +324,5 @@ template MongoModel(alias CreatePrototype, string collectionName, string modelNa
 		}
 	}
 
-	///Private: check if we implemented all required fields
-	mixin MixCheckModelFields!MongoModelTemplate;
 	alias MongoModel = MongoModelTemplate;
 }

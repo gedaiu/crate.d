@@ -334,7 +334,16 @@ string[string] toDict(T)(T data) {
 		foreach(string key, T val; data) {
 			dict[key] = val.to!string;
 		}
-	}
 
-	return dict;
+		return dict;
+	} else static if (__traits(isSame, TemplateOf!(T), vibe.utils.dictionarylist.DictionaryList)) {
+
+		foreach(string key, val; data) {
+			dict[key] = val;
+		}
+
+		return dict;
+	} else {
+		throw new Exception("Can not convert to dictionary type of " ~ T.stringof);
+	}
 }

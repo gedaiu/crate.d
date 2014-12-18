@@ -9,7 +9,7 @@ import std.stdio;
 /**
  * A book item prototype
  */
-class BookPrototype {
+class Book {
 	
 	enum BookCategory : string {
 		Fiction = "Fiction",
@@ -35,15 +35,29 @@ class BookPrototype {
 	string color = "#fff";
 	
 	@("field") 
-	bool inStock = true;
+	bool inStock;
 
 	this() {};
+}
+
+Book createBook(string type, string[string] data) {
+	auto myBook = new Book;
+
+	if("_id" in data) myBook._id = data["_id"];
+	if("name" in data) myBook.name = data["name"];
+	if("author" in data) myBook.author = data["author"];
+	if("category" in data) myBook.category = data["category"].to!(Book.BookCategory);
+	if("price" in data) myBook.price = data["name"].to!double;
+	if("color" in data) myBook.color = data["author"];
+	if("inStock" in data) myBook.inStock = data["inStock"].to!bool;
+
+	return myBook;
 }
 
 /**
  * Other products prototype
  */
-class OtherProductsPrototype {
+class OtherProducts {
 	
 	enum OtherProductsCategory : string {
 		Tea = "Tea",
@@ -64,10 +78,30 @@ class OtherProductsPrototype {
 	double price = 100;
 
 	@("field") 
-	bool inStock = true;
+	bool inStock;
 
 	this() {}
 }
+
+OtherProducts createOther(string type, string[string] data) {
+	auto myOther = new OtherProducts;
+	
+	if("_id" in data) myOther._id = data["_id"];
+	if("name" in data) myOther.name = data["name"];
+	if("category" in data) myOther.category = data["category"].to!(OtherProducts.OtherProductsCategory);
+	if("price" in data) myOther.price = data["price"].to!double;
+	if("inStock" in data) myOther.inStock = data["inStock"].to!bool;
+
+
+	writeln("???", data);
+	writeln("???", myOther._id);
+
+	return myOther;
+}
+
+
+alias BookModel = MongoModel!(createBook, "test.books", "Books");
+alias OtherProductsModel = MongoModel!(createOther, "test.otherProducts", "Other products");
 
 /**
  *  Vibe.d init
@@ -78,8 +112,7 @@ shared static this()
 	crated.model.mongo.dbAddress = "127.0.0.1";
 
 	//init the data	
-	alias BookModel = MongoModel!(BookPrototype, "test.books", "Books");
-	alias OtherProductsModel = MongoModel!(OtherProductsPrototype, "test.otherProducts", "Other products");
+
 
 	alias DataManagerController = DataManager!("/admin", BookModel, OtherProductsModel);
 

@@ -122,9 +122,57 @@ template AbstractModel(Prototype) {
 	abstract class Model {
 					
 		static {
+
+			///Private:
+			mixin PrototypeReflection!Prototype;
+
+			///Get field attribute value 
+			string valueOf(string field, string attr) {
+				
+				return "";
+			}
+
+			///Check if field has an attribute
+			bool fieldHas(string field, string attr) {
+				
+				return false;
+			}
+
+			//TODO: remove the string mixin
+			///All the enum fields with their keys
+			enum string[][string] enumValues = mixin("[ ``: [] " ~ getEnumValues ~ "]");
+
+			/**
+			 * Generate the values for the enums from the current item
+			 */
+			private string getEnumValues(ulong i = 0)() {
+				
+				//exit condition
+				static if(i >= fields.length) {
+					return "";
+				} else {
+					enum auto field = fields[i];
+					
+					//check for D types
+					static if(field[2] == "isEnum") {
+						import std.traits;
 						
-			///init the connection
-			void connect();
+						string vals = "";
+						
+						string glue = "";
+						foreach(v; EnumMembers!(typeof(__traits(getMember, Prototype, field[0])))) {
+							if(v.stringof[1..$-1] != "") {
+								vals ~= glue ~ `"` ~ v.stringof[1..$-1] ~ `"`; 
+								glue = ", ";
+							}
+						}
+						
+						return `, "` ~ field[0] ~ `": [` ~ vals ~ `]` ~ getEnumValues!(i + 1);
+					} else {
+						return getEnumValues!(i + 1);
+					}
+				}
+			}
 
 			/**
 			 * Add or update an element
@@ -388,8 +436,6 @@ template Model(alias CreatePrototype, string modelName = "Unknown") {
 			 * Create an item from some dictionary
 			 */
 			static Prototype CreateItem(T)(T data) if(!is(T == string)) {
-				if(collection.name != collectionName) connect;
-				
 				string type = "";
 				if("type" in data) type = data["type"].to!string;
 				

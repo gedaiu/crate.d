@@ -17,7 +17,7 @@ abstract class MyEvent : CalendarEvent {
 	this() {}
 }
 
-MyEvent createEvent(string type) {
+MyEvent createEvent(string type, string[string] data) {
 	if(type == EventType.Basic.to!string) {
 		return new CalendarEventPrototype!MyEvent;
 	}

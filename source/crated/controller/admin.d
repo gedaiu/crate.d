@@ -52,12 +52,10 @@ template AdminController(string baseUrl, Model, ContainerCls = BaseView) {
 		static void index(HTTPServerRequest req, HTTPServerResponse res) {
 
 			auto container = new ContainerCls;
-
-			auto model = new Model;
-			auto view = new AdminView(baseUrl, container);
+			auto view = new AdminView!Model(baseUrl, container);
 
 			container.useBootstrapCssCDN;
-			container.content = view.asAdminTable(model.all);
+			container.content = view.asAdminTable(Model.all);
 
 			res.writeBody( container.to!string , "text/html; charset=UTF-8");
 		}
@@ -71,7 +69,7 @@ template AdminController(string baseUrl, Model, ContainerCls = BaseView) {
 			auto container = new ContainerCls;
 
 			auto model = new Model;
-			auto view = new AdminView(baseUrl, container);
+			auto view = new AdminView!Model(baseUrl, container);
 
 			auto item = model.getOneBy!"_id"(BsonObjectID.fromString(req.params["id"]));
 
@@ -89,9 +87,9 @@ template AdminController(string baseUrl, Model, ContainerCls = BaseView) {
 			auto container = new ContainerCls;
 
 			auto model = new Model;
-			auto view = new AdminView(baseUrl, container);
+			auto view = new AdminView!Model(baseUrl, container);
 
-			auto item = model.createItem;
+			auto item = model.CreateItem;
 
 			container.useBootstrapCssCDN;
 			container.content = view.asAddForm(item);
@@ -105,13 +103,11 @@ template AdminController(string baseUrl, Model, ContainerCls = BaseView) {
 		 */
 		@("HttpRequest", "method:POST", "node:" ~ baseUrl ~ "/save/:id")
 		static void save(HTTPServerRequest req, HTTPServerResponse res) {
-
 			auto container = new ContainerCls;
 
-			auto model = new Model;
-			auto item = new ItemCls(req.form, model);
-			item.save;
-			
+			auto item = Model.CreateItem(req.form);
+			Model.save(item);
+
 			res.headers["Location"] = baseUrl;
 			res.statusCode = 302;
 			res.statusPhrase = "Saved! Redirecting...";
@@ -124,9 +120,7 @@ template AdminController(string baseUrl, Model, ContainerCls = BaseView) {
 		 */
 		@("HttpRequest", "method:ANY", "node:" ~ baseUrl ~ "/delete/:id")
 		static void delete_(HTTPServerRequest req, HTTPServerResponse res) {
-			auto model = new Model;
-
-			model.remove!(Model.ItemCls.primaryField[0])(req.params["id"]);
+			Model.remove!(Model.primaryFieldName)(req.params["id"]);
 
 			res.headers["Location"] = baseUrl;
 			res.statusCode = 302;
@@ -138,7 +132,6 @@ template AdminController(string baseUrl, Model, ContainerCls = BaseView) {
 
 	alias AdminController = AdminControllerTemplate;
 }
-
 
 /**
  * You also can create an AdminController like this:
