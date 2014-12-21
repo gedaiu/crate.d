@@ -16,17 +16,21 @@ class Book {
 	@("field") string author;
 }
 
-Book createBook(string type, string[string] data) {
-	auto myBook = new Book;
 
-	if("_id" in data) myBook._id = data["_id"];
-	if("name" in data) myBook.name = data["name"];
-	if("author" in data) myBook.author = data["author"];
+class BookDescriptor : ModelDescriptor!Book {
 
-	return myBook;
+	static Prototype CreateItem(string type, string[string] data) {
+		auto myBook = ( ModelDescriptor!Book ).CreateItem(type, data);
+
+		if("_id" in data) myBook._id = data["_id"];
+		if("name" in data) myBook.name = data["name"];
+		if("author" in data) myBook.author = data["author"];
+		
+		return myBook;
+	}
 }
 
-alias BookModel = MongoModel!(createBook, "test.BookModel");
+alias BookModel = MongoModel!(BookDescriptor, "test.BookModel", "Books");
 mixin ModelHelper!BookModel;
 
 unittest {
@@ -35,12 +39,15 @@ unittest {
 
 //test save
 unittest {
-	auto item = BookModel.CreateItem;
+	Book item = BookModel.CreateItem;
+	item.name = "some name";
+	item.author = "some author";
 	item.save;
 		
 	assert(BookModel.length == 1);
-
 	auto savedItem = BookModel.all[0];
+
+	savedItem.convert!Json;
 
 	assert(item.convert!Json == savedItem.convert!Json);
 }
@@ -57,6 +64,7 @@ unittest {
 
 //test remove
 unittest {
+
 	auto item = BookModel.CreateItem;
 	item.save;
 	
@@ -83,7 +91,9 @@ unittest {
 	auto item1 = BookModel.CreateItem;
 	auto item2 = BookModel.CreateItem;
 
-	BookModel.save([item1, item2]);
+	auto list = [item1, item2];
+
+	BookModel.save(list);
 	
 	assert(BookModel.length == 2);
 	

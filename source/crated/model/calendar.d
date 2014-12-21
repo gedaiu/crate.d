@@ -8,6 +8,7 @@ module crated.model.calendar;
 
 import std.exception;
 import std.datetime;
+import std.conv;
 
 
 enum EventType {
@@ -17,8 +18,8 @@ enum EventType {
 };
 
 abstract class CalendarEvent {
-
-	static const EventType itemType = EventType.Undefined;
+	@property
+	const(EventType) itemType();
 
 	@property 
 	void startDate(const SysTime startDate);
@@ -53,6 +54,7 @@ template CalendarEventPrototype(T : CalendarEvent) {
 		///Event end date
 		protected SysTime _endDate;
 
+
 		this() {
 			_startDate = Clock.currTime;
 			_startDate.fracSec = FracSec.zero;
@@ -60,6 +62,9 @@ template CalendarEventPrototype(T : CalendarEvent) {
 		}
 
 		@property override {
+			@("field")
+			const(EventType) itemType() { return EventType.Basic; }
+
 			void startDate(const SysTime startDate) { _startDate = startDate; }
 
 			@("field") 
@@ -67,9 +72,6 @@ template CalendarEventPrototype(T : CalendarEvent) {
 
 			void endDate(const SysTime endDate) { _endDate = endDate; }
 			@("field") SysTime endDate() const { return _endDate; }
-
-			@("field")
-			static const EventType itemType = EventType.Basic;
 
 			///return event duration
 			Duration duration() { return endDate - startDate; }
@@ -139,6 +141,8 @@ template CalendarUnknownEventPrototype(T : CalendarEvent) {
 
 		///Event start date
 		@property override { 
+			@("field")
+			const(EventType) itemType() { return EventType.Unknown; };
 
 			@("field") 
 			SysTime startDate() const {
@@ -177,17 +181,15 @@ template CalendarUnknownEventPrototype(T : CalendarEvent) {
 
 				_endDate = _startDate + _duration;
 			}
-			
 
 			///return event duration
 			@("field") Duration duration() const { return _duration; }
 			
 			///ditto
 			void duration(Duration customDuration) { _duration = customDuration; }
-
-			@("field")
-			static const EventType itemType = EventType.Unknown;
 		}
+
+
 
 		protected Duration _duration;
 

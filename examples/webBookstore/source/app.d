@@ -92,10 +92,6 @@ OtherProducts createOther(string type, string[string] data) {
 	if("price" in data) myOther.price = data["price"].to!double;
 	if("inStock" in data) myOther.inStock = data["inStock"].to!bool;
 
-
-	writeln("???", data);
-	writeln("???", myOther._id);
-
 	return myOther;
 }
 
@@ -112,8 +108,6 @@ shared static this()
 	crated.model.mongo.dbAddress = "127.0.0.1";
 
 	//init the data	
-
-
 	alias DataManagerController = DataManager!("/admin", BookModel, OtherProductsModel);
 
 	auto dataManager = new Controller!DataManagerController;

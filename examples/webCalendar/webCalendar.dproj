@@ -6,7 +6,7 @@
     <ProjectGuid>{FE25D782-0E4F-4EBC-AA97-98207C93FD3F}</ProjectGuid>
     <Compiler>DMD2</Compiler>
     <PreferOneStepBuild>true</PreferOneStepBuild>
-    <UseDefaultCompiler>true</UseDefaultCompiler>
+    <UseDefaultCompiler>false</UseDefaultCompiler>
     <IncrementalLinking>true</IncrementalLinking>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -21,7 +21,7 @@
     <DebugLevel>0</DebugLevel>
     <CustomCommands>
       <CustomCommands>
-        <Command type="Build" command="dub clean ; dub" workingdir="${ProjectDir}" externalConsole="True" />
+        <Command type="Build" command="dub clean ; dub" externalConsole="True" />
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>

@@ -4,7 +4,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{10C3C7CF-A7F0-483A-B9DA-7E3F16F4B3CB}</ProjectGuid>
-    <Compiler>DMD2</Compiler>
+    <Compiler>DMD</Compiler>
     <PreferOneStepBuild>true</PreferOneStepBuild>
     <UseDefaultCompiler>true</UseDefaultCompiler>
     <IncrementalLinking>true</IncrementalLinking>
@@ -21,7 +21,7 @@
     <DebugLevel>0</DebugLevel>
     <CustomCommands>
       <CustomCommands>
-        <Command type="Build" command="dub test" workingdir="${ProjectDir}" externalConsole="True" />
+        <Command type="Build" command="dub clean ; dub test" workingdir="${ProjectDir}" externalConsole="True" />
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>
@@ -54,5 +54,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="source\app.d" />
+    <Compile Include="source\mutiple.d" />
   </ItemGroup>
 </Project>

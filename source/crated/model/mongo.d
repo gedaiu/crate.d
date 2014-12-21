@@ -58,9 +58,8 @@ shared static string dbAddress;
  * alias BookModel = MongoModel!(BookPrototype, "test.books", "Books");
  * ---------------
  */
-template MongoModel(alias CreatePrototype, string collectionName, string modelName = "Unknown") {
+template MongoModel(alias ModelDescriptor, string collectionName, string modelName = "Unknown") {
 
-	alias Prototype = ReturnType!CreatePrototype;
 
 	///Private:
 	private MongoClient client;
@@ -72,9 +71,9 @@ template MongoModel(alias CreatePrototype, string collectionName, string modelNa
 	/**
 	 * Mongo model implementation
 	 */
-	class MongoModelTemplate : AbstractModel!(Prototype) {
+	class MongoModelTemplate : AbstractModel!ModelDescriptor {
 	
-		alias ItemCls = Prototype;
+		alias Prototype = ReturnType!(ModelDescriptor.CreateItem);
 
 		///Model name
 		enum string name = modelName;
@@ -90,10 +89,10 @@ template MongoModel(alias CreatePrototype, string collectionName, string modelNa
 			/**
 			 * Add or update an element
 			 */
-			void save(Prototype item) {
+			void save(ref Prototype item) {
 				if(collection.name != collectionName) connect;
 
-				bool isNew = (primaryField(item).to!string == "");
+				bool isNew = (ModelDescriptor.PrimaryField(item).to!string == "");
 
 				Bson query = item.convert!Bson;
 
@@ -101,6 +100,8 @@ template MongoModel(alias CreatePrototype, string collectionName, string modelNa
 				if(isNew) {
 					collection.insert(query);
 				} else {
+					enum primaryFieldName = PrimaryFieldName!(Prototype);
+
 					Bson sel = Bson.emptyObject;
 					sel[primaryFieldName] = query[primaryFieldName];
 
@@ -111,7 +112,7 @@ template MongoModel(alias CreatePrototype, string collectionName, string modelNa
 			/**
 			 * Add or update a list of elements
 			 */
-			void save(Prototype[] items) {
+			void save(ref Prototype[] items) {
 				foreach(item; items) {
 					save(item);
 				}
@@ -132,7 +133,7 @@ template MongoModel(alias CreatePrototype, string collectionName, string modelNa
 			 * Remove one item
 			 */
 			void remove(Prototype item) {
-				remove!(primaryFieldName)( primaryField(item) );
+				remove!(PrimaryFieldName!(Prototype))( Descriptor.PrimaryField(item) );
 			}
 
 			/**
@@ -146,7 +147,7 @@ template MongoModel(alias CreatePrototype, string collectionName, string modelNa
 				foreach(item; items) {
 					Bson tmp = Bson.emptyObject;
 
-					tmp = BsonObjectID.fromString( primaryField(item) );
+					tmp = BsonObjectID.fromString( Descriptor.PrimaryField(item) );
 					list ~= tmp;
 				}
 
@@ -154,7 +155,7 @@ template MongoModel(alias CreatePrototype, string collectionName, string modelNa
 				idList["$in"] = Bson(list);
 
 				Bson query = Bson.emptyObject;
-				query[primaryFieldName] = idList;
+				query[PrimaryFieldName!(Prototype)] = idList;
 
 				collection.remove(query, DeleteFlags.None);
 			}
@@ -218,24 +219,22 @@ template MongoModel(alias CreatePrototype, string collectionName, string modelNa
 			 */
 			static Prototype CreateItem(string type = "")() {
 				string[string] data;
-
-				Prototype item = CreatePrototype(type, data);
+				
+				Prototype item = ModelDescriptor.CreateItem(type, data);
 				
 				return item;
 			}
-
-
+			
 			/**
 			 * Create an item from some dictionary
 			 */
 			static Prototype CreateItem(T)(T data) if(!is(T == string)) {
-				if(collection.name != collectionName) connect;
-
 				string type = "";
 				if("type" in data) type = data["type"].to!string;
 				
 				string[string] dataAsString = toDict(data);
-				auto itm = CreatePrototype(type, dataAsString);
+
+				auto itm = ModelDescriptor.CreateItem(type, dataAsString);
 				
 				return itm;
 			}

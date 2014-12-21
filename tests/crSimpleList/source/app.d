@@ -1,3 +1,11 @@
+/**
+ * Authors: Szabo Bogdan <szabobogdan@yahoo.com>
+ * Date: 11 18, 2014
+ * License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.
+ * Copyright: Public Domain
+ */
+module source.app;
+
 import std.stdio;
 import std.conv;
 import crated.model.base;
@@ -12,15 +20,20 @@ class Book {
 	this() {}
 }
 
-Book createBook(string type, string[string] data) {
-	auto myBook = new Book;
-	
-	if("_id" in data) myBook.id = data["id"].to!ulong;
-	if("name" in data) myBook.name = data["name"];
-	if("author" in data) myBook.author = data["author"];
-	
-	return myBook;
+
+class BookDescriptor : ModelDescriptor!Book {
+	Book createBook(string type, string[string] data) {
+		auto myBook = new Book;
+		
+		if("_id" in data) myBook.id = data["id"].to!ulong;
+		if("name" in data) myBook.name = data["name"];
+		if("author" in data) myBook.author = data["author"];
+		 
+		return myBook;
+	}
 }
+
+
 
 alias BookModel = Model!(createBook);
 mixin ModelHelper!BookModel;
@@ -30,7 +43,6 @@ mixin ModelHelper!BookModel;
  * Test the basic model functionality
  */
 unittest {
-
 	auto item1 = BookModel.CreateItem;
 	item1.id = 1;
 	item1.name = "Prelude to Foundation";

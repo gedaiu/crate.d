@@ -18,7 +18,8 @@ abstract class MyEvent : CalendarEvent {
 }
 
 MyEvent createEvent(string type, string[string] data) {
-	if(type == EventType.Basic.to!string) {
+
+	if(type == EventType.Basic.to!string || type == "") {
 		return new CalendarEventPrototype!MyEvent;
 	}
 
@@ -26,7 +27,7 @@ MyEvent createEvent(string type, string[string] data) {
 		return new CalendarUnknownEventPrototype!MyEvent;
 	}
 
-	throw new Exception("Unknown " ~ type);
+	throw new Exception("Unknown type " ~ type);
 }
 
 alias CalendarModel = MongoModel!(createEvent, "test.calendar", "Calendar");

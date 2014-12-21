@@ -128,6 +128,36 @@ template ItemProperty(item, string method) {
 	}
 }
 
+/**
+ * Get all field attributes 
+ */
+template GetAttributes(string name, Prototype) {
+	
+	template GetFuncAttributes(TL...) {
+		
+		static if(TL.length == 1) {
+			alias GetFuncAttributes = TypeTuple!(__traits(getAttributes, TL[0]));
+		} else static if(TL.length > 1) {
+			alias GetFuncAttributes = TypeTuple!(GetFuncAttributes!(TL[0..$/2]), GetFuncAttributes!(TL[$/2..$]));
+		} else {
+			alias GetFuncAttributes = TypeTuple!();
+		}
+	}
+	
+	static if(is( FunctionTypeOf!(ItemProperty!(Prototype, name)) == function )) { 
+		
+		static if(__traits(getOverloads, Prototype, name).length == 1) {
+			alias GetAttributes = TypeTuple!(__traits(getAttributes, ItemProperty!(Prototype, name)));
+		} else {
+			alias GetAttributes = TypeTuple!(GetFuncAttributes!(TypeTuple!(__traits(getOverloads, Prototype, name))));
+		}
+		
+	} else {
+		alias GetAttributes = TypeTuple!(__traits(getAttributes, ItemProperty!(Prototype, name)));
+	}
+}
+
+
 /** 
  * Get all members that have ATTR attribute.
  * 
@@ -150,7 +180,7 @@ template ItemProperty(item, string method) {
  * 
  * --------------------
  */
-template getItemFields(alias ATTR, Prototype, bool addFields) {
+template getItemFields(alias ATTR, Prototype) {
 
 	template isConstField(alias name) {
 
@@ -158,9 +188,10 @@ template getItemFields(alias ATTR, Prototype, bool addFields) {
 			static if(TL.length == 1) {
 				alias localIsConst = IsConst!(ReturnType!(TL[0]));
 				enum bool check = localIsConst.check;
-			} else static if(TL.length >1) {
+
+			} else static if(TL.length > 1) {
 				alias localIsConst = IsConst!(ReturnType!(TL[0]));
-				enum bool check = localIsConst.check && CheckOverloads!(TL[1..$]).check;
+				enum bool check = localIsConst.check || CheckOverloads!(TL[1..$]).check;
 
 			} else {
 				enum bool check = false;
@@ -178,7 +209,7 @@ template getItemFields(alias ATTR, Prototype, bool addFields) {
 	/**
 	 *  Get a general type
 	 */
-	string Type(string name)() {
+	string Description(string name)() {
 
 		alias isEnum = IsEnum!(typeof(ItemProperty!(Prototype, name)));
 		alias isConst = isConstField!name;
@@ -191,64 +222,23 @@ template getItemFields(alias ATTR, Prototype, bool addFields) {
 		else return "";
 	}
 
-
-	//TODO: use Unqual! to get the type
 	/**
 	 * Get the type of a Prototype fieald
 	 */
-	string FieldType(string name)() {
+	string Type(string name)() {
 
 		static if(is( FunctionTypeOf!(ItemProperty!(Prototype, name)) == function )) { 
 
 			static if( is( ReturnType!(ItemProperty!(Prototype, name)) == void ) && arity!(ItemProperty!(Prototype, name)) == 1 ) {
-
-				auto t = ParameterTypeTuple!(ItemProperty!(Prototype, name))[0].stringof;
-
-				if(t[0..6] == "const(") {
-					t = t[6..$-1];
-				}
-
-				return t;
-
+				return Unqual!(ParameterTypeTuple!(ItemProperty!(Prototype, name))).stringof;
 			} else {
-				return ReturnType!(ItemProperty!(Prototype, name)).stringof;
+				return Unqual!(ReturnType!(ItemProperty!(Prototype, name))).stringof;
 			}
 
 		} else {
-			return typeof(ItemProperty!(Prototype, name)).stringof[1..$-1];
+			return Unqual!(typeof(ItemProperty!(Prototype, name))).stringof;
 		}
 	}
-
-	/**
-	 * Get all field attributes 
-	 */
-	template GetAttributes(string name) {
-
-		template GetFuncAttributes(TL...) {
-
-			static if(TL.length == 1) {
-				alias GetFuncAttributes = TypeTuple!(__traits(getAttributes, TL[0]));
-			} else static if(TL.length > 1) {
-				alias GetFuncAttributes = TypeTuple!(GetFuncAttributes!(TL[0..$/2]), GetFuncAttributes!(TL[$/2..$]));
-			} else {
-				alias GetFuncAttributes = TypeTuple!();
-			}
-		}
-
-		static if(is( FunctionTypeOf!(ItemProperty!(Prototype, name)) == function )) { 
-
-			static if(__traits(getOverloads, Prototype, name).length == 1) {
-				alias GetAttributes = TypeTuple!(__traits(getAttributes, ItemProperty!(Prototype, name)));
-			} else {
-				alias GetAttributes = TypeTuple!(GetFuncAttributes!(TypeTuple!(__traits(getOverloads, Prototype, name))));
-			}
-
-		} else {
-			alias GetAttributes = TypeTuple!(__traits(getAttributes, ItemProperty!(Prototype, name)));
-		}
-	}
-
-
 
 	/** 
 	 * Get all the metods that have ATTR attribute
@@ -260,16 +250,11 @@ template getItemFields(alias ATTR, Prototype, bool addFields) {
 					ItemFields!(FIELDS[0 .. $/2]),
 					ItemFields!(FIELDS[$/2 .. $])
 				); 
-		} else static if (FIELDS.length == 1 && FIELDS[0] != "modelFields" ) {
+		} else static if (FIELDS.length == 1) {
 
 			static if(ItemProperty!(Prototype, FIELDS[0]).length == 1) {
-				static if(staticIndexOf!(ATTR, GetAttributes!(FIELDS[0])) >= 0) {
-					static if(addFields) {
-						alias ItemFields = TypeTuple!([FIELDS[0], __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0])) ]);	
-					} else {
-						alias ItemFields = TypeTuple!([FIELDS[0], FieldType!(FIELDS[0]), Type!(FIELDS[0]) ]);
-					}
-
+				static if(staticIndexOf!(ATTR, GetAttributes!(FIELDS[0], Prototype)) >= 0) {
+					alias ItemFields = TypeTuple!([FIELDS[0]: [ "attributes": [ GetAttributes!(FIELDS[0], Prototype) ], "type": [ Type!(FIELDS[0]) ], "description": [ Description!(FIELDS[0]) ] ] ]);	
 				} else {
 					alias ItemFields = TypeTuple!();
 				}
@@ -280,51 +265,98 @@ template getItemFields(alias ATTR, Prototype, bool addFields) {
 		} else alias ItemFields = TypeTuple!();
 	}
 
-	alias list = ItemFields!(__traits(allMembers, Prototype));
+	mixin("enum list = [ " ~ Join!(ItemFields!(__traits(allMembers, Prototype))) ~ " ];");
 
 	/**
 	 * All the members that have ATTR attribute
 	 */
 	static if(list.length > 0) {
-		enum string[][] fields = [ list ];
-		alias getItemFields = fields;
+		alias getItemFields = list;
 	} else {
 		static assert(false, Prototype.stringof ~ " has no "~ ATTR ~" attribute.");
 	}
 }
 
+template EnumerateFieldList(alias ATTR, Prototype) {
+	/** 
+	 * Get all the metods that have ATTR attribute
+	 */
+	template ItemFields(FIELDS...) {
+		
+		static if (FIELDS.length > 1) {
+			alias ItemFields = TypeTuple!(
+				ItemFields!(FIELDS[0 .. $/2]),
+				ItemFields!(FIELDS[$/2 .. $])
+				); 
+		} else static if (FIELDS.length == 1) {
+			
+			static if(ItemProperty!(Prototype, FIELDS[0]).length == 1) {
+				static if(staticIndexOf!(ATTR, GetAttributes!(FIELDS[0], Prototype)) >= 0) {
+					alias ItemFields = TypeTuple!(FIELDS[0]);	
+				} else {
+					alias ItemFields = TypeTuple!();
+				}
+			} else {
+				alias ItemFields = TypeTuple!();
+			}
+			
+		} else alias ItemFields = TypeTuple!();
+	}
+
+	enum list = [ ItemFields!(__traits(allMembers, Prototype)) ];
+
+	alias EnumerateFieldList = list;
+}
+
+
+
+template Join(List...) {
+	
+	static if(List.length == 1) {
+		enum l = List[0].stringof[1..$-1];
+	} else static if(List.length > 1) {
+		enum l = List[0].stringof[1..$-1] ~ ", " ~ Join!(List[1..$]);
+	} else {
+		enum l = "";
+	}
+	
+	alias Join = l;
+}
+
+template FieldList(Prototype) {
+	enum string[][string][string] fields = getItemFields!("field", Prototype);
+
+	alias FieldList = fields;
+}
+
+
+template FindPrimary(Prototype, Fields...) {
+	
+	static if(Fields.length == 1) {
+		static if(ItemProperty!(Prototype, Fields[0]).length == 1) {
+			static if(staticIndexOf!("primary", GetAttributes!(Fields[0], Prototype)) >= 0) {
+				alias FindPrimary = TypeTuple!(__traits(getMember, Prototype, Fields[0]));
+			} else {
+				alias FindPrimary = TypeTuple!();
+			}
+		}
+	} else static if(Fields.length > 1) {
+		alias FindPrimary = TypeTuple!(FindPrimary!(Prototype, Fields[0..$/2]), FindPrimary!(Prototype, Fields[$/2..$]));
+	}
+}
 
 
 template PrimaryFieldType(Prototype) {
-	enum fields = getItemFields!("primary", Prototype, false);
-	
-	alias PrimaryFieldType = typeof(ItemProperty!(Prototype, fields[0][0]));
+	alias PrimaryFieldType = Unqual!(typeof(FindPrimary!(Prototype, __traits(allMembers, Prototype))));
 }
 
-mixin template PrototypeReflection(Prototype) {
 
-	OriginalType!(PrimaryFieldType!Prototype) primaryField(const Prototype item) {
-		enum fields = getItemFields!("primary", Prototype, false);
+template PrimaryFieldName(Prototype) {
+	enum string name = FindPrimary!(Prototype, __traits(allMembers, Prototype))[0].stringof;
 
-		return __traits(getMember, item, fields[0][0]);
-	}
-
-	enum string primaryFieldName = getItemFields!("primary", Prototype, false)[0][0];
-
-	/**
-	 * A pair of a field name and type to be accessed at runtime
-	 */
-	enum string[][] fields = getItemFields!("field", Prototype, false);
-
-	/**
-	 * A pair of a field name and type to be accessed at runtime
-	 */
-	//static enum string[] primaryField = getItemFields!("primary", Prototype, false)[0];
-	
-	//TODO: make attributes of type string[string][string] to avoid runtime string parsing in valueOf method
-	///The field attributes.
-	enum string[][] attributes = getItemFields!("field", Prototype, true);
+	alias PrimaryFieldName = name;
 }
+
 
 string[string] toDict(T)(T data) {
 	string[string] dict;

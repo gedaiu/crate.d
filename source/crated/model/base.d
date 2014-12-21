@@ -22,7 +22,6 @@ import std.string;
 import std.traits;
 import std.algorithm;
 import std.conv;
-import std.typetuple;
 import std.typecons;
 import std.datetime;
 import core.time;
@@ -43,137 +42,189 @@ class CratedModelException : Exception {
 	}
 }
 
-/**
- * Generate a crated item. A prototype class will be the base of ItemTemplate class which
- * contains helper methods and properties to make you able to use the prototype class with any other 
- * generated crate.d model.
- * 
- * The Item will be generated based on what attribute has every property declared. If you want to treat
- * a property as a db field you have to add <code>@("field")</code> attribute. Also every prototype must have 
- * a <code>@("primary")</code> attribute to let the models look for the primary fields.
- *
- * The default supported attributes are:
- * 	+ <code>field</code>   - an item field
- * 	+ <code>primary</code> - the primary key
- * 
- * But you are free to create and use any other atributes that can describe your Prototype.
- * 
- * Let's take a valid Prototype:
- * 
- * Example: 
- * --------------------
- * class BookItemPrototype {
- * 	@("field", "primary")
- *	ulong id;
- *
- *	@("field") string name = "unknown";
- * 	@("field") string author = "unknown";
- * }
- * --------------------
- * 
- * The most simple way of crate.d item like this:
- * 
- * Example:
- * ---------------------
- * auto books = new Model!(BookItemPrototype);
- * 
- * auto item = books.createItem;
- * ---------------------
- * 
- * As you can see, you can not have an Item without a model. In fact in order to make <code>item.save</code> 
- * and <code>item.detele</code> methods to work, the item has to know who is it's parent,
- * because those methods are shortcuts for <code>model.save(item)</code> or <code>model.delete(item)</code>.
- * 
- * In fact the code that create an Item looks like this:
- * 
- * Example:
- * ---------------------
- * auto books = new Model!(BookItemPrototype);
- * 
- * auto item = new Item!BookItemPrototype(books);
- * ---------------------
- * 
- * If you want to create an alias for the item type you can do it like this:
- * 
- * Example:
- * ---------------------
- * alias ItemCls = Item!BookItemPrototype;
- * 
- * ... or ...
- * 
- * auto books = new Model!(BookItemPrototype);
- * alias ItemCls = Item!(BookItemPrototype, books);
- * ---------------------
- * 
- * =Extending
- * 
- * ... more to be soon ... 
- * 
- * =Creating new Item templates
- */
+template ModelDescriptor(Prototype) {
+	alias ModelDescriptor = ModelDescriptor!(Prototype, "", Prototype);
+}
+
+class ModelDescriptor(PrototypeCls, List...)
+{
+	import std.typetuple;
+
+	alias Prototype = PrototypeCls;
+	
+	template CreateFieldList(alias Index) {
+		
+		static if (Index < List.length/2) {
+			alias CreateFieldList = TypeTuple!([ List[Index].to!string : FieldList!( List[List.length/2 + Index] ) ], CreateFieldList!(Index+1));
+		} else {
+			alias CreateFieldList = TypeTuple!();
+		}
+	}
+
+	template EnumerateFields(alias Index) {
+
+		static if (Index < List.length/2) {
+			alias EnumerateFields = TypeTuple!([ List[Index].to!string : EnumerateFieldList!("field", List[List.length/2 + Index] ) ], EnumerateFields!(Index+1));
+		} else {
+			alias EnumerateFields = TypeTuple!();
+		}
+	}
+
+	mixin("enum fieldList = [ " ~ Join!(CreateFieldList!0) ~ " ];");
+	mixin("enum fields = [ " ~ Join!(EnumerateFields!0) ~ " ];");
+
+	static 
+	{
+		protected string generateConditions(string code)(int i = 0) {
+			string a;
+
+			if(i < List.length/2) {
+				a ~= "
+			            if(type == List["~i.to!string~"].to!string) {
+							alias ClsType = List[$/2 + "~i.to!string~"];
+							"~code~"
+						}\n" ~ generateConditions!code(i+1);
+			}
+
+			return a;
+		}
+
+		///
+		Prototype CreateItem(string type, string[string] data) {
+			if(type == "") {
+				alias ClsType = List[$/2];
+				return new ClsType;
+			}
+
+			mixin(generateConditions!"return new ClsType;");
+
+			throw new CratedModelException("CreateItem Can't create item of type `"~type~"`");
+		}
+
+		///
+		ref PrimaryFieldType!(Prototype) PrimaryField(Prototype item) {
+			return __traits(getMember, item, PrimaryFieldName!(Prototype));
+		}
+
+		///
+		bool HasField(Prototype item, string field) {
+
+			auto type = Type(item);
+
+			mixin(generateConditions!"return HasField(type, field);");
+
+			throw new CratedModelException("HasField Can't find `" ~ field ~ "` type");
+		}
+		
+		///
+		bool HasField(string type, string field) {
+			if(field !in fieldList[type]) return false;
+			return true;		
+		}
+
+		///
+		bool HasAttribute(Prototype item, string field, string attribute) {
+
+			auto type = Type(item);
+			mixin(generateConditions!"return HasAttribute(type, field, attribute);");
+
+
+			throw new CratedModelException("HasAttribute Can't find `" ~ field ~ "` type");
+		}
+
+		///
+		bool HasAttribute(string type, string field, string attribute) {
+			if(!HasField(type, field)) throw new CratedModelException("Can't find `" ~ field ~ "` for `" ~ type ~ "`");
+
+			foreach(attr; fieldList[type][field]["attributes"]) {
+				if(attr == attribute || attr.indexOf(attribute ~ ":") == 0) {
+					return true;
+				}
+			}
+			
+			return false;
+		}	
+
+		///
+		string AttributeValue(Prototype item, string field, string attribute) {
+
+			auto type = Type(item);
+			mixin(generateConditions!"return AttributeValue(type, field, attribute);");
+			
+			throw new CratedModelException("AttributeValue Can't find `" ~ field ~ "` type");
+		}
+
+		///
+		string AttributeValue(string type, string field, string attribute) {
+			if(!HasField(type, field)) throw new CratedModelException("Can't find `" ~ field ~ "` for `" ~ type ~ "`");
+			
+			foreach(attr; fieldList[type][field]["attributes"]) {
+				if(attr.indexOf(attribute ~ ":") == 0) {
+					auto pos = attr.indexOf(":");
+					
+					return attr[pos+1..$].strip;
+				}
+			}
+			
+			return "";
+		}
+
+		///
+		string GetDescription(Prototype item, string field) {
+
+			auto type = Type(item);
+			mixin(generateConditions!"return GetDescription(type, field);");
+
+			throw new CratedModelException("GetDescription Can't find `" ~ field ~ "` type");
+		}
+		
+		///
+		string GetDescription(string type, string field) {
+			if(!HasField(type, field)) throw new CratedModelException("Can't find `" ~ field ~ "` for `" ~ type ~ "`");
+			
+			return fieldList[type][field]["description"][0];
+		}
+		
+		///
+		string GetType(Prototype item, string field) {
+
+			auto type = Type(item);
+			mixin(generateConditions!"return GetType(type, field);");
+
+			throw new CratedModelException("GetType Can't find `" ~ field ~ "` type");
+		}
+		
+		///
+		string GetType(string type, string field) {
+			return fieldList[type][field]["type"][0];
+		}
+
+		///
+		string Type(Prototype item) {
+			static if(__traits(hasMember, Prototype, "itemType")) {
+				return (item.itemType).to!string;
+			} else {
+				return "";
+			}
+		}
+
+	}
+}
 
 
 
-template AbstractModel(Prototype) {
+template AbstractModel(ModelDescriptor) {
+
+	alias Prototype = ReturnType!(ModelDescriptor.CreateItem);
 
 	/**
 	 * Abstract model definition
 	 */
 	abstract class Model {
 					
+		alias Descriptor = ModelDescriptor;
+
 		static {
-
-			///Private:
-			mixin PrototypeReflection!Prototype;
-
-			///Get field attribute value 
-			string valueOf(string field, string attr) {
-				
-				return "";
-			}
-
-			///Check if field has an attribute
-			bool fieldHas(string field, string attr) {
-				
-				return false;
-			}
-
-			//TODO: remove the string mixin
-			///All the enum fields with their keys
-			enum string[][string] enumValues = mixin("[ ``: [] " ~ getEnumValues ~ "]");
-
-			/**
-			 * Generate the values for the enums from the current item
-			 */
-			private string getEnumValues(ulong i = 0)() {
-				
-				//exit condition
-				static if(i >= fields.length) {
-					return "";
-				} else {
-					enum auto field = fields[i];
-					
-					//check for D types
-					static if(field[2] == "isEnum") {
-						import std.traits;
-						
-						string vals = "";
-						
-						string glue = "";
-						foreach(v; EnumMembers!(typeof(__traits(getMember, Prototype, field[0])))) {
-							if(v.stringof[1..$-1] != "") {
-								vals ~= glue ~ `"` ~ v.stringof[1..$-1] ~ `"`; 
-								glue = ", ";
-							}
-						}
-						
-						return `, "` ~ field[0] ~ `": [` ~ vals ~ `]` ~ getEnumValues!(i + 1);
-					} else {
-						return getEnumValues!(i + 1);
-					}
-				}
-			}
-
 			/**
 			 * Add or update an element
 			 */
@@ -253,8 +304,6 @@ template AbstractModel(Prototype) {
 
 	alias AbstractModel = Model;
 }
-
-
 
 
 /**
@@ -350,9 +399,8 @@ template AbstractModel(Prototype) {
  * 
  * 
  */
-template Model(alias CreatePrototype, string modelName = "Unknown") {
+template Model(alias ModelDescriptor, string modelName = "Unknown") {
 
-	alias Prototype = ReturnType!CreatePrototype;
 
 
 	mixin ModelHelper!ModelTemplate;
@@ -360,15 +408,13 @@ template Model(alias CreatePrototype, string modelName = "Unknown") {
 	/**
 	 * A basic model implementation without any persistence
 	 */
-		class ModelTemplate : AbstractModel!(Prototype) {
+	class ModelTemplate : AbstractModel!ModelDescriptor {
 
 		///An alias to the item class type.
-		alias ItemCls = Prototype;
+		alias Prototype = ReturnType!(ModelDescriptor.CreateItem);
+
 
 		static {
-			///Private:
-			mixin PrototypeReflection!Prototype;
-
 			///The model name.
 			enum string name = modelName;
 
@@ -379,11 +425,11 @@ template Model(alias CreatePrototype, string modelName = "Unknown") {
 			 * Add or update an element
 			 */
 			void save(Prototype item) {
-				auto itemId = primaryField(item);
+				auto itemId = ModelDescriptor.PrimaryField(item);
 				bool added = false;
 
 				foreach(i; 0..items.length) {
-					auto currentId = primaryField(items[i]);
+					auto currentId = ModelDescriptor.PrimaryField(items[i]);
 
 					if(itemId == currentId) {
 						items[i] = item;
@@ -422,16 +468,14 @@ template Model(alias CreatePrototype, string modelName = "Unknown") {
 			 * automatically added to the model. If you want to add it to a model
 			 * call Item.save()
 			 */
-
 			static Prototype CreateItem(string type = "")() {
 				string[string] data;
 				
-				Prototype item = CreatePrototype(type, data);
+				Prototype item = ModelDescriptor.CreateItem(type, data);
 				
 				return item;
 			}
-			
-			
+
 			/**
 			 * Create an item from some dictionary
 			 */
@@ -440,7 +484,7 @@ template Model(alias CreatePrototype, string modelName = "Unknown") {
 				if("type" in data) type = data["type"].to!string;
 				
 				string[string] dataAsString = toDict(data);
-				auto itm = CreatePrototype(type, dataAsString);
+				auto itm = ModelDescriptor.CreateItem(type, dataAsString);
 				
 				return itm;
 			}
@@ -529,43 +573,43 @@ template Model(alias CreatePrototype, string modelName = "Unknown") {
 
 mixin template ModelHelper(Model) {
 
-	void save(Model.ItemCls item) {
+	void save(ref Model.Prototype item) {
 		Model.save(item);
 	}
-	
-	void save(Model.ItemCls[] itemList) {
+
+	void save(ref Model.Prototype[] itemList) {
 		Model.save(itemList);
 	}
 
-	void remove(Model.ItemCls item) {
+	void remove(Model.Prototype item) {
 		Model.remove(item);
 	}
 	
-	void remove(Model.ItemCls[] itemList) {
+	void remove(Model.Prototype[] itemList) {
 		Model.remove(itemList);
 	}
 
 	//private
-	private void fillFields(T, FIELDS...)(ref T data, Model.ItemCls item) {
+	private void fillFields(T, FIELDS...)(ref T data, Model.Descriptor.Prototype item) {
 
-		static if(FIELDS[0].length == 1) {
+
+		static if(FIELDS[0].length == 1 && FIELDS[0][0] != "__ctor" && !__traits(hasMember, Object, FIELDS[0][0]) ) {
 
 			//if is a bson id
-			static if(Model.primaryFieldName == FIELDS[0][0][0] && FIELDS[0][0][1] == "string" && is(T == Bson)) {
+			static if(PrimaryFieldName!(Model.Descriptor.Prototype) == FIELDS[0][0] && is(T == Bson)) {
 				BsonObjectID id;
-				string val = __traits(getMember, item, FIELDS[0][0][0]);
+				string val = __traits(getMember, item, FIELDS[0][0]);
 
 				if(val == "") {
 					id = BsonObjectID.generate;
-					__traits(getMember, item, FIELDS[0][0][0]) = id.to!string;
+					__traits(getMember, item, FIELDS[0][0]) = id.to!string;
 				} else {
-					id = BsonObjectID.fromString(__traits(getMember, item, FIELDS[0][0][0]));
+					id = BsonObjectID.fromString(__traits(getMember, item, FIELDS[0][0]));
 				}
 
-				data[FIELDS[0][0][0]] = id;
-
+				data[FIELDS[0][0]] = id;
 			} else {
-				data[FIELDS[0][0][0]] = __traits(getMember, item, FIELDS[0][0][0]);
+				data[FIELDS[0][0]] = __traits(getMember, item, FIELDS[0][0]);
 			}
 
 		} else static if(FIELDS[0].length > 1) {
@@ -574,37 +618,13 @@ mixin template ModelHelper(Model) {
 		}
 	}
 
-	T convert(T)(Model.ItemCls item) if(is(T==Json) || is(T==Bson)) {
+	///
+	T convert(T)(Model.Prototype item) if(is(T==Json) || is(T==Bson)) {
 		T data = T.emptyObject;
 
-		fillFields!(T, Model.fields)(data, item);
-		
+		fillFields!(T, [__traits(allMembers, Model.Prototype)])(data, item);
+
 		return data;
 	}
 
 }
-
-/*
-///Private: copy field values from query to item
-private void setFieldsInto(string[][] fields)(ref Bson query, const Prototype item) {
-	
-	static if(fields.length == 1) {
-		if(query[fields[0][0]].type == Bson.Type.null_) {
-			//date time 
-			static if(fields[0][1] == "SysTime" || fields[0][1] == "DateTime" || fields[0][1] == "Date") {
-				BsonDate date = BsonDate( __traits(getMember, item, fields[0][0]) );
-				query[fields[0][0]] = date;
-			} else static if(fields[0][1] == "Duration") {
-				Bson date = Bson( __traits(getMember, item, fields[0][0]).total!"hnsecs" );
-				query[fields[0][0]] = date;
-			} else {
-				query[fields[0][0]] = __traits(getMember, item, fields[0][0]);
-			}
-		}
-		
-	} else if(fields.length > 0) {
-		setFieldsInto!(fields[0..$/2])(query, item);
-		setFieldsInto!(fields[$/2..$])(query, item);
-	}
-}
-*/
