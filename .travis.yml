@@ -5,12 +5,7 @@ d:
   - dmd-2.066.1
 
 script:
-  - dub test
-  - dub test --root=./tests/crMongoList/
-  - dub test --root=./tests/crSimpleList/
-  - dub test --root=./tests/webBookstore/
-  - dub test --root=./tests/webCalendar/
-  - dub test --root=./tests/documentationViewer/
+  - ./test.sh
 
 services:
   - mongodb
