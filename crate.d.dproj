@@ -50,7 +50,7 @@
     <CustomCommands>
       <CustomCommands>
         <Command type="Execute" command=".dub/build/__test__library__-unittest-posix.osx-x86_64-dmd-5018E9D5576260EAFC1DAFDAA16EB9C5/__test__library__" workingdir="${ProjectDir}" />
-        <Command type="Build" command="./test.sh" workingdir="${ProjectDir}" externalConsole="True" />
+        <Command type="Build" command="./test.sh dmd" workingdir="${ProjectDir}" externalConsole="True" />
       </CustomCommands>
     </CustomCommands>
     <ConsolePause>false</ConsolePause>
