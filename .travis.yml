@@ -8,7 +8,7 @@ d:
   - gdc-4.9.0
 
 script:
-  -- ./test.sh ${DC}
+  - ./test.sh ${DC}
 
 services:
   - mongodb
