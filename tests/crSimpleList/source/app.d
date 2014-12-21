@@ -4,9 +4,9 @@
  * License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.
  * Copyright: Public Domain
  */
-module source.app;
+module app;
 
-import source.model;
+import model;
 import std.stdio;
 
 void main()

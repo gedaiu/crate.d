@@ -4,16 +4,16 @@
  * License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.
  * Copyright: Public Domain
  */
-module source.model;
+module model;
 
 import crated.model.calendar;
 import crated.model.base;
 
-import source.tests.descriptor;
-import source.tests.model;
+import tests.descriptor;
+import tests.model;
 
-import source.prototypes.book;
-import source.prototypes.events;
+import prototypes.book;
+import prototypes.events;
 
 
 //Test the event model descriptor
