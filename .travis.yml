@@ -2,19 +2,15 @@ language: d
 sudo: false
 
 d:
-  - dmd-2.065.0
   - dmd-2.066.1
-  - ldc-0.14.0
-  - ldc-0.15.1
-  - gdc-4.9.0
 
 script:
-  - dub test --compiler=${DC}
-  - dub test --compiler=${DC} --root=./tests/crMongoList/
-  - dub test --compiler=${DC} --root=./tests/crSimpleList/
-  - dub test --compiler=${DC} --root=./tests/webBookstore/
-  - dub test --compiler=${DC} --root=./tests/webCalendar/
-  - dub test --compiler=${DC} --root=./tests/documentationViewer/
+  - dub test
+  - dub test --root=./tests/crMongoList/
+  - dub test --root=./tests/crSimpleList/
+  - dub test --root=./tests/webBookstore/
+  - dub test --root=./tests/webCalendar/
+  - dub test --root=./tests/documentationViewer/
 
 services:
   - mongodb
