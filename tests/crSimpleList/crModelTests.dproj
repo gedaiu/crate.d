@@ -51,9 +51,15 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="source\" />
+    <Folder Include="source\tests\" />
+    <Folder Include="source\prototypes\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="source\app.d" />
-    <Compile Include="source\mutiple.d" />
+    <Compile Include="source\model.d" />
+    <Compile Include="source\tests\descriptor.d" />
+    <Compile Include="source\tests\model.d" />
+    <Compile Include="source\prototypes\book.d" />
+    <Compile Include="source\prototypes\events.d" />
   </ItemGroup>
 </Project>
