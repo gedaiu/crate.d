@@ -401,8 +401,6 @@ template AbstractModel(ModelDescriptor) {
  */
 template Model(alias ModelDescriptor, string modelName = "Unknown") {
 
-
-
 	mixin ModelHelper!ModelTemplate;
 
 	/**
@@ -413,8 +411,9 @@ template Model(alias ModelDescriptor, string modelName = "Unknown") {
 		///An alias to the item class type.
 		alias Prototype = ReturnType!(ModelDescriptor.CreateItem);
 
-
 		static {
+			ulong idIndex = 0;
+
 			///The model name.
 			enum string name = modelName;
 
@@ -437,6 +436,9 @@ template Model(alias ModelDescriptor, string modelName = "Unknown") {
 					}
 				}
 
+				idIndex++;
+
+				Descriptor.PrimaryField(item) = idIndex.to!(typeof(itemId));
 				items ~= [item];
 			}
 
@@ -452,8 +454,47 @@ template Model(alias ModelDescriptor, string modelName = "Unknown") {
 			/**
 			 * Remove an existing item
 			 */
-			void remove(T)(T item) {
-				throw new CratedModelException("unimplemented base method");
+			void remove(Prototype item) {
+				if(items.length == 0) return; 
+
+				if(item == items[0]) {
+					items = items[1..$];
+					return;
+				}
+
+				if(item == items[items.length-1]) {
+					items = items[0..$-1];
+					return;
+				}
+
+				foreach(i; 1..items.length-1) {
+					if(items[i] == item) {
+						
+						items = items[0..i-1] ~ items[i+1..$];
+						
+						return;
+					}
+				}
+			}
+
+			/**
+			 * Remove an existing item
+			 */
+			void remove(Prototype[] items) {
+				foreach(i;0..items.length) {
+					remove(items[i]);
+				}
+			}
+
+			/**
+			 * Remove an item by field name
+			 */
+			void remove(string field, T)(T value) {
+				foreach(item; items) {
+					if(__traits(getMember, item, field) == value) {
+						remove(item);
+					}
+				}
 			}
 		
 			/**
@@ -461,6 +502,7 @@ template Model(alias ModelDescriptor, string modelName = "Unknown") {
 			 */
 			void truncate() {
 				items = [];
+				idIndex = 0;
 			}
 
 			/**
@@ -593,10 +635,13 @@ mixin template ModelHelper(Model) {
 	private void fillFields(T, FIELDS...)(ref T data, Model.Descriptor.Prototype item) {
 
 
-		static if(FIELDS[0].length == 1 && FIELDS[0][0] != "__ctor" && !__traits(hasMember, Object, FIELDS[0][0]) ) {
+		static if(FIELDS[0].length == 1 && FIELDS[0][0] != "__ctor" && !__traits(hasMember, Object, FIELDS[0][0]) && is(typeof(__traits(getMember, item, FIELDS[0][0])) == string)) {
 
 			//if is a bson id
 			static if(PrimaryFieldName!(Model.Descriptor.Prototype) == FIELDS[0][0] && is(T == Bson)) {
+
+				auto type = Model.Descriptor.Type(item);
+
 				BsonObjectID id;
 				string val = __traits(getMember, item, FIELDS[0][0]);
 

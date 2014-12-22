@@ -61,5 +61,6 @@
     <Compile Include="source\tests\model.d" />
     <Compile Include="source\prototypes\book.d" />
     <Compile Include="source\prototypes\events.d" />
+    <Compile Include="source\mongo.d" />
   </ItemGroup>
 </Project>

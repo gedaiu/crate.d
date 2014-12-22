@@ -147,8 +147,15 @@ template MongoModel(alias ModelDescriptor, string collectionName, string modelNa
 				foreach(item; items) {
 					Bson tmp = Bson.emptyObject;
 
-					tmp = BsonObjectID.fromString( Descriptor.PrimaryField(item) );
-					list ~= tmp;
+					auto val = Descriptor.PrimaryField(item);
+
+					static if(is(typeof(val) == string)) {
+						tmp = BsonObjectID.fromString( val );
+						list ~= tmp;
+					} else {
+						list ~= Bson(val);
+					}
+
 				}
 
 				Bson idList = Bson.emptyObject;
@@ -235,7 +242,7 @@ template MongoModel(alias ModelDescriptor, string collectionName, string modelNa
 				string[string] dataAsString = toDict(data);
 
 				auto itm = ModelDescriptor.CreateItem(type, dataAsString);
-				
+
 				return itm;
 			}
 
@@ -259,6 +266,7 @@ template MongoModel(alias ModelDescriptor, string collectionName, string modelNa
 				auto cursor = collection.find(query);
 				
 				while (!cursor.empty) {
+
 					filteredList ~= CreateItem(cursor.front.toJson);
 					cursor.popFront();
 				}

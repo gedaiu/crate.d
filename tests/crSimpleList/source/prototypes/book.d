@@ -11,7 +11,7 @@ import crated.model.base;
 
 class Book {
 	@("field", "primary")
-	ulong id;
+	string _id;
 	
 	@("field") string name = "unknown";
 	@("field") string author = "unknown";
@@ -21,10 +21,10 @@ class Book {
 
 
 class BookDescriptor : ModelDescriptor!Book {
-	Book createBook(string type, string[string] data) {
+	static Book CreateItem(string type, string[string] data) {
 		auto myBook = new Book;
-		
-		if("_id" in data) myBook.id = data["id"].to!ulong;
+
+		if("_id" in data) myBook._id = data["_id"];
 		if("name" in data) myBook.name = data["name"];
 		if("author" in data) myBook.author = data["author"];
 		

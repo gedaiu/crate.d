@@ -8,6 +8,7 @@ module model;
 
 import crated.model.calendar;
 import crated.model.base;
+import crated.model.mongo;
 
 import tests.descriptor;
 import tests.model;
@@ -20,7 +21,16 @@ import prototypes.events;
 alias EventsModel = Model!EventDescriptor;
 mixin ModelDescriptorTest!EventsModel;
 
-
 //Test the book prototype using the default model
 alias BookModel = Model!BookDescriptor;
 mixin BasicModelTest!BookModel;
+
+//Test the book prototype using the mongo model
+alias BookMongoModel = MongoModel!(BookDescriptor, "test.BookModel", "Books");
+
+unittest {
+	crated.model.mongo.dbAddress = "127.0.0.1";
+	BookMongoModel.truncate;
+}
+
+mixin BasicModelTest!BookMongoModel;
