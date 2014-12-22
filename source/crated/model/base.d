@@ -91,6 +91,7 @@ class ModelDescriptor(PrototypeCls, List...)
 
 		///
 		Prototype CreateItem(string type, string[string] data) {
+
 			if(type == "") {
 				alias ClsType = List[$/2];
 				return new ClsType;
@@ -633,12 +634,13 @@ mixin template ModelHelper(Model) {
 
 	//private
 	private void fillFields(T, FIELDS...)(ref T data, Model.Descriptor.Prototype item) {
+		import std.traits;
+		import crated.tools;
 
-
-		static if(FIELDS[0].length == 1 && FIELDS[0][0] != "__ctor" && !__traits(hasMember, Object, FIELDS[0][0]) && is(typeof(__traits(getMember, item, FIELDS[0][0])) == string)) {
+		static if(FIELDS[0].length == 1 && FIELDS[0][0] != "__ctor" && !__traits(hasMember, Object, FIELDS[0][0])) {
 
 			//if is a bson id
-			static if(PrimaryFieldName!(Model.Descriptor.Prototype) == FIELDS[0][0] && is(T == Bson)) {
+			static if(PrimaryFieldName!(Model.Descriptor.Prototype) == FIELDS[0][0] && is(T == Bson) && is(typeof(__traits(getMember, item, FIELDS[0][0])) == string)) {
 
 				auto type = Model.Descriptor.Type(item);
 
@@ -654,7 +656,29 @@ mixin template ModelHelper(Model) {
 
 				data[FIELDS[0][0]] = id;
 			} else {
-				data[FIELDS[0][0]] = __traits(getMember, item, FIELDS[0][0]);
+
+				static if( !isTypeTuple!(__traits(getMember, item, FIELDS[0][0])) ) {
+					alias type = FieldType!(__traits(getMember, item, FIELDS[0][0]));
+
+					static if(isBasicType!type) {
+
+						alias isEnum = IsEnum!type;
+
+						static if(isEnum.check) {
+							data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]).to!string;
+						} else { 
+							data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]);
+						}
+					} else static if (is(type == SysTime)) {
+						static if( is(T == Bson) ) {
+							data[FIELDS[0][0]] = BsonDate(__traits(getMember, item, FIELDS[0][0]));
+						} else {
+							data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]).toISOExtString;
+						}
+					} else static if (is(type == Duration)) {
+						data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]).total!"nsecs";
+					}
+				}
 			}
 
 		} else static if(FIELDS[0].length > 1) {

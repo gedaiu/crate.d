@@ -12,15 +12,22 @@ import crated.model.mongo;
 
 import tests.descriptor;
 import tests.model;
+import tests.events;
 
 import prototypes.book;
 import prototypes.events;
 
+unittest {
+	crated.model.mongo.dbAddress = "127.0.0.1";
+}
 
 //Test the event model descriptor
-alias EventsModel = Model!EventDescriptor;
+alias EventsModel = MongoModel!(EventDescriptor, "test.calendar", "Calendar");
 mixin ModelDescriptorTest!EventsModel;
 
+mixin EventsTest!EventsModel;
+
+/*
 //Test the book prototype using the default model
 alias BookModel = Model!BookDescriptor;
 mixin BasicModelTest!BookModel;
@@ -29,8 +36,8 @@ mixin BasicModelTest!BookModel;
 alias BookMongoModel = MongoModel!(BookDescriptor, "test.BookModel", "Books");
 
 unittest {
-	crated.model.mongo.dbAddress = "127.0.0.1";
 	BookMongoModel.truncate;
 }
 
 mixin BasicModelTest!BookMongoModel;
+*/

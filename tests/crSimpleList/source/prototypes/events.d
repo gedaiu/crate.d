@@ -34,4 +34,13 @@ abstract class Event : CalendarEvent {
 	this() {}
 }
 
-alias EventDescriptor = ModelDescriptor!(Event, EventType.Basic, EventType.Unknown, CalendarEventPrototype!Event, CalendarUnknownEventPrototype!Event);
+alias BaseEventDescriptor = ModelDescriptor!(Event, EventType.Basic, EventType.Unknown, CalendarEventPrototype!Event, CalendarUnknownEventPrototype!Event);
+
+class EventDescriptor : BaseEventDescriptor {
+
+	static Event CreateItem(string type, string[string] data) {
+		auto item = BaseEventDescriptor.CreateItem(type, data);
+
+		return item;
+	}
+}

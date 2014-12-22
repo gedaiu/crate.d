@@ -157,6 +157,20 @@ template GetAttributes(string name, Prototype) {
 	}
 }
 
+template FieldType(alias F) {
+
+	static if(is( FunctionTypeOf!F == function )) { 
+		
+		static if( is( ReturnType!(F) == void ) && arity!(F) == 1 ) {
+			alias FieldType = Unqual!(ParameterTypeTuple!F);
+		} else {
+			alias FieldType = Unqual!(ReturnType!F);
+		}
+		
+	} else {
+		alias FieldType = Unqual!(typeof(F));
+	}
+}
 
 /** 
  * Get all members that have ATTR attribute.
@@ -222,24 +236,6 @@ template getItemFields(alias ATTR, Prototype) {
 		else return "";
 	}
 
-	/**
-	 * Get the type of a Prototype fieald
-	 */
-	string Type(string name)() {
-
-		static if(is( FunctionTypeOf!(ItemProperty!(Prototype, name)) == function )) { 
-
-			static if( is( ReturnType!(ItemProperty!(Prototype, name)) == void ) && arity!(ItemProperty!(Prototype, name)) == 1 ) {
-				return Unqual!(ParameterTypeTuple!(ItemProperty!(Prototype, name))).stringof;
-			} else {
-				return Unqual!(ReturnType!(ItemProperty!(Prototype, name))).stringof;
-			}
-
-		} else {
-			return Unqual!(typeof(ItemProperty!(Prototype, name))).stringof;
-		}
-	}
-
 	/** 
 	 * Get all the metods that have ATTR attribute
 	 */
@@ -254,7 +250,7 @@ template getItemFields(alias ATTR, Prototype) {
 
 			static if(ItemProperty!(Prototype, FIELDS[0]).length == 1) {
 				static if(staticIndexOf!(ATTR, GetAttributes!(FIELDS[0], Prototype)) >= 0) {
-					alias ItemFields = TypeTuple!([FIELDS[0]: [ "attributes": [ GetAttributes!(FIELDS[0], Prototype) ], "type": [ Type!(FIELDS[0]) ], "description": [ Description!(FIELDS[0]) ] ] ]);	
+					alias ItemFields = TypeTuple!([FIELDS[0]: [ "attributes": [ GetAttributes!(FIELDS[0], Prototype) ], "type": [ FieldType!(ItemProperty!(Prototype, FIELDS[0])).stringof ], "description": [ Description!(FIELDS[0]) ] ] ]);	
 				} else {
 					alias ItemFields = TypeTuple!();
 				}

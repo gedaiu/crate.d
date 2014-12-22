@@ -62,7 +62,6 @@ mixin template ModelDescriptorTest(Model) {
 		assert(Descriptor.GetType(item, "startDate") == "SysTime");
 	}
 
-
 	unittest {
 		auto item = Model.CreateItem!"Basic";
 

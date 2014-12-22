@@ -237,7 +237,7 @@ template MongoModel(alias ModelDescriptor, string collectionName, string modelNa
 			 */
 			static Prototype CreateItem(T)(T data) if(!is(T == string)) {
 				string type = "";
-				if("type" in data) type = data["type"].to!string;
+				if("itemType" in data) type = data["itemType"].to!string;
 				
 				string[string] dataAsString = toDict(data);
 
