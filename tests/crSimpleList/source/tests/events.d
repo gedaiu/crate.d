@@ -18,7 +18,7 @@ mixin template EventsTest(Model) {
 		Model.truncate;
 
 		auto item1 = Model.CreateItem!"Basic";
-		auto item2 = Model.CreateItem!"Unknown";
+		auto item2 = Model.CreateItem!"AutoPostpone";
 
 		item1.save;
 		item2.save;

@@ -22,7 +22,7 @@ mixin template ModelDescriptorTest(Model) {
 
 	unittest {
 		auto item1 = Model.CreateItem!"Basic";
-		auto item2 = Model.CreateItem!"Unknown";
+		auto item2 = Model.CreateItem!"AutoPostpone";
 		
 		assert(!Descriptor.HasField(item1, "duration"));
 		assert(Descriptor.HasField(item2, "duration"));
@@ -30,7 +30,7 @@ mixin template ModelDescriptorTest(Model) {
 
 	unittest {
 		auto item1 = Model.CreateItem!"Basic";
-		auto item2 = Model.CreateItem!"Unknown";
+		auto item2 = Model.CreateItem!"AutoPostpone";
 		
 		assert(Descriptor.HasAttribute(item1, "name", "required"));
 		assert(Descriptor.HasAttribute(item1, "name", "test"));

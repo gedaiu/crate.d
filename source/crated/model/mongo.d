@@ -238,8 +238,12 @@ template MongoModel(alias ModelDescriptor, string collectionName, string modelNa
 			static Prototype CreateItem(T)(T data) if(!is(T == string)) {
 				string type = "";
 				if("itemType" in data) type = data["itemType"].to!string;
-				
-				string[string] dataAsString = toDict(data);
+
+				static if( is(T == string[string])) { 
+					string[string] dataAsString = data;
+				} else {
+					string[string] dataAsString = toDict(data);
+				}
 
 				auto itm = ModelDescriptor.CreateItem(type, dataAsString);
 

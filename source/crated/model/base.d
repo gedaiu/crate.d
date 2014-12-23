@@ -61,17 +61,47 @@ class ModelDescriptor(PrototypeCls, List...)
 		}
 	}
 
-	template EnumerateFields(alias Index) {
 
-		static if (Index < List.length/2) {
-			alias EnumerateFields = TypeTuple!([ List[Index].to!string : EnumerateFieldList!("field", List[List.length/2 + Index] ) ], EnumerateFields!(Index+1));
-		} else {
-			alias EnumerateFields = TypeTuple!();
-		}
-	}
+	enum itemTypeList = [ List[0..$/2] ];
 
 	mixin("enum fieldList = [ " ~ Join!(CreateFieldList!0) ~ " ];");
-	mixin("enum fields = [ " ~ Join!(EnumerateFields!0) ~ " ];");
+	enum fields = EnumerateFieldList!( Prototype );
+	enum primaryFieldName = PrimaryFieldName!(Prototype);
+	mixin("enum enumValues = [ " ~ getEnumValues ~ " ];");
+
+	/**
+	 * Generate the values for the enums from the current item
+	 */
+	private static string getEnumValues(ulong i = 0)() {
+		
+		//exit condition
+		static if(i >= fields.length) {
+			return "";
+		} else {
+			enum auto field = fields[i];
+
+			alias isEnum = IsEnum!(typeof(ItemProperty!(Prototype, field)));
+
+			//check for D types
+			static if(isEnum.check) {
+				import std.traits;
+				
+				string vals = "";
+				
+				string glue = "";
+				foreach(v; EnumMembers!(typeof(__traits(getMember, Prototype, field)))) {
+					if(v.stringof[1..$-1] != "") {
+						vals ~= glue ~ `"` ~ v.stringof[1..$-1] ~ `"`; 
+						glue = ", ";
+					}
+				}
+				
+				return (i==0 ? ", ":"") ~ `"` ~ field ~ `": [` ~ vals ~ `]` ~ getEnumValues!(i + 1);
+			} else {
+				return getEnumValues!(i + 1);
+			}
+		}
+	}
 
 	static 
 	{
@@ -108,6 +138,12 @@ class ModelDescriptor(PrototypeCls, List...)
 		}
 
 		///
+		void RemovePrimaryField(Prototype item) {
+			PrimaryFieldType!(Prototype) blankId;
+			__traits(getMember, item, PrimaryFieldName!(Prototype)) = blankId;
+		}
+
+		///
 		bool HasField(Prototype item, string field) {
 
 			auto type = Type(item);
@@ -135,7 +171,7 @@ class ModelDescriptor(PrototypeCls, List...)
 
 		///
 		bool HasAttribute(string type, string field, string attribute) {
-			if(!HasField(type, field)) throw new CratedModelException("Can't find `" ~ field ~ "` for `" ~ type ~ "`");
+			if(!HasField(type, field)) throw new CratedModelException("HasAttribute Can't find `" ~ field ~ "` for `" ~ type ~ "`");
 
 			foreach(attr; fieldList[type][field]["attributes"]) {
 				if(attr == attribute || attr.indexOf(attribute ~ ":") == 0) {
@@ -157,7 +193,7 @@ class ModelDescriptor(PrototypeCls, List...)
 
 		///
 		string AttributeValue(string type, string field, string attribute) {
-			if(!HasField(type, field)) throw new CratedModelException("Can't find `" ~ field ~ "` for `" ~ type ~ "`");
+			if(!HasField(type, field)) throw new CratedModelException("AttributeValue Can't find `" ~ field ~ "` for `" ~ type ~ "`");
 			
 			foreach(attr; fieldList[type][field]["attributes"]) {
 				if(attr.indexOf(attribute ~ ":") == 0) {
@@ -167,6 +203,24 @@ class ModelDescriptor(PrototypeCls, List...)
 				}
 			}
 			
+			return "";
+		}
+
+		///
+		string AttributeValue(string field, string attribute) {
+
+			foreach(type; fieldList) {
+				if(field in type) {
+					foreach(attr; type[field]["attributes"]) {
+						if(attr.indexOf(attribute ~ ":") == 0) {
+							auto pos = attr.indexOf(":");
+							
+							return attr[pos+1..$].strip;
+						}
+					}
+				}
+			}
+
 			return "";
 		}
 
@@ -181,9 +235,18 @@ class ModelDescriptor(PrototypeCls, List...)
 		
 		///
 		string GetDescription(string type, string field) {
-			if(!HasField(type, field)) throw new CratedModelException("Can't find `" ~ field ~ "` for `" ~ type ~ "`");
+			if(!HasField(type, field)) throw new CratedModelException("GetDescription Can't find `" ~ field ~ "` for `" ~ type ~ "`");
 			
 			return fieldList[type][field]["description"][0];
+		}
+
+		///
+		string GetDescription(string field) {
+			foreach(type; fieldList) {
+				if(field in type) return type[field]["description"][0];
+			}
+			
+			return "";
 		}
 		
 		///
@@ -201,6 +264,15 @@ class ModelDescriptor(PrototypeCls, List...)
 		}
 
 		///
+		string GetType(string field) {
+			foreach(type; fieldList) {
+				if(field in type) return type[field]["type"][0];
+			}
+
+			return "";
+		}
+
+		///
 		string Type(Prototype item) {
 			static if(__traits(hasMember, Prototype, "itemType")) {
 				return (item.itemType).to!string;
@@ -209,6 +281,81 @@ class ModelDescriptor(PrototypeCls, List...)
 			}
 		}
 
+		///
+		string[string] ToDic(Prototype item) {
+			Json data = Json.emptyObject;
+
+			FillFields!(Json, fields)(data, item);
+
+			string[string] dataAsString = toDict(data);
+
+			return dataAsString;
+		}
+
+		T Convert(T)(Prototype item) if(is(T==Json) || is(T==Bson)) {
+			T data = T.emptyObject;
+			
+			FillFields!(T, [__traits(allMembers, Prototype)])(data, item);
+			
+			return data;
+		}
+
+		//private
+		void FillFields(T, FIELDS...)(ref T data, Prototype item) {
+			import std.traits;
+			import crated.tools;
+			
+			static if(FIELDS[0].length == 1 && FIELDS[0][0] != "__ctor" && !__traits(hasMember, Object, FIELDS[0][0])) {
+
+				//if is a bson id
+				static if(PrimaryFieldName!(Prototype) == FIELDS[0][0] && is(T == Bson) && is(typeof(__traits(getMember, item, FIELDS[0][0])) == string)) {
+					auto type = Type(item);
+					
+					BsonObjectID id;
+					string val = __traits(getMember, item, FIELDS[0][0]);
+					
+					if(val == "") {
+						id = BsonObjectID.generate;
+						__traits(getMember, item, FIELDS[0][0]) = id.to!string;
+					} else {
+						id = BsonObjectID.fromString(__traits(getMember, item, FIELDS[0][0]));
+					}
+					
+					data[FIELDS[0][0]] = id;
+				} else {
+					
+					static if( !isTypeTuple!(__traits(getMember, item, FIELDS[0][0])) ) {
+						alias type = FieldType!(__traits(getMember, item, FIELDS[0][0]));
+						
+						static if(isBasicType!type) {
+							alias isEnum = IsEnum!type;
+							
+							static if(isEnum.check) {
+								data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]).to!string;
+							} else { 
+								data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]);
+							}
+						} else static if (is(type == string)) {
+							data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]);
+						} else static if (is(type == SysTime)) {
+							static if( is(T == Bson) ) {
+								data[FIELDS[0][0]] = BsonDate(__traits(getMember, item, FIELDS[0][0]));
+							} else {
+								data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]).toISOExtString;
+							}
+						} else static if (is(type == Duration)) {
+							data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]).total!"hnsecs";
+						} else {
+							data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]).to!string;
+						}
+					}
+				}
+
+			} else static if(FIELDS[0].length > 1) {
+				FillFields!(T, FIELDS[0][0..$/2])(data, item);
+				FillFields!(T, FIELDS[0][$/2..$])(data, item);
+			}
+		}
 	}
 }
 
@@ -226,6 +373,7 @@ template AbstractModel(ModelDescriptor) {
 		alias Descriptor = ModelDescriptor;
 
 		static {
+
 			/**
 			 * Add or update an element
 			 */
@@ -614,6 +762,10 @@ template Model(alias ModelDescriptor, string modelName = "Unknown") {
 	alias Model = ModelTemplate;
 }
 
+/**
+ * 
+ * 
+ */
 mixin template ModelHelper(Model) {
 
 	void save(ref Model.Prototype item) {
@@ -632,68 +784,9 @@ mixin template ModelHelper(Model) {
 		Model.remove(itemList);
 	}
 
-	//private
-	private void fillFields(T, FIELDS...)(ref T data, Model.Descriptor.Prototype item) {
-		import std.traits;
-		import crated.tools;
-
-		static if(FIELDS[0].length == 1 && FIELDS[0][0] != "__ctor" && !__traits(hasMember, Object, FIELDS[0][0])) {
-
-			//if is a bson id
-			static if(PrimaryFieldName!(Model.Descriptor.Prototype) == FIELDS[0][0] && is(T == Bson) && is(typeof(__traits(getMember, item, FIELDS[0][0])) == string)) {
-
-				auto type = Model.Descriptor.Type(item);
-
-				BsonObjectID id;
-				string val = __traits(getMember, item, FIELDS[0][0]);
-
-				if(val == "") {
-					id = BsonObjectID.generate;
-					__traits(getMember, item, FIELDS[0][0]) = id.to!string;
-				} else {
-					id = BsonObjectID.fromString(__traits(getMember, item, FIELDS[0][0]));
-				}
-
-				data[FIELDS[0][0]] = id;
-			} else {
-
-				static if( !isTypeTuple!(__traits(getMember, item, FIELDS[0][0])) ) {
-					alias type = FieldType!(__traits(getMember, item, FIELDS[0][0]));
-
-					static if(isBasicType!type) {
-
-						alias isEnum = IsEnum!type;
-
-						static if(isEnum.check) {
-							data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]).to!string;
-						} else { 
-							data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]);
-						}
-					} else static if (is(type == SysTime)) {
-						static if( is(T == Bson) ) {
-							data[FIELDS[0][0]] = BsonDate(__traits(getMember, item, FIELDS[0][0]));
-						} else {
-							data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]).toISOExtString;
-						}
-					} else static if (is(type == Duration)) {
-						data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]).total!"nsecs";
-					}
-				}
-			}
-
-		} else static if(FIELDS[0].length > 1) {
-			fillFields!(T, FIELDS[0][0..$/2])(data, item);
-			fillFields!(T, FIELDS[0][$/2..$])(data, item);
-		}
-	}
-
 	///
 	T convert(T)(Model.Prototype item) if(is(T==Json) || is(T==Bson)) {
-		T data = T.emptyObject;
-
-		fillFields!(T, [__traits(allMembers, Model.Prototype)])(data, item);
-
-		return data;
+		return Model.Descriptor.Convert!T(item);
 	}
 
 }

@@ -5,18 +5,37 @@
 	"license": "MIT",
 	"authors": ["Szabo Bogdan"],
 	"dependencies": {
-		"vibe-d": ">=0.7.21-rc.2"
+		"temple": "~master",
+		"vibe-d": "~master"
 	},
 
 	"subPackages": [
 		{
 			"name": "model",
 			"targetType": "library",
-			"sourcePaths": ["source/model"],
-			"importPaths": ["source/model"]
+			"sourcePaths": ["source/crated/model"],
+			"importPaths": ["source/crated/model"]
 		}
 	],
 
-	"dflags": ["-J./source"],
+	"configurations": [
+		{
+			"name": "lib",
+			"targetType": "library"
+		},
+
+		{
+			"name": "unittest",
+			"dependencies": {},
+			"targetType": "executable",
+			"mainSourceFile": "source/crate.d",
+			"versions": [
+				"VibeCustomMain", "cratedUnittest"
+			],
+		}
+	],
+
+	"stringImportPaths": ["source/crated/view/tpl"],
+
 	"versions": ["VibeCustomMain"]
 }

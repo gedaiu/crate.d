@@ -77,9 +77,12 @@
     <None Include="assets\adminmenu.css" />
     <None Include="assets\adminmenu.js" />
     <None Include="assets\datetime.js" />
+    <None Include="source\crated\view\tpl\adminTable.emd" />
+    <None Include="source\crated\view\tpl\adminForm.emd" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="source\crated\" />
     <Folder Include="assets\" />
+    <Folder Include="source\crated\view\tpl\" />
   </ItemGroup>
 </Project>

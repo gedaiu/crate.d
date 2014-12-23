@@ -5,7 +5,6 @@
 
 	"authors": ["Szabo Bogdan"],
 	"dependencies": {
-		"vibe-d": ">=0.7.21-rc.2",
 		"crate-d": {"version": "~master", "path": "../../"}
 	},
 

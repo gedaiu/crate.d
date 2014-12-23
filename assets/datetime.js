@@ -1,7 +1,5 @@
 ﻿$(function() {
 
-	console.log($(":input[type=datetime-local]"));
-
 	//fix datetimes with timezones
 	$(":input[type=datetime-local]").each(function() {
 		

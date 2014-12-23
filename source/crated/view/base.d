@@ -202,11 +202,28 @@ class BaseView {
 	}
 
 	void useBootstrapCssCDN() {
-		cssFiles ~= [ BootstrapCssCDN ];
+		if(parent is null) {
+			cssFiles ~= [ BootstrapCssCDN ];
+		} else {
+			parent.useBootstrapCssCDN;
+		}
+	}
+
+	void useBootstrapJsCDN() {
+		if(parent is null) {
+			useJqueryCDN;
+			jsFiles ~= [ BootstrapJsCDN ];
+		} else {
+			parent.useBootstrapJsCDN;
+		}
 	}
 
 	void useJqueryCDN() {
-		jsFiles ~= [ JQueryCDN ];
+		if(parent is null) {
+			jsFiles ~= [ JQueryCDN ];
+		} else {
+			parent.useJqueryCDN;
+		}
 	}
 
 	void uses(string file) {
@@ -220,6 +237,8 @@ class BaseView {
 	}
 
 	string wrapWithBaseContainer(const string content) {
+		bool used[string];
+
 		string page = `<!DOCTYPE html>
 <head>
     <meta charset="utf-8">
@@ -229,16 +248,23 @@ class BaseView {
     <meta name="viewport" content="width=device-width, initial-scale=1">`;
 		
 		foreach(i;0..cssFiles.length) {
-			page ~= "\n\t<link rel='stylesheet' href='" ~ cssFiles[i] ~ "'>";
+
+			if(cssFiles[i] !in used) {
+				used[cssFiles[i]] = true;
+				page ~= "\n\t<link rel='stylesheet' href='" ~ cssFiles[i] ~ "'>";
+			}
 		}
 		
 		page~=`
 </head>
 <body>
 	` ~ content;
-		
+
 		foreach(i;0..jsFiles.length) {
-			page ~= "\n\t<script src='" ~ jsFiles[i] ~ "'></script>";
+			if(jsFiles[i] !in used) {
+				used[jsFiles[i]] = true;
+				page ~= "\n\t<script src='" ~ jsFiles[i] ~ "'></script>";
+			}
 		}
 		
 		page ~= `

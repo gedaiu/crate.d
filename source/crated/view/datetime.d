@@ -122,7 +122,6 @@ class ViewDuration : ViewType {
 		}
 	}
 
-
 	override string asPreview() {
 		Duration value;
 		
@@ -132,6 +131,7 @@ class ViewDuration : ViewType {
 			value = dur!"hnsecs"(0);
 		}
 
+		if(value.total!"hnsecs" == 0) return "-";
 
 		return value.to!string;
 	}

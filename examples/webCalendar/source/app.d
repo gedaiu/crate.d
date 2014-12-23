@@ -7,30 +7,43 @@ import crated.controller.admin;
 
 import std.stdio;
 
-abstract class MyEvent : CalendarEvent {
+abstract class Event : CalendarEvent {
 	@("field", "primary")
 	string _id;
 
 	@("field", "required") 
-	string name = "unknown";
+	string name;
 
 	this() {}
 }
 
-MyEvent createEvent(string type, string[string] data) {
+alias BaseEventDescriptor = ModelDescriptor!(Event, EventType.Basic, EventType.AutoPostpone, CalendarEventPrototype!Event, CalendarAutoPostponeEventPrototype!Event);
 
-	if(type == EventType.Basic.to!string || type == "") {
-		return new CalendarEventPrototype!MyEvent;
+class EventDescriptor : BaseEventDescriptor {
+	
+	static Event CreateItem(string type, string[string] data) {
+		auto item = BaseEventDescriptor.CreateItem(type, data);
+
+		if("_id" in data) item._id = data["_id"];
+		if("name" in data) item.name = data["name"];
+		if("startDate" in data) item.startDate = SysTime.fromISOExtString(data["startDate"]);
+
+		if(type == "Basic") {
+			if("endDate" in data) item.endDate = SysTime.fromISOExtString(data["endDate"]);
+		}
+
+		if(type == "AutoPostpone") {
+			if("duration" in data) item.duration = dur!"hnsecs"(data["duration"].to!long);
+			if("postpone" in data) item.postpone = dur!"hnsecs"(data["postpone"].to!long);
+			if("boundary" in data) item.boundary = dur!"hnsecs"(data["boundary"].to!long);
+		}
+
+		return item;
 	}
-
-	if(type == EventType.Unknown.to!string) {
-		return new CalendarUnknownEventPrototype!MyEvent;
-	}
-
-	throw new Exception("Unknown type " ~ type);
 }
 
-alias CalendarModel = MongoModel!(createEvent, "test.calendar", "Calendar");
+
+alias CalendarModel = MongoModel!(EventDescriptor, "test.calendar", "Calendar");
 
 alias DataManagerController = DataManager!("/admin", CalendarModel);
 

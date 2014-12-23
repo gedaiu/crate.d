@@ -6,6 +6,8 @@
  */
 module crated.model.calendar;
 
+import crated.model.base;
+
 import std.exception;
 import std.datetime;
 import std.conv;
@@ -14,7 +16,7 @@ import std.conv;
 enum EventType {
 	Undefined,
 	Basic,
-	Unknown
+	AutoPostpone
 };
 
 abstract class CalendarEvent {
@@ -38,6 +40,18 @@ abstract class CalendarEvent {
 
 	@property 
 	void duration(Duration duration);
+
+	@property 
+	void boundary(const Duration customBoundary);
+
+	@property 
+	Duration boundary() const;
+	
+	@property 
+	void postpone(const Duration customBoundary);
+
+	@property 
+	Duration postpone() const;
 }
 
 /**
@@ -78,6 +92,18 @@ template CalendarEventPrototype(T : CalendarEvent) {
 
 			///ditto
 			void duration(Duration duration) { endDate = startDate + duration; }
+
+			///return event boundary
+			Duration boundary() const { return dur!"minutes"(0); }
+			
+			///ditto
+			void boundary(const Duration customBoundary) { throw new CratedModelException("Base Event does not support boundary setter");  }
+			
+			///return event postpone
+			Duration postpone() const { return dur!"minutes"(0); }
+			
+			///ditto
+			void postpone(const Duration customPostpone) {  throw new CratedModelException("Base Event does not support postpone getter");  }
 		}
 
 		///Invariant to check the event consistency
@@ -121,19 +147,21 @@ unittest {
 }
 
 /**
- * An event with an unknown start date. The <code>startDate</code> field represents an aproximate start date for
+ * An event with an auto postpone start date. The <code>startDate</code> field represents an aproximate start date for
  * the event. If the current time is <code>startDate - boundary</code> the startDate will be automaticaly postponed
  * with <code>postpone</code> duration.
  */
 
-template CalendarUnknownEventPrototype(T : CalendarEvent) {
+template CalendarAutoPostponeEventPrototype(T : CalendarEvent) {
 
-	class CalendarUnknownEventPrototypeImplementation : T
+	class CalendarAutoPostponeEventPrototypeImplementation : T
 	{
 		this() {
 			_startDate = Clock.currTime;
 			_startDate.fracSec = FracSec.zero;
 			_duration = dur!"hours"(1);
+			_boundary = dur!"minutes"(15);
+			_postpone = dur!"minutes"(15);
 		}
 
 		protected SysTime _startDate;
@@ -142,7 +170,7 @@ template CalendarUnknownEventPrototype(T : CalendarEvent) {
 		///Event start date
 		@property override { 
 			@("field")
-			const(EventType) itemType() { return EventType.Unknown; };
+			const(EventType) itemType() { return EventType.AutoPostpone; };
 
 			@("field") 
 			SysTime startDate() const {
@@ -183,51 +211,40 @@ template CalendarUnknownEventPrototype(T : CalendarEvent) {
 			}
 
 			///return event duration
-			@("field") Duration duration() const { return _duration; }
+			@("field") 
+			Duration duration() const { return _duration; }
 			
 			///ditto
 			void duration(Duration customDuration) { _duration = customDuration; }
+
+			///return event postpone
+			@("field") 
+			Duration postpone() const { return _postpone; }
+			
+			///ditto
+			void postpone(const Duration customPostpone) { _postpone = customPostpone; }
+
+			///return event boundary
+			@("field") 
+			Duration boundary() const { return _boundary; }
+			
+			///ditto
+			void boundary(const Duration customBoundary) { _boundary = customBoundary; }
 		}
-
-
-
-		protected Duration _duration;
-
-		@("field")
-		Duration boundary = dur!"minutes"(15);
-
-		@("field")
-		Duration postpone = dur!"minutes"(15);
-
-		///Invariant to check the event consistency
-		invariant() {
-			assert(boundary >= postpone, "`boundary` < `postpone`");
+		
+		protected {
+			Duration _duration;
+			Duration _boundary;
+			Duration _postpone;
 		}
 	}
 
-	alias CalendarUnknownEventPrototype = CalendarUnknownEventPrototypeImplementation;
-}
-
-unittest {
-	//test boundary consistence
-	auto event = new CalendarUnknownEventPrototype!CalendarEvent;
-	
-	event.boundary = dur!"minutes"(1);
-
-	bool failed = false;
-
-	try {
-		assert(event);
-	} catch (core.exception.AssertError e) {
-		failed = true;
-	}
-	
-	assert(failed);
+	alias CalendarAutoPostponeEventPrototype = CalendarAutoPostponeEventPrototypeImplementation;
 }
 
 unittest {
 	//end date estimation test
-	auto event = new CalendarUnknownEventPrototype!CalendarEvent;
+	auto event = new CalendarAutoPostponeEventPrototype!CalendarEvent;
 	
 	event.startDate = SysTime(DateTime(2100,1,1));
 	event.duration = dur!"hours"(10);
@@ -237,7 +254,7 @@ unittest {
 
 unittest {
 	//duration from end date
-	auto event = new CalendarUnknownEventPrototype!CalendarEvent;
+	auto event = new CalendarAutoPostponeEventPrototype!CalendarEvent;
 	
 	event.startDate = SysTime(DateTime(2100,1,1));
 	event.endDate = event.startDate + dur!"hours"(10);
@@ -247,7 +264,7 @@ unittest {
 
 unittest {
 	//duration from end date
-	auto event = new CalendarUnknownEventPrototype!CalendarEvent;
+	auto event = new CalendarAutoPostponeEventPrototype!CalendarEvent;
 	
 	event.startDate = SysTime(DateTime(2100,1,1));
 	event.endDate = event.startDate - dur!"hours"(10);
@@ -257,7 +274,7 @@ unittest {
 
 unittest {
 	//start date postpone
-	auto event = new CalendarUnknownEventPrototype!CalendarEvent;
+	auto event = new CalendarAutoPostponeEventPrototype!CalendarEvent;
 	
 	auto start = Clock.currTime + dur!"minutes"(16);
 	event.startDate = start;
@@ -267,7 +284,7 @@ unittest {
 
 unittest {
 	//start date postpone
-	auto event = new CalendarUnknownEventPrototype!CalendarEvent;
+	auto event = new CalendarAutoPostponeEventPrototype!CalendarEvent;
 	
 	auto start = Clock.currTime;
 	
@@ -625,7 +642,7 @@ class CalendarEventChainPrototype {
 		foreach(i; 1..events.length) {
 			if(events[i].startDate < prevEvent.endDate) {
 
-				if(events[i].itemType != EventType.Unknown) {
+				if(events[i].itemType != EventType.AutoPostpone) {
 					auto tmpDuration = events[i].duration;
 					events[i].endDate = prevEvent.endDate + tmpDuration;
 				}
@@ -703,10 +720,10 @@ unittest {
 }
 
 unittest {
-	//test two overlaping events with an unknown event
+	//test two overlaping events with an AutoPostpone event
 	auto chain = new CalendarEventChainPrototype;
 	
-	auto event1 = new CalendarUnknownEventPrototype!CalendarEvent;
+	auto event1 = new CalendarAutoPostponeEventPrototype!CalendarEvent;
 	event1.startDate = SysTime(DateTime(2014,1,1,10,0,0));
 	event1.duration = dur!"hours"(1);
 	

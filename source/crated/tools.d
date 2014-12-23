@@ -228,7 +228,8 @@ template getItemFields(alias ATTR, Prototype) {
 		alias isEnum = IsEnum!(typeof(ItemProperty!(Prototype, name)));
 		alias isConst = isConstField!name;
 
-		static if(isConst.check)        return "isConst"; 
+		static if(isConst.check)        return "isConst";
+		else static if(isEnum.check && isTypeTuple!(__traits(getMember, item, name))) return "isEnumListDeclaration"; 
 		else static if(isEnum.check)	return "isEnum"; 
 		else static if(__traits(isIntegral, ItemProperty!(Prototype, name))) return "isIntegral";
 		else static if(__traits(isFloating, ItemProperty!(Prototype, name))) return "isFloating";
@@ -273,7 +274,7 @@ template getItemFields(alias ATTR, Prototype) {
 	}
 }
 
-template EnumerateFieldList(alias ATTR, Prototype) {
+template EnumerateFieldList(Prototype) {
 	/** 
 	 * Get all the metods that have ATTR attribute
 	 */
@@ -286,12 +287,8 @@ template EnumerateFieldList(alias ATTR, Prototype) {
 				); 
 		} else static if (FIELDS.length == 1) {
 			
-			static if(ItemProperty!(Prototype, FIELDS[0]).length == 1) {
-				static if(staticIndexOf!(ATTR, GetAttributes!(FIELDS[0], Prototype)) >= 0) {
-					alias ItemFields = TypeTuple!(FIELDS[0]);	
-				} else {
-					alias ItemFields = TypeTuple!();
-				}
+			static if(ItemProperty!(Prototype, FIELDS[0]).length == 1 && !isTypeTuple!(__traits(getMember, Prototype, FIELDS[0])) && !__traits(hasMember, Object, FIELDS[0]) && FIELDS[0] != "__ctor") {
+				alias ItemFields = TypeTuple!(FIELDS[0]);		
 			} else {
 				alias ItemFields = TypeTuple!();
 			}

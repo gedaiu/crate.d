@@ -34,7 +34,7 @@ abstract class Event : CalendarEvent {
 	this() {}
 }
 
-alias BaseEventDescriptor = ModelDescriptor!(Event, EventType.Basic, EventType.Unknown, CalendarEventPrototype!Event, CalendarUnknownEventPrototype!Event);
+alias BaseEventDescriptor = ModelDescriptor!(Event, EventType.Basic, EventType.AutoPostpone, CalendarEventPrototype!Event, CalendarAutoPostponeEventPrototype!Event);
 
 class EventDescriptor : BaseEventDescriptor {
 

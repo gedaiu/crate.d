@@ -15,6 +15,18 @@ import crated.view.base;
 import crated.tools;
 
 /**
+ * Aggregates all information about a model error status.
+ */
+class CratedControllerException : Exception {
+	/**
+	 * Create the exception
+	 */
+	this(string msg, string file = __FILE__, ulong line = cast(ulong)__LINE__, Throwable next = null) {
+		super(msg, file, line, next);
+	}
+}
+
+/**
  * Generate a crated controller.
  * 
  * This template extends <code>ControllerCls</code> with methods that helps you to automate the vibe.d routing.
@@ -64,7 +76,9 @@ template Controller(ControllerCls) {
 
 		//TODO: make attributes of type string[string][string] to avoid runtime string parsing
 		///The request attributes.
-		enum string[][] requests = getItemFields!("HttpRequest", ControllerCls, true);
+		enum string[][string][string] requestDetails = getItemFields!("HttpRequest", ControllerCls);
+		enum string[] requests = EnumerateFieldList!( ControllerCls );
+
 
 		/**
 		 * Set the Controller callbacks to a vibe.d router. If <code>ControllerCls</code> has 
@@ -80,13 +94,15 @@ template Controller(ControllerCls) {
 		}
 
 		///Private: 
-		private void addRoutes(string[][] requests)(ref URLRouter router) {
-			static if(requests.length == 1) {
-				route( &__traits(getMember, this, requests[0][0]), 
-				       valueOf(requests[0][0], "method"), 
-				       valueOf(requests[0][0], "node"), 
-				       router);
+		private void addRoutes(string[] requests)(ref URLRouter router) {
+			import std.traits;
 
+			static if( requests.length == 1 && requests[0] in requestDetails ) {
+
+				string method = valueOf(requests[0], "method");
+				string node = valueOf(requests[0], "node");
+
+				route( &__traits(getMember, this, requests[0]),  method, node, router);
 			} else static if(requests.length > 1) {
 				addRoutes!(requests[0..$/2])(router);
 				addRoutes!(requests[$/2..$])(router);
@@ -114,14 +130,15 @@ template Controller(ControllerCls) {
 		 * -------------
 		 */
 		static string valueOf(string fieldName, string attribute) {
-			foreach(list; requests) {
-				if(list[0] == fieldName) {
+			foreach(requestName; requests) {
+				if(requestName == fieldName) {
 					
-					foreach(i; 1..list.length) {
-						auto index = list[i].indexOf(":");
+					foreach(i; 0..requestDetails[requestName]["attributes"].length) {
+						string attr = requestDetails[requestName]["attributes"][i];
+						auto index = attr.indexOf(":");
 						
-						if(index > 0 && list[i][0..index] == attribute) {
-							return list[i][index+1..$];
+						if(index > 0 && attr[0..index] == attribute) {
+							return attr[index+1..$];
 						}
 					}
 				}

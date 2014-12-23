@@ -11,6 +11,8 @@ module crated.controller.admin;
 import crated.view.admin;
 import crated.view.adminmenu;
 
+import crated.tools;
+
 import crated.controller.base;
 
 import vibe.d;
@@ -40,7 +42,7 @@ import vibe.d;
 template AdminController(string baseUrl, Model, ContainerCls = BaseView) {
 
 	///Private:
-	alias ItemCls = Model.ItemCls;
+	alias ItemCls = Model.Prototype;
 
 	///Admin controller template class
 	class AdminControllerTemplate  {
@@ -54,7 +56,6 @@ template AdminController(string baseUrl, Model, ContainerCls = BaseView) {
 			auto container = new ContainerCls;
 			auto view = new AdminView!Model(baseUrl, container);
 
-			container.useBootstrapCssCDN;
 			container.content = view.asAdminTable(Model.all);
 
 			res.writeBody( container.to!string , "text/html; charset=UTF-8");
@@ -67,14 +68,10 @@ template AdminController(string baseUrl, Model, ContainerCls = BaseView) {
 		static void edit(HTTPServerRequest req, HTTPServerResponse res) {
 
 			auto container = new ContainerCls;
-
-			auto model = new Model;
 			auto view = new AdminView!Model(baseUrl, container);
-
-			auto item = model.getOneBy!"_id"(BsonObjectID.fromString(req.params["id"]));
-
-			container.useBootstrapCssCDN;
-			container.content = view.asEditForm(item);
+		
+			auto item = Model.getOneBy!"_id"(BsonObjectID.fromString(req.params["id"]));
+			container.content = view.asForm!"edit"(item);
 
 			res.writeBody( container.to!string , "text/html; charset=UTF-8");
 		}
@@ -82,22 +79,36 @@ template AdminController(string baseUrl, Model, ContainerCls = BaseView) {
 		/**
 		 * The add item page
 		 */
-		@("HttpRequest", "method:GET", "node:" ~ baseUrl ~ "/add")
+		@("HttpRequest", "method:GET", "node:" ~ baseUrl ~ "/add/:type")
 		static void add(HTTPServerRequest req, HTTPServerResponse res) {
+			
 			auto container = new ContainerCls;
-
-			auto model = new Model;
 			auto view = new AdminView!Model(baseUrl, container);
-
-			auto item = model.CreateItem;
-
-			container.useBootstrapCssCDN;
-			container.content = view.asAddForm(item);
-
+			
+			string[string] data;
+			data["itemType"] = req.params["type"];
+			
+			auto item = Model.CreateItem(data);
+			container.content = view.asForm!"add"(item);
+			
 			res.writeBody( container.to!string, "text/html; charset=UTF-8");
 		}
-		
-		
+
+		/**
+		 * The add item page
+		 */
+		@("HttpRequest", "method:GET", "node:" ~ baseUrl ~ "/add")
+		static void addDefault(HTTPServerRequest req, HTTPServerResponse res) {
+			
+			auto container = new ContainerCls;
+			auto view = new AdminView!Model(baseUrl, container);
+
+			auto item = Model.CreateItem;
+			container.content = view.asForm!"add"(item);
+			
+			res.writeBody( container.to!string, "text/html; charset=UTF-8");
+		}
+
 		/**
 		 * The save item action
 		 */
@@ -105,8 +116,11 @@ template AdminController(string baseUrl, Model, ContainerCls = BaseView) {
 		static void save(HTTPServerRequest req, HTTPServerResponse res) {
 			auto container = new ContainerCls;
 
-			auto item = Model.CreateItem(req.form);
-			Model.save(item);
+			if(req.params["id"] == "new") {
+				add(req);
+			} else {
+				update(req);
+			}
 
 			res.headers["Location"] = baseUrl;
 			res.statusCode = 302;
@@ -120,13 +134,51 @@ template AdminController(string baseUrl, Model, ContainerCls = BaseView) {
 		 */
 		@("HttpRequest", "method:ANY", "node:" ~ baseUrl ~ "/delete/:id")
 		static void delete_(HTTPServerRequest req, HTTPServerResponse res) {
-			Model.remove!(Model.primaryFieldName)(req.params["id"]);
+			Model.remove!(PrimaryFieldName!(Model.Descriptor.Prototype))(req.params["id"]);
 
 			res.headers["Location"] = baseUrl;
 			res.statusCode = 302;
 			res.statusPhrase = "Deleted! Redirecting...";
 			
 			res.writeBody( "Deleted! Redirecting..." , "text/html; charset=UTF-8");
+		}
+
+		/**
+		 * 
+		 */
+		private static void add(HTTPServerRequest req) {
+			if(Model.Descriptor.primaryFieldName in req.form && req.form[Model.Descriptor.primaryFieldName] != "") {
+				throw new CratedControllerException("Can not add items with default primary key");
+			}
+			
+			auto item = Model.CreateItem(req.form);
+			Model.save(item);
+		}
+
+		/**
+		 * 
+		 */
+		private static void update(HTTPServerRequest req) {
+			if(Model.Descriptor.primaryFieldName !in req.form) {
+				throw new CratedControllerException("You must set `"~Model.Descriptor.primaryFieldName~"` primary field to update an item");
+			}
+			
+			if(Model.Descriptor.primaryFieldName in req.form && req.form[Model.Descriptor.primaryFieldName] != req.params["id"]) {
+				throw new CratedControllerException("POST[`"~Model.Descriptor.primaryFieldName~"`] does not match with save/:id");
+			}
+			
+			auto item = Model.CreateItem(req.form);
+
+			if("__save" in req.form) {
+				if(req.form["__save"] == "new") Model.Descriptor.RemovePrimaryField(item);
+				else  {
+					string[string] data = Model.Descriptor.ToDic(item);
+					data["itemType"] = req.form["__save"];
+					item = Model.CreateItem(data);
+				}
+			}
+
+			Model.save(item);
 		}
 	}
 

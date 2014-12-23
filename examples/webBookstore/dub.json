@@ -4,11 +4,14 @@
 	"copyright": "Copyright © 2014, Szabo Bogdan",
 	"authors": ["Szabo Bogdan"],
 	"dependencies": {
-		"vibe-d": ">=0.7.21-rc.2"
+		"temple": "~master",
+		"vibe-d": "~master"
 	},
 
 	"dflags": ["-J./source"],
 	"versions": ["UseVibe", "VibeDefaultMain"],
 
-	"sourcePaths": [ "../../source" ]
+	"sourcePaths": [ "../../source" ],
+
+	"stringImportPaths": ["../../source/crated/view/tpl"],
 }
