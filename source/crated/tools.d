@@ -229,7 +229,7 @@ template getItemFields(alias ATTR, Prototype) {
 		alias isConst = isConstField!name;
 
 		static if(isConst.check)        return "isConst";
-		else static if(isEnum.check && isTypeTuple!(__traits(getMember, item, name))) return "isEnumListDeclaration"; 
+		else static if(isEnum.check && isTypeTuple!(__traits(getMember, Prototype, name))) return "isEnumListDeclaration"; 
 		else static if(isEnum.check)	return "isEnum"; 
 		else static if(__traits(isIntegral, ItemProperty!(Prototype, name))) return "isIntegral";
 		else static if(__traits(isFloating, ItemProperty!(Prototype, name))) return "isFloating";

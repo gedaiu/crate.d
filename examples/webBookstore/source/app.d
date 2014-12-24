@@ -85,8 +85,8 @@ class OtherProducts {
 
 	this() {}
 }
-/*
-class OtherProductsDescriptor : ModelDescriptor!Book {
+
+class OtherProductsDescriptor : ModelDescriptor!OtherProducts {
 	static OtherProducts CreateItem(string type, string[string] data) {
 		auto myOther = new OtherProducts;
 		
@@ -98,13 +98,13 @@ class OtherProductsDescriptor : ModelDescriptor!Book {
 		
 		return myOther;
 	}
-}*/
+}
 
 alias BookModel = MongoModel!(BookDescriptor, "test.books", "Books");
-//alias OtherProductsModel = MongoModel!(OtherProductsDescriptor, "test.otherProducts", "Other products");
+alias OtherProductsModel = MongoModel!(OtherProductsDescriptor, "test.otherProducts", "Other products");
 
 ///Create the controller
-alias DataManagerController = DataManager!("/admin", BookModel/*, OtherProductsModel*/);
+alias DataManagerController = DataManager!("/admin", BookModel, OtherProductsModel);
 
 /**
  *  Vibe.d init
