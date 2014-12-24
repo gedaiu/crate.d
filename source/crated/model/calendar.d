@@ -151,7 +151,6 @@ unittest {
  * the event. If the current time is <code>startDate - boundary</code> the startDate will be automaticaly postponed
  * with <code>postpone</code> duration.
  */
-
 template CalendarAutoPostponeEventPrototype(T : CalendarEvent) {
 
 	class CalendarAutoPostponeEventPrototypeImplementation : T
@@ -536,47 +535,58 @@ unittest {
 /**
  * This represents a repetable event.
  */
-class CalendarRepetableEventPrototype : CalendarEventPrototype!(CalendarEvent) {
+/**
+ * An event with an auto postpone start date. The <code>startDate</code> field represents an aproximate start date for
+ * the event. If the current time is <code>startDate - boundary</code> the startDate will be automaticaly postponed
+ * with <code>postpone</code> duration.
+ */
+template CalendarRepetableEventPrototype(T : CalendarEvent) {
 
-	@("field") CalendarRulePrototype[] rules;
 
-	/**
-	 * Check if there is an event on a particular date and time
-	 */
-	bool isEventOn(SysTime date) {
-		if(date < startDate || date >= endDate) return false;
+	class CalendarRepetableEventPrototypeImplementation : CalendarEventPrototype!(T) {
 
-		bool result = false;
+		@("field") CalendarRulePrototype[] rules;
+		
+		/**
+		 * Check if there is an event on a particular date and time
+		 */
+		bool isEventOn(SysTime date) {
+			if(date < _startDate || date >= _endDate) return false;
 
-		foreach(rule; rules) {
-			result = result || rule.isInside(startDate, endDate, date);
+			bool result = false;
+			
+			foreach(rule; rules) {
+				result = result || rule.isInside(_startDate, _endDate, date);
+			}
+			
+			return result;
 		}
+		
+		/**
+		 * Generate intervals for the current event.
+		 * 
+		 * TODO: write a test
+		 */
+		Interval!SysTime[] generateIntervalsBetween(SysTime startInterval, SysTime endInterval) {
+			if(startInterval < _startDate) startInterval = startDate;
+			if(endInterval > _endDate) endInterval = endDate;
 
-		return result;
-	}
-
-	/**
-	 * Generate intervals for the current event.
-	 * 
-	 * TODO: write a test
-	 */
-	Interval!SysTime[] generateIntervalsBetween(SysTime startInterval, SysTime endInterval) {
-		if(startInterval < startDate) startInterval = startDate;
-		if(endInterval > endDate) endInterval = endDate;
-
-		Interval!SysTime[] intervals;
-
-		foreach(rule; rules) {
-			intervals ~= rule.generateIntervalsBetween(startDate, startInterval, endInterval);
+			Interval!SysTime[] intervals;
+			
+			foreach(rule; rules) {
+				intervals ~= rule.generateIntervalsBetween(_startDate, startInterval, endInterval);
+			}
+			
+			return intervals;
 		}
-
-		return intervals;
 	}
+	
+	alias CalendarRepetableEventPrototype = CalendarRepetableEventPrototypeImplementation;
 }
 
 unittest {
 	//test outside events
-	auto testEvent = new CalendarRepetableEventPrototype;
+	auto testEvent = new CalendarRepetableEventPrototype!CalendarEvent;
 	testEvent.startDate = SysTime(DateTime(2014,1,1));
 	testEvent.endDate = SysTime(DateTime(2015,1,1));
 	
@@ -587,7 +597,7 @@ unittest {
 
 unittest {
 	//test outside events
-	auto testEvent = new CalendarRepetableEventPrototype;
+	auto testEvent = new CalendarRepetableEventPrototype!CalendarEvent;
 	testEvent.startDate = SysTime(DateTime(2014,1,1));
 	testEvent.endDate = SysTime(DateTime(2015,1,1));
 
