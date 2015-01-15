@@ -29,6 +29,8 @@ import core.time;
 import vibe.d;
 
 import crated.tools;
+import crated.view.base;
+import crated.view.datetime;
 
 /**
  * Aggregates all information about a model error status.
@@ -42,6 +44,41 @@ class CratedModelException : Exception {
 	}
 }
 
+///iterate all attributes and search a view struct
+template FieldByAttribute(alias EndString, L...) {
+
+	///look for a struct UDA that ends with EndString
+	template TypeFromAttributes(T...) {
+
+		static if(T.length == 0) {
+			alias TypeFromAttributes = TypeTuple!();
+		} else static if(T.length == 1) {
+
+			enum name = T[0].stringof;
+			enum len = EndString.length;
+
+			static if( ( is(T[0] == struct) || is(T[0] == class) ) && name.length > len && name[$-len..$] == EndString) {
+				alias TypeFromAttributes = TypeTuple!(T[0]);
+			} else {
+				alias TypeFromAttributes = TypeTuple!();
+			}
+		} else {
+			alias TypeFromAttributes = TypeTuple!(TypeFromAttributes!(T[0..$/2]), TypeFromAttributes!(T[$/2 .. $]) );
+		}
+	}
+
+	static if(L.length == 0) {
+		alias FieldByAttribute = TypeTuple!();
+	} else static if(L.length == 1) {
+		alias FieldByAttribute = TypeTuple!( TypeFromAttributes!(__traits(getAttributes, L[0])) );
+	} else {
+		alias FieldByAttribute = TypeTuple!( FieldByAttribute!(EndString, L[0..$/2]), FieldByAttribute!(EndString, L[$/2 .. $]) );
+	}
+}
+
+
+
+
 template ModelDescriptor(Prototype) {
 	alias ModelDescriptor = ModelDescriptor!(Prototype, "", Prototype);
 }
@@ -51,7 +88,8 @@ class ModelDescriptor(PrototypeCls, List...)
 	import std.typetuple;
 
 	alias Prototype = PrototypeCls;
-	
+
+	///Create the field list for every item type
 	template CreateFieldList(alias Index) {
 		
 		static if (Index < List.length/2) {
@@ -61,13 +99,111 @@ class ModelDescriptor(PrototypeCls, List...)
 		}
 	}
 
-
 	enum itemTypeList = [ List[0..$/2] ];
+	alias clsList = List[$/2..$];
 
+	//TODO: rename fields to prototypeFields and fieldList to fieldListByType
 	mixin("enum fieldList = [ " ~ Join!(CreateFieldList!0) ~ " ];");
 	enum fields = EnumerateFieldList!( Prototype );
 	enum primaryFieldName = PrimaryFieldName!(Prototype);
 	mixin("enum enumValues = [ " ~ getEnumValues ~ " ];");
+
+	///Get all classes from the descriptor
+	template FindCls(string ItemType, L...) {
+		static if(L.length == 0) {
+			alias FindCls = TypeTuple!();
+		} else {
+			static if(ItemType == L[0].to!string) {
+				alias FindCls = TypeTuple!(L[$/2]);
+			} else {
+				alias FindCls = TypeTuple!( FindCls!(ItemType, L[1..$/2] , L[$/2 +1 .. $]) );
+			}
+		}
+	}
+
+	///Get the prototype of an array type field
+	template FindPrototypeTypeFor(alias name) {
+
+		alias Type = typeof(__traits(getMember, Prototype, name));
+
+		static if(!isSomeString!Type && isArray!Type) {
+
+			alias fieldPrototype = FieldByAttribute!("Prototype", __traits(getOverloads, Prototype, name));
+
+			static if(fieldPrototype.length == 0) {
+				alias FindPrototypeTypeFor = ArrayType!(typeof(__traits(getMember, Prototype, name)));
+			} else {
+				alias FindPrototypeTypeFor = fieldPrototype[0];
+			}
+		} else {
+			alias FindPrototypeTypeFor = typeof(__traits(getMember, Prototype, name));
+		}
+	}
+
+	template FindViewTypeFor(string ItemType, string name) {
+
+		alias CLS = FindCls!(ItemType, List);
+		alias originalType = OriginalFieldType!(__traits(getMember, CLS, name));
+		alias fieldType = FieldType!(__traits(getMember, CLS, name));
+		//TODO: Rename attributeType
+
+		alias attributeType = FieldByAttribute!("View", __traits(getOverloads, CLS, name));
+
+		static if(attributeType.length > 0) 
+		{
+			alias View = attributeType[0];
+		} 
+		else static if (is(fieldType == SysTime)) 
+		{
+			alias View = SysTimeView;
+		}
+		else static if (is(fieldType == Duration)) 
+		{
+			alias View = DurationView;
+		} 
+		else 
+		{
+			alias View = TypeView!fieldType;
+		}
+
+		//check if we have arrays
+		static if(!isSomeString!(originalType) && isArray!(originalType)) 
+		{
+			alias FindViewTypeFor = ArrayView!View;
+		} 
+		else static if(isAssociativeArray!(originalType)) 
+		{
+			//TODO: 
+			static assert(false, "AssociativeArray to be implemented");
+		} 
+		else 
+		{
+			alias FindViewTypeFor = View;
+		}
+
+	}
+
+	mixin template CreateViewList(FIELDS...) {
+
+		static if(FIELDS[0].length == 1) {
+
+			enum FieldName = FIELDS[0][0];
+			alias TypeName = typeof(__traits(getMember, PrototypeCls, FieldName));
+
+			///Get field view
+			static auto GetView(string itemType, string field)() if(field == FieldName) {
+				alias VIEW = FindViewTypeFor!( itemType, field );
+				VIEW view;
+
+				return view;
+			}
+		} else static if(FIELDS[0].length > 1) {
+			mixin CreateViewList!(FIELDS[0][0..$/2]);
+			mixin CreateViewList!(FIELDS[0][$/2..$]);
+		}
+	}
+
+	mixin CreateViewList!fields;
 
 	/**
 	 * Generate the values for the enums from the current item
@@ -105,17 +241,32 @@ class ModelDescriptor(PrototypeCls, List...)
 
 	static 
 	{
-		protected string generateConditions(string code)(int i = 0) {
+		private string generateConditions(string code)(int i = 0) {
 			string a;
 
 			if(i < List.length/2) {
 				a ~= "
 			            if(type == List["~i.to!string~"].to!string) {
 							alias ClsType = List[$/2 + "~i.to!string~"];
+							enum string SType = List["~i.to!string~"].to!string;
 							"~code~"
 						}\n" ~ generateConditions!code(i+1);
 			}
 
+			return a;
+		}
+
+		string GenerateItemConditions(string code, int i = 0)() {
+			string a;
+
+			static if(i < List.length/2) {
+				a ~= "
+			            if(type == `" ~ List[i].to!string ~ "`) {
+							 enum string SType = `" ~ List[i].to!string ~ "`;
+							"~code~"
+						}\n" ~ GenerateItemConditions!(code, i+1);
+			}
+			
 			return a;
 		}
 
@@ -145,7 +296,6 @@ class ModelDescriptor(PrototypeCls, List...)
 
 		///
 		bool HasField(Prototype item, string field) {
-
 			auto type = Type(item);
 
 			mixin(generateConditions!"return HasField(type, field);");
@@ -161,10 +311,8 @@ class ModelDescriptor(PrototypeCls, List...)
 
 		///
 		bool HasAttribute(Prototype item, string field, string attribute) {
-
 			auto type = Type(item);
 			mixin(generateConditions!"return HasAttribute(type, field, attribute);");
-
 
 			throw new CratedModelException("HasAttribute Can't find `" ~ field ~ "` type");
 		}
@@ -172,7 +320,7 @@ class ModelDescriptor(PrototypeCls, List...)
 		///
 		bool HasAttribute(string type, string field, string attribute) {
 			if(!HasField(type, field)) throw new CratedModelException("HasAttribute Can't find `" ~ field ~ "` for `" ~ type ~ "`");
-
+			
 			foreach(attr; fieldList[type][field]["attributes"]) {
 				if(attr == attribute || attr.indexOf(attribute ~ ":") == 0) {
 					return true;
@@ -180,6 +328,44 @@ class ModelDescriptor(PrototypeCls, List...)
 			}
 			
 			return false;
+		}
+
+		///
+		bool HasAttribute(string type, string field, string attribute)() {
+
+			bool has(list...)() {
+
+				static if(list[0].length == 1) {
+					static if(attribute == list[0][0]) {
+						return true;
+					} else static if(attribute.length < list[0][0].length) {
+						enum attr = attribute ~ ":";
+
+						static if(list[0][0][0..attr.length] == attr) {
+							return true;
+						} else {
+							return false;
+						}
+
+					} else {
+						return false;
+					}
+
+				} else static if(list[0].length > 1) {
+					auto r1 = has!(list[0][0..$/2]);
+					auto r2 = has!(list[0][$/2..$]);
+
+					return r1 || r2;
+				} else {
+					return false;
+				}
+			}
+
+			static if( (field in fieldList[type]) !is null) {
+				return has!(fieldList[type][field]["attributes"]);
+			} else {
+				return false;
+			}
 		}	
 
 		///
@@ -285,7 +471,7 @@ class ModelDescriptor(PrototypeCls, List...)
 		string[string] ToDic(Prototype item) {
 			Json data = Json.emptyObject;
 
-			FillFields!(Json, fields)(data, item);
+			FillFields!(Json, Prototype, fields)(data, item);
 
 			string[string] dataAsString = toDict(data);
 
@@ -295,55 +481,74 @@ class ModelDescriptor(PrototypeCls, List...)
 		T Convert(T)(Prototype item) if(is(T==Json) || is(T==Bson)) {
 			T data = T.emptyObject;
 			
-			FillFields!(T, [__traits(allMembers, Prototype)])(data, item);
-			
+			FillFields!(T, Prototype, [__traits(allMembers, Prototype)])(data, item);
+
 			return data;
 		}
 
-		//private
-		void FillFields(T, FIELDS...)(ref T data, Prototype item) {
+		///
+		BsonObjectID GetAndUpdateBsonId(ref string val) {
+			BsonObjectID id;
+
+			if(val == "") {
+				id = BsonObjectID.generate;
+				val = id.to!string;
+			} else {
+				id = BsonObjectID.fromString(val);
+			}
+
+			return id;
+		}
+
+		///Private:
+		void FillFields(T, U, FIELDS...)(ref T data, U item) {
 			import std.traits;
 			import crated.tools;
-			
-			static if(FIELDS[0].length == 1 && FIELDS[0][0] != "__ctor" && !__traits(hasMember, Object, FIELDS[0][0])) {
+
+			static if(FIELDS[0].length == 1 && FIELDS[0][0] != "__ctor" && !__traits(hasMember, Object, FIELDS[0][0]) && !isTypeTuple!(__traits(getMember, item, FIELDS[0][0]) )) {
+
+				alias CurrentType = typeof(__traits(getMember, item, FIELDS[0][0]));
 
 				//if is a bson id
-				static if(PrimaryFieldName!(Prototype) == FIELDS[0][0] && is(T == Bson) && is(typeof(__traits(getMember, item, FIELDS[0][0])) == string)) {
-					auto type = Type(item);
-					
-					BsonObjectID id;
-					string val = __traits(getMember, item, FIELDS[0][0]);
-					
-					if(val == "") {
-						id = BsonObjectID.generate;
-						__traits(getMember, item, FIELDS[0][0]) = id.to!string;
-					} else {
-						id = BsonObjectID.fromString(__traits(getMember, item, FIELDS[0][0]));
-					}
-					
+				static if(PrimaryFieldName!(Prototype) == FIELDS[0][0] && is(T == Bson) && is(CurrentType == string)) {
+
+					auto id = GetAndUpdateBsonId(__traits(getMember, item, FIELDS[0][0]));
 					data[FIELDS[0][0]] = id;
+
 				} else {
-					
 					static if( !isTypeTuple!(__traits(getMember, item, FIELDS[0][0])) ) {
-						alias type = FieldType!(__traits(getMember, item, FIELDS[0][0]));
-						
-						static if(isBasicType!type) {
-							alias isEnum = IsEnum!type;
+
+						static if(!isSomeString!CurrentType && isArray!CurrentType) {
+							T[] array;
+
+							foreach(i; 0..__traits(getMember, item, FIELDS[0][0]).length ) {
+								auto listItem = T.emptyObject;
+
+								alias ListType = FindPrototypeTypeFor!(FIELDS[0][0]);
+
+								FillFields!(T, ListType, [__traits(allMembers, ListType)] )(listItem, __traits(getMember, item, FIELDS[0][0])[i]);
+
+								array ~= [ listItem ];
+							}
+
+							data[FIELDS[0][0]] = array;
+						} else static if(isBasicType!CurrentType) {
+							alias isEnum = IsEnum!CurrentType;
 							
 							static if(isEnum.check) {
 								data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]).to!string;
 							} else { 
 								data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]);
 							}
-						} else static if (is(type == string)) {
+						} else static if (is(CurrentType == string)) {
 							data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]);
-						} else static if (is(type == SysTime)) {
+						} else static if (is(CurrentType == SysTime)) {
 							static if( is(T == Bson) ) {
 								data[FIELDS[0][0]] = BsonDate(__traits(getMember, item, FIELDS[0][0]));
 							} else {
 								data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]).toISOExtString;
 							}
-						} else static if (is(type == Duration)) {
+						} else static if (is(CurrentType == Duration)) {
 							data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]).total!"hnsecs";
 						} else {
 							data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]).to!string;
@@ -352,8 +557,8 @@ class ModelDescriptor(PrototypeCls, List...)
 				}
 
 			} else static if(FIELDS[0].length > 1) {
-				FillFields!(T, FIELDS[0][0..$/2])(data, item);
-				FillFields!(T, FIELDS[0][$/2..$])(data, item);
+				FillFields!(T, U, FIELDS[0][0..$/2])(data, item);
+				FillFields!(T, U, FIELDS[0][$/2..$])(data, item);
 			}
 		}
 	}
@@ -788,5 +993,114 @@ mixin template ModelHelper(Model) {
 	T convert(T)(Model.Prototype item) if(is(T==Json) || is(T==Bson)) {
 		return Model.Descriptor.Convert!T(item);
 	}
+}
 
+string[] extractArray(string keyName)(string[string] data) {
+	string[] array;
+	
+	enum baseString = keyName ~ "[";
+	
+	foreach(key, value; data) {
+		if(key.indexOf(baseString) == 0) {
+			auto pos1 = key.indexOf("[")+1;
+			auto pos2 = key.indexOf("]");
+			auto index = key[pos1..pos2].to!int;
+
+			if(array.length < index+1)
+				array.length = index+1;
+
+			array[index] = value;
+		}
+	}
+	
+	return array;
+}
+
+unittest {
+	string[string] data;
+	data["key[0]"] = "test1";
+	data["key[1]"] = "test2";
+	
+	auto array = extractArray!"key"(data);
+	
+	assert(array.length == 2);
+	assert(array[0] == "test1");
+	assert(array[1] == "test2");
+}
+
+unittest {
+	string[string] data;
+	data["key"] = "test1";
+	
+	auto array = extractArray!"key"(data);
+	
+	assert(array.length == 0);
+}
+
+string[string][] extractAssocArray(string keyName)(string[string] data) {
+	string[string][] array;
+	
+	enum baseString = keyName ~ "[";
+	
+	foreach(key, value; data) {
+		if(key.indexOf(baseString) == 0) {
+			auto pos1 = key.indexOf("[")+1;
+			auto pos2 = key.indexOf("]");
+			auto index = key[pos1..pos2].to!int;
+
+			key = key[pos2+1..$];
+			pos1 = key.indexOf("[")+1;
+			pos2 = key.indexOf("]");
+			auto pos3 = key.lastIndexOf("]");
+
+			if(pos1 > -1 && pos2 > pos1) {
+				string assocKey;
+
+				if(pos3 == pos2) { 
+					assocKey = key[pos1..pos2];
+				} else {
+					assocKey = key;
+				}
+
+				if(array.length < index+1)
+					array.length = index+1;
+
+				array[index][assocKey] = value;
+			}
+		}
+	}
+
+	return array;
+}
+
+unittest {
+	string[string] data;
+	
+	data["key[0][field]"] = "value";
+	
+	auto array = extractAssocArray!"key"(data);
+	
+	assert(array.length == 1);
+	assert(array[0]["field"] == "value");
+}
+
+unittest {
+	string[string] data;
+	
+	data["key[0][field][other]"] = "value";
+	
+	auto array = extractAssocArray!"key"(data);
+	
+	assert(array.length == 1);
+	assert(array[0]["[field][other]"] == "value");
+}
+
+unittest {
+	string[string] data;
+
+	data["key[0]"] = "value";
+	
+	auto array = extractAssocArray!"key"(data);
+	
+	assert(array.length == 0);
 }

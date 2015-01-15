@@ -8,6 +8,7 @@
  */
 module crated.controller.admin;
 
+import std.stdio; //todo: remove this line
 import crated.view.admin;
 import crated.view.adminmenu;
 
@@ -17,7 +18,7 @@ import crated.controller.base;
 
 import vibe.d;
 
-/**
+/**	
  * AdminController create <b>/edit/:id</b>, <b>/add</b>, <b>/edit</b>, <b>/delete</b> 
  * nodes relative to the <code>baseUrl</code> parameter. At the <b>baseUrl</b> node will be displayed
  * a list wil the model elements.
@@ -87,8 +88,9 @@ template AdminController(string baseUrl, Model, ContainerCls = BaseView) {
 			
 			string[string] data;
 			data["itemType"] = req.params["type"];
-			
+
 			auto item = Model.CreateItem(data);
+
 			container.content = view.asForm!"add"(item);
 			
 			res.writeBody( container.to!string, "text/html; charset=UTF-8");

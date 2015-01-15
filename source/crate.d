@@ -2,5 +2,6 @@
 
 void main() {
     import std.stdio;
-    writeln("crated unittests pass");
+
+    writeln("Crate.D unittests pass");
 }

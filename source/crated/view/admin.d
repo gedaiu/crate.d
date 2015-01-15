@@ -10,6 +10,9 @@
 module crated.view.admin;
 
 import std.conv;
+import std.traits;
+import std.stdio;//todo: remove this
+
 import crated.model.base;
 import crated.view.datetime;
 
@@ -32,216 +35,62 @@ template AdminView(Model) {
 		/**
 		 * 
 		 */
-		ViewType editFormFieldByType(string field)(string itemType, ulong index) {
-			bool required;
-			string requiredIcon;
-
-			if(Descriptor.HasField(itemType, field) && Descriptor.HasAttribute(itemType, field, "required")) required = true;
-
-			string cls;
-			
-			if(index == 1) cls ~= "input-lg";
-
-			ViewType view;
-
-			string fieldType;
-			string fieldDesc;
-
-			if(Descriptor.HasField(itemType, field)) {
-				fieldType = Descriptor.GetType(itemType, field);
-				fieldDesc = Descriptor.GetDescription(itemType, field);
-			} else {
-				fieldType = Descriptor.GetType(field);
-				fieldDesc = Descriptor.GetDescription(field);
-			}
-
-			switch(fieldType) {
-				case "bool":
-					view = new ViewBool;
-					view.container = parent;
-					
-					break;
-					
-				case "byte": case "short": case "int": case "long": case "cent": case "ubyte": case "ushort":
-				case "uint": case "ulong": case "ucent":
-					view = new ViewType;
-					view.container = parent;
-					view.type = "number";
-					
-					break;
-					
-				case "float": case "double": case "real":
-					view = new ViewType;
-					view.container = parent;
-					view.type = "number";
-					view.step = "0.01";
-					
-					break;
-					
-				case "SysTime":
-					view = new ViewSysTime;
-					view.container = parent;
-					
-					break;
-					
-				case "Duration":
-					view = new crated.view.datetime.ViewDuration;
-					view.container = parent;
-					
-					break;
-					
-				default:
-					
-					if(fieldDesc == "isEnum") {
-						view = new ViewList;
-						view.container = parent;
-
-						static if(is(typeof(Descriptor.enumValues) == string[][string]) && field in Descriptor.enumValues) {
-
-							foreach(v; Descriptor.enumValues[field]) {
-								static if( is(typeof(v) == string) ) {
-									(cast(ViewList) view).addItem(v);
-								} else {
-									(cast(ViewList) view).addItem(v.to!string);
-								}
-							}
-
-						}
-					} else {
-						view = new ViewType;
-						view.container = parent;
-						
-						view.type = "text";
-					}
-			}
-			
-			view.cls = cls;
-			view.id = "formElement" ~ index.to!string;
-			view.name = field;
-			
-			return view;
-		}
-
-		/**
-		 * 
-		 */
-		private ViewType getViewByAttribute(string field)(string itemType, ulong index) {
-			
-			ViewType view;
-			
-			string fieldType;
-
-			if(Descriptor.HasField(itemType, field)) 
-			{
-				fieldType = Descriptor.AttributeValue(itemType, field, "type");
-			}
-			else
-			{
-				fieldType = Descriptor.AttributeValue(field, "type");
-			}
-
-			string cls;
-			
-			if(index == 1) cls ~= "input-lg";
-			
-			switch(fieldType) {
-				case "color": case "date": case "datetime": case "datetime-local": case "email": case "month":
-				case "number": case "range": case "tel": case "time": case "url": case "week":
-					view = new ViewType;
-					view.container = parent;
-					view.type = fieldType;
-					view.cls = cls;
-					view.id = "formElement" ~ index.to!string;
-					view.name = field;
-					
-					break;
-				default:
-					break;
-			}
-			
-			return view;
-		}
-
-		/// Private: 
-		private ViewType getTypeFor(string field, PrototypedItem)(PrototypedItem item, ulong index = 0) {
-			ViewType inputField = getViewByAttribute!field(Descriptor.Type(item), index);
-			
-			//build the value based on the property type
-			if(inputField is null) inputField = editFormFieldByType!field(Descriptor.Type(item), index);
-
-			static if( is(typeof(__traits(getMember, item, field)) == std.datetime.SysTime) ) 
-			{
-				inputField.value = __traits(getMember, item, field).toISOExtString;
-			}
-			else static if( is(typeof(__traits(getMember, item, field)) == core.time.Duration) ) 
-			{
-				inputField.value = __traits(getMember, item, field).total!"hnsecs".to!string;
-			}
-			else
-			{
-				inputField.value = __traits(getMember, item, field).to!string;
-			}
-			return inputField;
-		}
-
-		/**
-		 * 
-		 */
 		string asForm(string mode, PrototypedItem)(PrototypedItem item) {
 			string a;
 
 			useBootstrapCssCDN;
 
+			BaseView parentContainer = parent;
+
 			/**
 			 * 
 			 */
-			string editFormField(string field, PrototypedItem)(PrototypedItem item, ulong index) {
+			string editFormField(string itemType, string field)(ulong index) {
 				string a;
 
 				static if(field == Descriptor.primaryFieldName) { 
-					a ~= "<input type='hidden' name='" ~ field ~ "' value='" ~ __traits(getMember, item, field).to!string ~ "' />";
-					
+					a = "<input type='hidden' name='" ~ field ~ "' value='" ~ __traits(getMember, item, field).to!string ~ "' />";
 				} else static if(field == "itemType") {
 					a = "<input type='hidden' name='itemType' value='" ~ __traits(getMember, item, field).to!string ~ "' />";
 				} else {
-					string itemType = Descriptor.Type(item);
 
 					if(Descriptor.HasField(itemType, field) && Descriptor.GetDescription(itemType, field) != "isConst") {
-						ViewType inputField = getTypeFor!(field)(item, index);
-						
-						if(inputField !is null) {
-							string cls;
-							
-							if(index == 1) cls = "class='text-primary'";
-							
-							a ~= `<div class="form-group">`;
-							a ~= "<label "~cls~" for='formElement"~index.to!string~"'>" ~ field ~ "</label>";
-							
-							bool required;
-							if(Descriptor.HasAttribute(itemType, field, "required")) required = true;
-							
-							a ~= inputField.asForm(required) ~ `</div>`;
-						}
+						auto inputField = Descriptor.GetView!(itemType, field);
+						inputField.container = parentContainer;
+						inputField.value = __traits(getMember, item, field);
+						inputField.name = field;
+						string cls;
+
+						if(index == 1) cls = "class='text-primary'";
+
+						a ~= `<div class="form-group">`;
+						a ~= "<h3><label "~cls~" for='formElement"~index.to!string~"'>" ~ field ~ "</label></h3>";
+
+						bool required;
+						if(Descriptor.HasAttribute(itemType, field, "required")) required = true;
+
+						a ~= inputField.asForm(required) ~ `</div>`;
 					}
 				}
-				
+
 				return a;
 			}
 
-			string editFormFields(string[] fields, PrototypedItem)(PrototypedItem item, ulong index = 0) {
-				
+			string editFormFields(string itemType, string[] fields)(ulong index = 0) {
+
 				static if(fields.length > 1) {
-					return editFormFields!(fields[0..$/2])(item, index) ~ editFormFields!(fields[$/2..$])(item, index+fields.length/2);
+					return editFormFields!(itemType, fields[0..$/2])(index) ~ editFormFields!(itemType, fields[$/2..$])(index+fields.length/2);
 				} else {
-					return editFormField!(fields[0])(item, index);
+					return editFormField!(itemType, fields[0])(index);
 				}
+
+				return "";
 			}
 
 			if(parent) {
 				static if(mode == "edit") parent.title = "Edit " ~ Model.name;
 				static if(mode == "add") parent.title = "Add " ~ Model.name;
 			}
-
 
 			auto tpl = compile_temple_file!"adminForm.emd";
 
@@ -253,7 +102,9 @@ template AdminView(Model) {
 			static if(mode == "add") 
 				context.action = baseUrl~`/save/new`;
 
-			context.fields = editFormFields!(Descriptor.fields)(item);
+			auto type = Descriptor.Type(item);
+
+			mixin(Descriptor.GenerateItemConditions!`context.fields = editFormFields!(SType, Descriptor.fields);`);
 
 			static if(mode == "edit") {
 				useBootstrapJsCDN;
@@ -265,17 +116,17 @@ template AdminView(Model) {
 					string buttonList;
 
 					buttonList = `<li class="divider"></li>`;
-					foreach(type; Descriptor.itemTypeList) {
-						if(type != item.itemType) {
+					foreach(itemType; Descriptor.itemTypeList) {
+						if(itemType != item.itemType) {
 							buttonList ~= `
 								<li>
 									<a href="#">
-										<label for="save`~type.to!string~`">
-											<span class="glyphicon glyphicon-transfer" aria-hidden="true"></span> as ` ~ type.to!string ~ `
+										<label for="save`~itemType.to!string~`">
+											<span class="glyphicon glyphicon-transfer" aria-hidden="true"></span> as ` ~ itemType.to!string ~ `
 										</label>
 									</a>
 									
-									<input style="display: none" id="save`~type.to!string~`" name="__save" value="` ~ type.to!string ~ `" type="submit"/>
+									<input style="display: none" id="save`~itemType.to!string~`" name="__save" value="` ~ itemType.to!string ~ `" type="submit"/>
 								</li>`;
 						}
 					}
@@ -316,21 +167,37 @@ template AdminView(Model) {
 			}
 
 			//build the table line
-			string adminTableLine(fields...)(PrototypedItem item) 
+			string adminTableLine(string itemType)(PrototypedItem item) 
 			{
-				static if(fields[0].length == 1 && fields[0][0] != Descriptor.primaryFieldName) 
+				string previewLine(L...)() 
 				{
-					ViewType inputField = getTypeFor!(fields[0][0])(item);
-					
-					return "<td>"~inputField.asPreview~"</td>";
-				} 
-				else static if (fields[0].length > 1) 
-				{
-					return adminTableLine!(fields[0][0..$/2])(item) ~ adminTableLine!(fields[0][$/2..$])(item);
-				} else 
-				{
-					return "";
+					static if(L[0].length == 1 && (L[0][0] in Model.Descriptor.fieldList[itemType]) !is null && !Model.Descriptor.HasAttribute!(itemType, L[0][0], "primary")) {
+						auto view = Descriptor.GetView!(itemType, L[0][0]);
+
+						view.value = __traits(getMember, item, L[0][0]);
+
+						return `<td>` ~ view.asPreview ~ `</td>`;
+					} else static if (L[0].length > 1) {
+						return previewLine!(L[0][0..$/2]) ~ previewLine!(L[0][$/2..$]);
+					} else static if ( !Descriptor.HasAttribute!(itemType, L[0][0], "primary") ){
+						return `<td>-</td>`;
+					} else {
+						return ``;
+					}
 				}
+
+				return previewLine!(Model.Descriptor.fields);
+			}
+
+			///create the code for selecting the right line type
+			string createLines() {
+				string code;
+
+				foreach(type; Model.Descriptor.itemTypeList) {
+					code ~= "if(item.itemType.to!string == `" ~ type.to!string ~ "`) lines ~= adminTableLine!`" ~ type.to!string ~ "`(item);";
+				}
+
+				return code;
 			}
 
 			useBootstrapCssCDN;
@@ -343,7 +210,13 @@ template AdminView(Model) {
 			foreach(item; items) 
 			{
 				lines ~= "<tr>";
-				lines ~= adminTableLine!(Descriptor.fields)(item);
+
+				static if(__traits(hasMember, PrototypedItem, "itemType")) {
+					mixin(createLines());
+				} else {
+					lines ~= adminTableLine!""(item);
+				}
+
 				lines ~= "<td><a class='btn btn-default' href='" ~ baseUrl ~ "/edit/" ~ Descriptor.PrimaryField(item) ~ "'>Edit</a> "~
 					"<a class='btn btn-danger' href='" ~ baseUrl ~ "/delete/" ~ Descriptor.PrimaryField(item) ~ "'>Delete</a></td></tr>";
 			}
@@ -363,7 +236,7 @@ template AdminView(Model) {
 				}
 
 				context.buttonList = buttonList;
-			} else {	
+			} else {
 				context.isGroup = false;
 				context.button = `<a class='btn btn-default' href='` ~ baseUrl ~ `/add'>Add</a>`;
 			}

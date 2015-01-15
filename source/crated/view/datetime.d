@@ -6,15 +6,43 @@
  */
 module crated.view.datetime;
 
+import temple;
+
 import core.time;
 import std.datetime;
 import std.conv;
 import std.array;
 import crated.view.base;
+import crated.model.calendar;
 
-class ViewSysTime : ViewType {
+import std.stdio; //todo: remove this
 
-	override string asForm(bool isRequired = false) {
+struct SysTimeView {
+
+	string[string] attributes;
+	SysTime value;
+
+	BaseView container;
+	
+	/**
+	 * Allows to access attributes using dot sintax
+	 */
+	@property const(string) opDispatch(string prop)() const { 
+		if(prop in attributes) return attributes[prop]; 
+		
+		return "";
+	}
+	
+	/// ditto
+	@property ref string opDispatch(string prop)() { 
+		if(prop !in attributes) attributes[prop] = ""; 
+		
+		return attributes[prop]; 
+	}
+
+	///
+	string asForm(bool isRequired = false) {
+		if(container is null) throw new CratedViewException("Can't find the parent container");
 
 		container.useJqueryCDN;
 		container.uses("datetime.js");
@@ -22,55 +50,61 @@ class ViewSysTime : ViewType {
 		string id = opDispatch!"id";
 		string cls = opDispatch!"cls";
 		string name = opDispatch!"name";
-		string value = opDispatch!"value";
 
-		SysTime date = SysTime.fromISOExtString(value);
-		date = date.toUTC;
+
+		import std.stdio;
 
 		if(isRequired) {
 			return "<div class='input-group'>
-			               <input class='form-control "~cls~"' id='"~id~"' min='0001-01-00T00:00:00' max='3000-01-00T00:00:00' type='datetime-local' name='"~name~"' value='"~date.toISOExtString~"' required>
+			               <input class='form-control "~cls~"' id='"~id~"' min='0001-01-00T00:00:00' max='3000-01-00T00:00:00' type='datetime-local' name='"~name~"' value='"~value.toISOExtString~"' required>
 			               <span class='input-group-addon'>
 	                             <span class='glyphicon glyphicon-fire' aria-hidden='true'></span>
 	                       </span>
 			        </div>";
 		} else {
-			return "<input class='form-control "~cls~"' id='"~id~"'  min='0001-01-00T00:00:00' max='3000-01-00T00:00:00'  type='datetime-local' name='"~name~"' value='"~date.toISOExtString~"'>";
+			return "<input class='form-control "~cls~"' id='"~id~"'  min='0001-01-00T00:00:00' max='3000-01-00T00:00:00'  type='datetime-local' name='"~name~"' value='"~value.toISOExtString~"'>";
 		}
 	}
 
-	override string asPreview() {
-		string value = opDispatch!"value";
-		
-		SysTime date = SysTime.fromISOExtString(value);
-		date = date.toOtherTZ(PosixTimeZone.getTimeZone(crated.settings.defaultTZ));
-
-
+	string asPreview() {
 		string text = crated.settings.dateFormat;
 
-		text = text.replace("d", date.day.to!string).replace("m", date.month.to!string).replace("Y", date.year.to!string)
-				   .replace("G", date.hour.to!string).replace("i", date.minute.to!string).replace("s", date.second.to!string);
+		text = text.replace("d", value.day.to!string).replace("m", value.month.to!string).replace("Y", value.year.to!string)
+			       .replace("G", value.hour.to!string).replace("i", value.minute.to!string).replace("s", value.second.to!string);
 
 		return text;
 	}
 }
 
 
-class ViewDuration : ViewType {
+struct DurationView {
 
+
+	string[string] attributes;
+	Duration value;
+	BaseView container;
+	
+	/**
+	 * Allows to access attributes using dot sintax
+	 */
+	@property const(string) opDispatch(string prop)() const { 
+		if(prop in attributes) return attributes[prop]; 
+		
+		return "";
+	}
+	
+	/// ditto
+	@property ref string opDispatch(string prop)() { 
+		if(prop !in attributes) attributes[prop] = ""; 
+		
+		return attributes[prop]; 
+	}
 
 	private string inputForm(bool isRequired = false) {
 
 		string id = opDispatch!"id";
 		string cls = opDispatch!"cls";
 		string name = opDispatch!"name";
-		Duration value;
-
-		try {
-			value = dur!"hnsecs"(opDispatch!"value".to!long);
-		} catch(Exception e) {
-			value = dur!"hnsecs"(0);
-		}
 
 		string required;
 
@@ -81,8 +115,7 @@ class ViewDuration : ViewType {
 		long weeks, days, hours, minutes, seconds;
 		value.split!("weeks", "days", "hours", "minutes", "seconds")(weeks, days, hours, minutes, seconds);
 
-		return "
-				<div class='row'>
+		return "<div class='row'>
 					<div class='col-xs-2'>
 						<label class='text-info' for='"~id~"weeks'>weeks</label>
 						<input class='form-control "~cls~"' id='"~id~"weeks'   type='number' name='"~name~"[weeks]'   value='" ~ weeks.to!string   ~ "' "~required~">
@@ -102,12 +135,11 @@ class ViewDuration : ViewType {
 					<div class='col-xs-2'>
 						<label class='text-info' for='"~id~"seconds'>seconds</label>
 						<input class='form-control "~cls~"' id='"~id~"seconds' type='number' name='"~name~"[seconds]' value='" ~ seconds.to!string ~ "' "~required~">
-					</div></div>
-		";
+					</div></div>";
 
 	}
 
-	override string asForm(bool isRequired = false) {
+	string asForm(bool isRequired = false) {
 
 		if(isRequired) {
 
@@ -122,17 +154,108 @@ class ViewDuration : ViewType {
 		}
 	}
 
-	override string asPreview() {
-		Duration value;
-		
-		try {
-			value = dur!"hnsecs"(opDispatch!"value".to!long);
-		} catch(Exception e) {
-			value = dur!"hnsecs"(0);
-		}
-
+	string asPreview() {
 		if(value.total!"hnsecs" == 0) return "-";
 
 		return value.to!string;
 	}
+}
+
+struct CalendarRuleView {
+
+	string[string] attributes;
+	CalendarRulePrototype value;
+
+	BaseView container;
+	
+	/**
+	 * Allows to access attributes using dot sintax
+	 */
+	@property const(string) opDispatch(string prop)() const { 
+		if(prop in attributes) return attributes[prop]; 
+		
+		return "";
+	}
+	
+	/// ditto
+	@property ref string opDispatch(string prop)() { 
+		if(prop !in attributes) attributes[prop] = ""; 
+		
+		return attributes[prop]; 
+	}
+
+	string asForm(bool isRequired = false) {
+
+		//container.uses("calendarRuleViewAsForm.css");
+
+		auto tpl = compile_temple_file!"adminRuleView.emd";
+
+		auto context = new TempleContext();
+		if("name" in attributes) context.name = attributes["name"];
+			else context.name = "";
+
+		if(value is null) {
+			context.monday = "";
+			context.tuesday = "";
+			context.wednesday = "";
+			context.thursday = "";
+			context.friday = "";
+			context.saturday = "";
+			context.sunday = "";
+			
+			context.startTime = "";
+			context.endTime = "";
+			context.repeatAfterWeeks = "0";
+		} else {
+			context.monday = value.monday ? "checked":"";
+			context.tuesday = value.tuesday ? "checked":"";
+			context.wednesday = value.wednesday ? "checked":"";
+			context.thursday = value.thursday ? "checked":"";
+			context.friday = value.friday ? "checked":"";
+			context.saturday = value.saturday ? "checked":"";
+			context.sunday = value.sunday ? "checked":"";
+
+			context.startTime = value.endTime.toISOExtString;
+			context.endTime = value.startTime.toISOExtString;
+			context.repeatAfterWeeks = value.repeatAfterWeeks.to!string;
+		}
+
+		string field = tpl.toString(context).to!string;
+
+		if(isRequired) {
+			return "<div class='input-group'><!--
+			               "~field~" 
+			               <span class='input-group-addon'>
+	                             <span class='glyphicon glyphicon-fire' aria-hidden='true'></span>
+	                       </span>
+			        </div>";
+		} else {
+			return "<!--"~field;
+		}
+	}
+	
+	string asPreview() {
+		return "rule?";
+	}
+}
+
+unittest {
+	CalendarRuleView view;
+	auto rule = new CalendarRule;
+
+	view.value = rule;
+
+	assert(view.value == rule);
+}
+
+unittest {
+	alias ArrayRuleView = ArrayView!CalendarRuleView;
+
+	auto view = new ArrayRuleView;
+	CalendarRule[] list;
+	list ~= new CalendarRule;
+
+	view.value = list;
+
+	assert(view.value.length == 1);
 }

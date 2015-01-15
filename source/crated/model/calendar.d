@@ -7,6 +7,8 @@
 module crated.model.calendar;
 
 import crated.model.base;
+import crated.view.base;
+import crated.view.datetime;
 
 import std.exception;
 import std.datetime;
@@ -16,7 +18,8 @@ import std.conv;
 enum EventType {
 	Undefined,
 	Basic,
-	AutoPostpone
+	AutoPostpone,
+	Repetable
 };
 
 abstract class CalendarEvent {
@@ -52,6 +55,12 @@ abstract class CalendarEvent {
 
 	@property 
 	Duration postpone() const;
+
+	@property @CalendarRulePrototype
+	CalendarRule[] rules() const;
+
+	@property 
+	void rules(CalendarRule[] someRules);
 }
 
 /**
@@ -68,7 +77,6 @@ template CalendarEventPrototype(T : CalendarEvent) {
 		///Event end date
 		protected SysTime _endDate;
 
-
 		this() {
 			_startDate = Clock.currTime;
 			_startDate.fracSec = FracSec.zero;
@@ -76,7 +84,8 @@ template CalendarEventPrototype(T : CalendarEvent) {
 		}
 
 		@property override {
-			@("field")
+
+			@("field") 
 			const(EventType) itemType() { return EventType.Basic; }
 
 			void startDate(const SysTime startDate) { _startDate = startDate; }
@@ -103,7 +112,13 @@ template CalendarEventPrototype(T : CalendarEvent) {
 			Duration postpone() const { return dur!"minutes"(0); }
 			
 			///ditto
-			void postpone(const Duration customPostpone) {  throw new CratedModelException("Base Event does not support postpone getter");  }
+			void postpone(const Duration customPostpone) {  throw new CratedModelException("Base Event does not support postpone setter");  }
+
+			@property 
+			CalendarRule[] rules() const { return null; }
+			
+			@property 
+			void rules(CalendarRule[] someRules) { throw new CratedModelException("Base Event does not support rules setter");  };
 		}
 
 		///Invariant to check the event consistency
@@ -229,6 +244,12 @@ template CalendarAutoPostponeEventPrototype(T : CalendarEvent) {
 			
 			///ditto
 			void boundary(const Duration customBoundary) { _boundary = customBoundary; }
+
+			@property 
+			CalendarRule[] rules() const { return null; }
+			
+			@property 
+			void rules(CalendarRule[] someRules) { throw new CratedModelException("Base Event does not support rules setter");  };
 		}
 		
 		protected {
@@ -296,39 +317,39 @@ unittest {
  * Rule that helps to define repetable events.
  */
 class CalendarRulePrototype {
-	bool weekStartOnMonday;
-
 	@("field")
 	bool monday;
-
+	
 	@("field")
 	bool tuesday;
-
+	
 	@("field")
 	bool wednesday;
-
+	
 	@("field")
 	bool thursday;
-
+	
 	@("field")
 	bool friday;
-
+	
 	@("field")
 	bool saturday;
-
+	
 	@("field")
 	bool sunday;
-
+	
 	@("field")
 	TimeOfDay startTime = TimeOfDay(0,0,0);
-
+	
 	@("field")
 	TimeOfDay endTime = TimeOfDay(1,0,0);
-
+	
 	@("field")
 	int repeatAfterWeeks;
+}
 
-
+class CalendarRule : CalendarRulePrototype {
+	bool weekStartOnMonday;
 
 	/**
 	 * Check if a date satisfy a rule
@@ -441,7 +462,7 @@ class CalendarRulePrototype {
 }
 
 unittest {
-	auto testProgram = new CalendarRulePrototype;
+	auto testProgram = new CalendarRule;
 		
 	bool failed = false;
 	
@@ -455,7 +476,7 @@ unittest {
 }
 
 unittest {
-	auto testProgram = new CalendarRulePrototype;
+	auto testProgram = new CalendarRule;
 	
 	testProgram.startTime = TimeOfDay(1,0,0);
 	testProgram.endTime = TimeOfDay(0,0,0);
@@ -476,15 +497,15 @@ unittest {
 	SysTime end = SysTime(DateTime(2014,1,2,0,0,0));
 	
 	//range check
-	assert(!CalendarRulePrototype.isInsideDateInterval(start, end, start - dur!"seconds"(1)));
-	assert( CalendarRulePrototype.isInsideDateInterval(start, end, start) );
-	assert( CalendarRulePrototype.isInsideDateInterval(start, end, end - dur!"seconds"(1)));
-	assert(!CalendarRulePrototype.isInsideDateInterval(start, end, end));
+	assert(!CalendarRule.isInsideDateInterval(start, end, start - dur!"seconds"(1)));
+	assert( CalendarRule.isInsideDateInterval(start, end, start) );
+	assert( CalendarRule.isInsideDateInterval(start, end, end - dur!"seconds"(1)));
+	assert(!CalendarRule.isInsideDateInterval(start, end, end));
 }
 
 unittest {
 	//check rule colisons
-	auto testProgram = new CalendarRulePrototype;
+	auto testProgram = new CalendarRule;
 	
 	testProgram.startTime = TimeOfDay(10,0,0);
 	testProgram.endTime = TimeOfDay(11,0,0);
@@ -498,7 +519,7 @@ unittest {
 
 unittest {
 	//check rule colisons
-	auto testProgram = new CalendarRulePrototype;
+	auto testProgram = new CalendarRule;
 	
 	testProgram.startTime = TimeOfDay(10,0,0);
 	testProgram.endTime = TimeOfDay(11,0,0);
@@ -515,7 +536,7 @@ unittest {
 
 unittest {
 	//check interval generation
-	auto testProgram = new CalendarRulePrototype;
+	auto testProgram = new CalendarRule;
 	testProgram.startTime = TimeOfDay(10,0,0);
 	testProgram.endTime = TimeOfDay(11,0,0);
 	testProgram.repeatAfterWeeks = 2;
@@ -531,7 +552,6 @@ unittest {
 	assert(res[1] == Interval!SysTime(SysTime(DateTime(2014,2,10,10,0,0)), SysTime(DateTime(2014,2,10,11,0,0))));
 }
 
-
 /**
  * This represents a repetable event.
  */
@@ -545,8 +565,25 @@ template CalendarRepetableEventPrototype(T : CalendarEvent) {
 
 	class CalendarRepetableEventPrototypeImplementation : CalendarEventPrototype!(T) {
 
-		@("field") CalendarRulePrototype[] rules;
+		CalendarRule[] _rules;
+
+		@("field")
+		override const(EventType) itemType() { return EventType.Repetable; };
+
+		@property @("field") @CalendarRuleView
+		override CalendarRule[] rules() const { 
+			CalendarRule[] r;
+
+			foreach(rule; _rules) {
+				r ~= cast(CalendarRule) rule;
+			}
+
+			return r; 
+		}
 		
+		@property 
+		override void rules(CalendarRule[] someRules) { _rules = someRules;  };
+
 		/**
 		 * Check if there is an event on a particular date and time
 		 */
@@ -587,6 +624,14 @@ template CalendarRepetableEventPrototype(T : CalendarEvent) {
 unittest {
 	//test outside events
 	auto testEvent = new CalendarRepetableEventPrototype!CalendarEvent;
+
+	assert(testEvent.itemType == EventType.Repetable);
+	assert((cast(CalendarEvent) testEvent).itemType == EventType.Repetable);
+}
+
+unittest {
+	//test outside events
+	auto testEvent = new CalendarRepetableEventPrototype!CalendarEvent;
 	testEvent.startDate = SysTime(DateTime(2014,1,1));
 	testEvent.endDate = SysTime(DateTime(2015,1,1));
 	
@@ -594,26 +639,26 @@ unittest {
 	assert(!testEvent.isEventOn( SysTime(DateTime(2015,1,1)) ));
 }
 
-
 unittest {
 	//test outside events
 	auto testEvent = new CalendarRepetableEventPrototype!CalendarEvent;
 	testEvent.startDate = SysTime(DateTime(2014,1,1));
 	testEvent.endDate = SysTime(DateTime(2015,1,1));
 
-	CalendarRulePrototype rule1 = new CalendarRulePrototype;
+	CalendarRule rule1 = new CalendarRule;
 	rule1.monday = true;
 	rule1.startTime = TimeOfDay(10,0,0);
 	rule1.endTime = TimeOfDay(11,0,0);
 	rule1.repeatAfterWeeks = 2;
 
-	CalendarRulePrototype rule2 = new CalendarRulePrototype;
+	CalendarRule rule2 = new CalendarRule;
 	rule2.tuesday = true;
 	rule2.startTime = TimeOfDay(12,0,0);
 	rule2.endTime = TimeOfDay(14,0,0);
 	rule2.repeatAfterWeeks = 2;
 
-	testEvent.rules ~= [rule1, rule2];
+	auto rules = [rule1, rule2];
+	testEvent.rules = rules;
 
 	//test the first rule
 	assert(!testEvent.isEventOn( SysTime(DateTime(2014,1,20, 10,0,0)) - dur!"seconds"(1)));

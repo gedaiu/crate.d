@@ -11,29 +11,31 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug</OutputPath>
+    <OutputPath>.</OutputPath>
     <ObjectsDirectory>obj/Debug</ObjectsDirectory>
     <LinkinThirdPartyLibraries>false</LinkinThirdPartyLibraries>
     <UnittestMode>false</UnittestMode>
-    <OutputName>CalendarExample</OutputName>
+    <OutputName>webcalendar</OutputName>
     <Target>Executable</Target>
-    <Externalconsole>true</Externalconsole>
     <DebugLevel>0</DebugLevel>
     <CustomCommands>
       <CustomCommands>
-        <Command type="Build" command="dub clean ; dub" externalConsole="True" />
+        <Command type="BeforeBuild" command="/usr/local/bin/dub clean" workingdir="${ProjectDir}" />
+        <Command type="Build" command="/usr/local/bin/dub" workingdir="${ProjectDir}" externalConsole="True" pauseExternalConsole="True" />
       </CustomCommands>
     </CustomCommands>
+    <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <OutputPath>bin\Release</OutputPath>
     <ObjectsDirectory>obj/Release</ObjectsDirectory>
     <LinkinThirdPartyLibraries>false</LinkinThirdPartyLibraries>
     <UnittestMode>false</UnittestMode>
-    <OutputName>CalendarExample</OutputName>
+    <OutputName>webcalendar</OutputName>
     <Target>Executable</Target>
     <Externalconsole>true</Externalconsole>
     <DebugLevel>0</DebugLevel>
+    <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Unittest|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -41,10 +43,11 @@
     <ObjectsDirectory>obj/Unittest</ObjectsDirectory>
     <LinkinThirdPartyLibraries>false</LinkinThirdPartyLibraries>
     <UnittestMode>true</UnittestMode>
-    <OutputName>CalendarExample</OutputName>
+    <OutputName>webcalendar</OutputName>
     <Target>Executable</Target>
     <Externalconsole>true</Externalconsole>
     <DebugLevel>0</DebugLevel>
+    <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <ItemGroup>
     <None Include="dub.json" />

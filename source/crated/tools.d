@@ -157,18 +157,44 @@ template GetAttributes(string name, Prototype) {
 	}
 }
 
-template FieldType(alias F) {
-
-	static if(is( FunctionTypeOf!F == function )) { 
+template OriginalFieldType(alias F) {
+	static if(is( FunctionTypeOf!F == function )) 
+	{ 
 		
-		static if( is( ReturnType!(F) == void ) && arity!(F) == 1 ) {
-			alias FieldType = Unqual!(ParameterTypeTuple!F);
-		} else {
-			alias FieldType = Unqual!(ReturnType!F);
+		static if( is( ReturnType!(F) == void ) && arity!(F) == 1 ) 
+		{
+			alias OriginalFieldType = Unqual!(ParameterTypeTuple!F);
+		} 
+		else 
+		{
+			alias OriginalFieldType = Unqual!(ReturnType!F);
 		}
 		
 	} else {
-		alias FieldType = Unqual!(typeof(F));
+		alias OriginalFieldType = typeof(F);
+	}
+}
+
+template ArrayType(T : T[]) {
+	alias ArrayType = T;
+}
+
+template FieldType(alias F) {
+
+	alias FT = OriginalFieldType!F;
+
+	static if(!isSomeString!(FT) && isArray!(FT)) 
+	{
+
+		alias FieldType = ArrayType!(FT);
+	} 
+	else static if(isAssociativeArray!(FT)) 
+	{
+		alias FieldType = ValueType!(FT);
+	} 
+	else 
+	{
+		alias FieldType = Unqual!(FT);
 	}
 }
 
@@ -231,10 +257,24 @@ template getItemFields(alias ATTR, Prototype) {
 		static if(isConst.check)        return "isConst";
 		else static if(isEnum.check && isTypeTuple!(__traits(getMember, Prototype, name))) return "isEnumListDeclaration"; 
 		else static if(isEnum.check)	return "isEnum"; 
+		else static if(!isSomeString!(typeof(ItemProperty!(Prototype, name))) && isArray!(typeof(ItemProperty!(Prototype, name)))) return "isArray";
+		else static if(isAssociativeArray!(typeof(ItemProperty!(Prototype, name)))) return "isAssociativeArray";
 		else static if(__traits(isIntegral, ItemProperty!(Prototype, name))) return "isIntegral";
 		else static if(__traits(isFloating, ItemProperty!(Prototype, name))) return "isFloating";
 		else static if( is(ItemProperty!(Prototype, name) == enum) )  return "isEnum";
 		else return "";
+	}
+
+	template strOf(T) {
+		enum str = "object:" ~ T.stringof;
+
+		alias strOf = str;
+	}
+
+	template strOf(alias T) {
+		enum str = T;
+		
+		alias strOf = T;
 	}
 
 	/** 
@@ -251,7 +291,8 @@ template getItemFields(alias ATTR, Prototype) {
 
 			static if(ItemProperty!(Prototype, FIELDS[0]).length == 1) {
 				static if(staticIndexOf!(ATTR, GetAttributes!(FIELDS[0], Prototype)) >= 0) {
-					alias ItemFields = TypeTuple!([FIELDS[0]: [ "attributes": [ GetAttributes!(FIELDS[0], Prototype) ], "type": [ FieldType!(ItemProperty!(Prototype, FIELDS[0])).stringof ], "description": [ Description!(FIELDS[0]) ] ] ]);	
+
+					alias ItemFields = TypeTuple!([FIELDS[0]: [ "attributes": [ staticMap!(strOf, GetAttributes!(FIELDS[0], Prototype)) ], "type": [ FieldType!(ItemProperty!(Prototype, FIELDS[0])).stringof ], "description": [ Description!(FIELDS[0]) ] ] ]);	
 				} else {
 					alias ItemFields = TypeTuple!();
 				}
@@ -357,7 +398,23 @@ string[string] toDict(T)(T data) {
 	static if(is(T == Json) || is(T == Bson)) {
 
 		foreach(string key, T val; data) {
-			dict[key] = val.to!string;
+
+			if(data[key].type == T.Type.array) { 
+
+				foreach(i; 0..data[key].length) {
+					string[string] item = toDict(val[i]);
+
+					string itemKey = key ~ "[" ~ i.to!string ~ "]";
+
+					foreach(itemSubkey, value; item) {
+						dict[ itemKey ~ "["~itemSubkey~"]" ] = value;
+					}
+				}
+			} else if(data[key].type == T.Type.object) {
+				assert(false, "not implemented");
+			} else {
+				dict[key] = val.to!string;
+			}
 		}
 
 		return dict;

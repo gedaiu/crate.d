@@ -20,9 +20,8 @@
     <DebugLevel>0</DebugLevel>
     <CustomCommands>
       <CustomCommands>
-        <Command type="Build" command="dub test" workingdir="${ProjectDir}" externalConsole="True" />
         <Command type="Clean" command="dub clean" workingdir="${ProjectDir}" externalConsole="True" />
-        <Command type="Execute" command=".dub/build/application-debug-posix.osx-x86_64-dmd-AD37A1B0CA4AE81292FC4DB52F2A12B1/crate.d" workingdir="${ProjectDir}" />
+        <Command type="Build" command="dub clean;dub test" externalConsole="True" />
       </CustomCommands>
     </CustomCommands>
     <ConsolePause>false</ConsolePause>
@@ -79,6 +78,10 @@
     <None Include="assets\datetime.js" />
     <None Include="source\crated\view\tpl\adminTable.emd" />
     <None Include="source\crated\view\tpl\adminForm.emd" />
+    <None Include="source\crated\view\tpl\adminRuleView.emd" />
+    <None Include="assets\arrayViewAsForm.css" />
+    <None Include="assets\arrayViewAsForm.js" />
+    <None Include="assets\calendarRuleViewAsForm.css" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="source\crated\" />

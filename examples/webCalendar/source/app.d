@@ -17,10 +17,59 @@ abstract class Event : CalendarEvent {
 	this() {}
 }
 
-alias BaseEventDescriptor = ModelDescriptor!(Event, EventType.Basic, EventType.AutoPostpone, CalendarEventPrototype!Event, CalendarAutoPostponeEventPrototype!Event);
+alias BaseEventDescriptor = ModelDescriptor!(Event, EventType.Basic, EventType.AutoPostpone, EventType.Repetable, 
+													CalendarEventPrototype!Event, CalendarAutoPostponeEventPrototype!Event, CalendarRepetableEventPrototype!Event);
 
 class EventDescriptor : BaseEventDescriptor {
-	
+
+	static TimeOfDay getTimeOfDay(string data) {
+		int h = 0;
+		int m = 0;
+		int s = 0;
+
+		auto splitedData = data.split(":");
+
+		if(splitedData.length > 1) h = splitedData[0].to!int;
+		if(splitedData.length > 2) m = splitedData[1].to!int;
+		if(splitedData.length > 3) s = splitedData[2].to!int;
+
+		return TimeOfDay(h, m, s);
+	}
+
+	static CalendarRule CreateRule(string[string] data) {
+		CalendarRule rule =  new CalendarRule;
+
+		if("monday" in data && ( data["monday"] == "true" ) ) 
+			rule.monday = true;
+
+		if("tuesday" in data && ( data["tuesday"] == "true" ) ) 
+			rule.tuesday = true;
+
+		if("wednesday" in data && ( data["wednesday"] == "true" ) ) 
+			rule.wednesday = true;
+
+		if("thursday" in data && ( data["thursday"] == "true" ) ) 
+				rule.thursday = true;
+
+		if("friday" in data && ( data["friday"] == "true" ) ) 
+			rule.friday = true;
+
+		if("saturday" in data && ( data["saturday"] == "true" ) ) 
+			rule.saturday = true;
+
+		if("sunday" in data && ( data["sunday"] == "true" ) ) 
+			rule.sunday = true;
+
+		if("repeatAfterWeeks" in data && data["repeatAfterWeeks"] != "") {
+			rule.repeatAfterWeeks = data["repeatAfterWeeks"].to!int;
+		}
+
+		if("startTime" in data) rule.startTime = getTimeOfDay(data["startTime"]); 
+		if("endTime" in data) rule.endTime = getTimeOfDay(data["endTime"]);
+
+		return rule;
+	}
+
 	static Event CreateItem(string type, string[string] data) {
 		auto item = BaseEventDescriptor.CreateItem(type, data);
 
@@ -28,7 +77,7 @@ class EventDescriptor : BaseEventDescriptor {
 		if("name" in data) item.name = data["name"];
 		if("startDate" in data) item.startDate = SysTime.fromISOExtString(data["startDate"]);
 
-		if(type == "Basic") {
+		if(type == "Basic" || type == "Repetable") {
 			if("endDate" in data) item.endDate = SysTime.fromISOExtString(data["endDate"]);
 		}
 
@@ -38,13 +87,21 @@ class EventDescriptor : BaseEventDescriptor {
 			if("boundary" in data) item.boundary = dur!"hnsecs"(data["boundary"].to!long);
 		}
 
+		if(type == "Repetable") {
+			auto stringRules = data.extractAssocArray!"rules";
+
+			CalendarRule[] rules;
+			foreach(i; 0..stringRules.length)
+				rules ~= CreateRule(stringRules[i]);
+
+			item.rules = rules;
+		}
+
 		return item;
 	}
 }
 
-
 alias CalendarModel = MongoModel!(EventDescriptor, "test.calendar", "Calendar");
-
 alias DataManagerController = DataManager!("/admin", CalendarModel);
 
 /**
