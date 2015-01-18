@@ -4,7 +4,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{683475DD-F833-4E0C-94A5-92A616126E08}</ProjectGuid>
-    <Compiler>DMD2</Compiler>
+    <Compiler>DMD</Compiler>
     <PreferOneStepBuild>true</PreferOneStepBuild>
     <UseDefaultCompiler>true</UseDefaultCompiler>
     <IncrementalLinking>true</IncrementalLinking>
@@ -20,9 +20,8 @@
     <DebugLevel>0</DebugLevel>
     <CustomCommands>
       <CustomCommands>
-        <Command type="Build" command="dub test" workingdir="${ProjectDir}" externalConsole="True" />
         <Command type="Clean" command="dub clean" workingdir="${ProjectDir}" externalConsole="True" />
-        <Command type="Execute" command=".dub/build/application-debug-posix.osx-x86_64-dmd-AD37A1B0CA4AE81292FC4DB52F2A12B1/crate.d" workingdir="${ProjectDir}" />
+        <Command type="Build" command="dub clean;dub test" externalConsole="True" />
       </CustomCommands>
     </CustomCommands>
     <ConsolePause>false</ConsolePause>
@@ -50,7 +49,7 @@
     <CustomCommands>
       <CustomCommands>
         <Command type="Execute" command=".dub/build/__test__library__-unittest-posix.osx-x86_64-dmd-5018E9D5576260EAFC1DAFDAA16EB9C5/__test__library__" workingdir="${ProjectDir}" />
-        <Command type="Build" command="./test.sh" workingdir="${ProjectDir}" externalConsole="True" />
+        <Command type="Build" command="./test.sh dmd" workingdir="${ProjectDir}" externalConsole="True" />
       </CustomCommands>
     </CustomCommands>
     <ConsolePause>false</ConsolePause>
@@ -66,6 +65,8 @@
     <Compile Include="source\crated\settings.d" />
     <Compile Include="source\crated\view\adminmenu.d" />
     <Compile Include="source\crated\tools.d" />
+    <Compile Include="source\crated\model\calendar.d" />
+    <Compile Include="source\crated\view\datetime.d" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dub.json" />
@@ -74,9 +75,19 @@
     <None Include="test.sh" />
     <None Include="assets\adminmenu.css" />
     <None Include="assets\adminmenu.js" />
+    <None Include="assets\datetime.js" />
+    <None Include="source\crated\view\tpl\adminTable.emd" />
+    <None Include="source\crated\view\tpl\adminForm.emd" />
+    <None Include="source\crated\view\tpl\adminRuleView.emd" />
+    <None Include="assets\arrayViewAsForm.js" />
+    <None Include="assets\calendarRuleViewAsForm.css" />
+    <None Include="assets\associativeArrayViewAsForm.js" />
+    <None Include="assets\arrayViewForm.css" />
+    <None Include="assets\arrayForm.js" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="source\crated\" />
     <Folder Include="assets\" />
+    <Folder Include="source\crated\view\tpl\" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,49 @@
+﻿--><div class="ruleViewAsForm"><h4>Days</h4>
+	<div class="row">
+		<div class="col-xs-6 col-sm-3">
+			<label><input value="true" name="<%= var.name %>[monday]" type="checkbox" <%= var.monday %> /> Monday</label>	
+		</div>
+		<div class="col-xs-6 col-sm-3">
+			<label><input value="true" name="<%= var.name %>[tuesday]" type="checkbox" <%= var.tuesday %> /> Tuesday</label>
+		</div>
+		<div class="col-xs-6 col-sm-3">
+			<label><input value="true" name="<%= var.name %>[wednesday]" type="checkbox" <%= var.wednesday %> /> Wednesday</label>	
+		</div>
+		<div class="col-xs-6 col-sm-3">
+			<label><input value="true" name="<%= var.name %>[thursday]" type="checkbox" <%= var.thursday %> /> Thursday</label>	
+		</div>
+		<div class="col-xs-6 col-sm-3">
+			<label><input value="true" name="<%= var.name %>[friday]" type="checkbox" <%= var.friday %> /> Friday</label>	
+		</div>
+		<div class="col-xs-6 col-sm-3">
+			<label><input value="true" name="<%= var.name %>[saturday]" type="checkbox" <%= var.saturday %> /> Saturday</label>	
+		</div>
+		<div class="col-xs-6 col-sm-3">
+			<label><input value="true" name="<%= var.name %>[sunday]" type="checkbox" <%= var.sunday %> /> Sunday</label>	
+		</div>
+	</div>
+
+	<h4>Hours</h4>
+
+	<div class="row">
+		<div class="col-xs-12 col-sm-6">
+
+			<div class="input-group">
+		      <div class="input-group-addon">Starting with </div>
+		      <input type="time" name="<%= var.name %>[startTime]" value="<%= var.startTime %>" class="form-control"/>
+
+		      <div class="input-group-addon"> until </div>
+		      <input type="time" name="<%= var.name %>[endTime]" value="<%= var.endTime %>" class="form-control"/>
+		    </div>
+
+		</div>
+
+		<div class="col-xs-12 col-sm-6">
+			<div class="input-group">
+		      <div class="input-group-addon">and repeat after</div>
+		      <input type="number" name="<%= var.name %>[repeatAfterWeeks]"  value="<%= var.repeatAfterWeeks %>" class="form-control"/>
+		      <div class="input-group-addon">weeks</div>
+		    </div>
+		</div>
+	</div>
+</div>

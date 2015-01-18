@@ -7,6 +7,11 @@
 module crated.settings;
 
 
-enum BootstrapCssCDN = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css";
-enum BootstrapJsCDN = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js";
-enum JQueryCDN = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js";
+string BootstrapCssCDN = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css";
+string BootstrapJsCDN = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js";
+string JQueryCDN = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js";
+
+
+///date time settings
+string defaultTZ = "Europe/Bucharest";
+string dateFormat = "d/m/Y G:i:s";

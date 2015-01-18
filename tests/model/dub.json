@@ -1,0 +1,14 @@
+{
+	"name": "model tests",
+	"description": "crate.d test models",
+	"copyright": "Copyright © 2014, Szabo Bogdan",
+
+	"authors": ["Szabo Bogdan"],
+
+	"dependencies": {
+		"crate-d": {"version": "~master", "path": "../../"}
+	},
+
+	"versions": ["VibeCustomMain", "UseVibe"],
+
+}

@@ -1,0 +1,47 @@
+﻿<div class="container">
+	<div class="row">
+		<div class="col-xs-12">
+
+			<% if(var.isEmpty == true) { %>
+				<h2>This is an empty model.</h2>
+				<p>There are no items to show. To add a new item click the button below.</p>
+				<br/>
+			<% } else { %>
+
+				<table class='table table-striped'>
+	               <thead>
+	               		<tr>
+	               			<%= var.header %>
+	               			<th></th>
+	               		</tr>
+	               	</thead>
+
+	               	<tbody>
+	               		<%= var.lines %>
+	               	</tbody>
+				</table>
+			<% } %>
+
+			<% if(var.isGroup == true) { %>
+
+				<div class="btn-group">
+					
+					<%= var.button %>
+
+					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+						<span class="caret"></span>
+						<span class="sr-only">Add as</span>
+					</button>
+
+					<ul class="dropdown-menu" role="menu">
+						<%= var.buttonList %>
+					</ul>
+				</div>
+			<% } else { %>
+
+			<%= var.button %>
+
+			<% } %>
+			</div>
+	</div>
+</div>

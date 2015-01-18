@@ -5,18 +5,18 @@
 	"license": "MIT",
 	"authors": ["Szabo Bogdan"],
 	"dependencies": {
-		"vibe-d": ">=0.7.21-rc.2"
+		"temple": ">=0.7.3",
+		"vibe-d": ">=0.7.21"
 	},
 
 	"subPackages": [
 		{
 			"name": "model",
 			"targetType": "library",
-			"sourcePaths": ["source/model"],
-			"importPaths": ["source/model"]
+			"sourcePaths": ["source/crated/model"],
+			"importPaths": ["source/crated/model"]
 		}
 	],
 
-	"dflags": ["-J./source"],
-	"versions": ["VibeCustomMain"]
+	"stringImportPaths": ["source/crated/view/tpl"]
 }
