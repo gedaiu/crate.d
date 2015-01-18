@@ -9,7 +9,7 @@ import std.stdio;
 /**
  * A book item prototype
  */
-class BookPrototype {
+class Book {
 	
 	enum BookCategory : string {
 		Fiction = "Fiction",
@@ -35,13 +35,37 @@ class BookPrototype {
 	string color = "#fff";
 	
 	@("field") 
-	bool inStock = true;
+	bool inStock;
+
+	@("field")
+	string[string] metadata;
+
+	this() {};
+}
+
+
+class BookDescriptor : ModelDescriptor!Book {
+	static Book CreateItem(string type, string[string] data) {
+		auto myBook = new Book;
+
+		if("_id" in data) myBook._id = data["_id"];
+		if("name" in data) myBook.name = data["name"];
+		if("author" in data) myBook.author = data["author"];
+		if("category" in data) myBook.category = data["category"].to!(Book.BookCategory);
+		if("price" in data) myBook.price = data["price"].to!double;
+		if("color" in data) myBook.color = data["color"];
+		if("inStock" in data) myBook.inStock = data["inStock"].to!bool;
+
+		myBook.metadata = data.extractArray!("metadata", typeof(myBook.metadata));
+
+		return myBook;
+	}
 }
 
 /**
  * Other products prototype
  */
-class OtherProductsPrototype {
+class OtherProducts {
 	
 	enum OtherProductsCategory : string {
 		Tea = "Tea",
@@ -62,8 +86,36 @@ class OtherProductsPrototype {
 	double price = 100;
 
 	@("field") 
-	bool inStock = true;
+	bool inStock;
+	
+	@("field")
+	string[][string] otherdata;
+
+
+	this() {}
 }
+
+class OtherProductsDescriptor : ModelDescriptor!OtherProducts {
+	static OtherProducts CreateItem(string type, string[string] data) {
+		auto myOther = new OtherProducts;
+		
+		if("_id" in data) myOther._id = data["_id"];
+		if("name" in data) myOther.name = data["name"];
+		if("category" in data) myOther.category = data["category"].to!(OtherProducts.OtherProductsCategory);
+		if("price" in data) myOther.price = data["price"].to!double;
+		if("inStock" in data) myOther.inStock = data["inStock"].to!bool;
+
+		myOther.otherdata = data.extractArray!("otherdata", typeof(myOther.otherdata));
+
+		return myOther;
+	}
+}
+
+alias BookModel = MongoModel!(BookDescriptor, "test.books", "Books");
+alias OtherProductsModel = MongoModel!(OtherProductsDescriptor, "test.otherProducts", "Other products");
+
+///Create the controller
+alias DataManagerController = DataManager!("/admin", BookModel, OtherProductsModel);
 
 /**
  *  Vibe.d init
@@ -72,12 +124,6 @@ shared static this()
 {	
 	//setup the database connection string
 	crated.model.mongo.dbAddress = "127.0.0.1";
-
-	//init the data	
-	alias BookModel = MongoModel!(BookPrototype, "test.books", "Books");
-	alias OtherProductsModel = MongoModel!(OtherProductsPrototype, "test.otherProducts", "Other products");
-
-	alias DataManagerController = DataManager!("/admin", BookModel, OtherProductsModel);
 
 	auto dataManager = new Controller!DataManagerController;
 

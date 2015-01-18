@@ -1,0 +1,44 @@
+﻿<div class="container">
+	<div class="row">
+		<div class="col-xs-12">
+			
+			<form action="<%= var.action %>" method="post">
+
+			<%= var.fields %>
+
+				<% if(var.isGroup == true) { %>
+
+				<div class="btn-group">
+					
+					<input class='btn btn-default btn-success' value="<%= var.submitText %>" type="submit"/>
+
+					<button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+						<span class="caret"></span>
+						<span class="sr-only">Save as</span>
+					</button>
+
+					 <ul class="dropdown-menu" role="menu">
+					    <li>
+							<a href="#">
+								<label for="saveAsNew">
+									<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> as new	
+								</label>
+							</a>
+							<input style="display: none" id="saveAsNew" name="__save" value="new" type="submit"/>
+						</li>
+
+						<%= var.buttonList %>
+
+					</ul>
+				</div>
+
+			<% } else { %>
+
+				<input class='btn btn-default btn-success' value="<%= var.submitText %>" type="submit"/>
+
+			<% } %>
+
+			</form>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,11 @@
+{
+	"name": "webcalendar",
+	"description": "A crate.d calendar example",
+	"copyright": "Copyright © 2014, Szabo Bogdan",
+	"authors": ["Szabo Bogdan"],
+	"dependencies": {
+		"crate-d": {"version": ">=0.1.0", "path": "../../"}
+	},
+
+	"versions": ["VibeDefaultMain"]
+}

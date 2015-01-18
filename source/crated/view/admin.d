@@ -1,4 +1,5 @@
-﻿/**
+﻿
+/**
  * Views to manage data
  * 
  * Authors: Szabo Bogdan <szabobogdan@yahoo.com>
@@ -9,283 +10,244 @@
 module crated.view.admin;
 
 import std.conv;
+import std.traits;
+import std.stdio;//todo: remove this
+
 import crated.model.base;
+import crated.view.datetime;
+
+import temple;
+
 public import crated.view.base;
 
-class AdminView : BaseView {
+template AdminView(Model) {
+	class AdminViewTpl : BaseView {
 
-	immutable string baseUrl;
+		alias Descriptor = Model.Descriptor;
 
-	this(const string baseUrl, BaseView parent) {
-		super(parent);
-		this.baseUrl = baseUrl;
-	}
-
-	/**
-	 * 
-	 */
-	private string editFormFieldByAttribute(string field, PrototypedItem)(PrototypedItem item, ulong index) {
-		bool required;
-		if(PrototypedItem.fieldHas(field, "required")) required = true;
-
-		string fieldType = PrototypedItem.valueOf(field, "type");
-		string cls;
+		immutable string baseUrl;
 		
-		if(index == 1) cls ~= "input-lg";
+		this(const string baseUrl, BaseView parent) {
+			super(parent);
+			this.baseUrl = baseUrl;
+		}
 
-		switch(fieldType) {
-			case "color": case "date": case "datetime": case "datetime-local": case "email": case "month":
-			case "number": case "range": case "tel": case "time": case "url": case "week":
-				if(required) {				
-					return "<div class='input-group'>
-						               <input class='"~cls~" form-control' id='formElement"~index.to!string~"' type='" ~ fieldType ~ "' name='" ~ field ~ "' value='" ~ item.fieldAsString!field ~ "' required>
-									   <span class='input-group-addon'>
-                                             <span class='glyphicon glyphicon-fire' aria-hidden='true'></span>
-                                       </span>
-						        </div>";
-					
+		/**
+		 * 
+		 */
+		string asForm(string mode, PrototypedItem)(PrototypedItem item) {
+			string a;
+
+			useBootstrapCssCDN;
+
+			BaseView parentContainer = parent;
+
+			/**
+			 * 
+			 */
+			string editFormField(string itemType, string field)(ulong index) {
+				string a;
+
+				static if(field == Descriptor.primaryFieldName) { 
+					a = "<input type='hidden' name='" ~ field ~ "' value='" ~ __traits(getMember, item, field).to!string ~ "' />";
+				} else static if(field == "itemType") {
+					a = "<input type='hidden' name='itemType' value='" ~ __traits(getMember, item, field).to!string ~ "' />";
 				} else {
-					return "<input class='"~cls~" form-control' id='formElement"~index.to!string~"' type='" ~ fieldType ~ "' name='" ~ field ~ "' value='" ~ item.fieldAsString!field ~ "'/>";
 
+					if(Descriptor.HasField(itemType, field) && Descriptor.GetDescription(itemType, field) != "isConst") {
+						auto inputField = Descriptor.GetView!(itemType, field);
+						inputField.container = parentContainer;
+						inputField.value = __traits(getMember, item, field);
+						inputField.name = field;
+						string cls;
+
+						if(index == 1) cls = "class='text-primary'";
+
+						a ~= `<div class="form-group">`;
+						a ~= "<h3><label "~cls~" for='formElement"~index.to!string~"'>" ~ field ~ "</label></h3>";
+
+						bool required;
+						if(Descriptor.HasAttribute(itemType, field, "required")) required = true;
+
+						a ~= inputField.asForm(required) ~ `</div>`;
+					}
 				}
 
+				return a;
+			}
 
-			default:
+			string editFormFields(string itemType, string[] fields)(ulong index = 0) {
+
+				static if(fields.length > 1) {
+					return editFormFields!(itemType, fields[0..$/2])(index) ~ editFormFields!(itemType, fields[$/2..$])(index+fields.length/2);
+				} else {
+					return editFormField!(itemType, fields[0])(index);
+				}
 
 				return "";
-		}
-	}
+			}
 
-	/**
-	 * 
-	 */
-	string editFormFieldByType(string[] field, PrototypedItem)(PrototypedItem item, ulong index) {
-		bool required;
-		string requiredIcon;
+			if(parent) {
+				static if(mode == "edit") parent.title = "Edit " ~ Model.name;
+				static if(mode == "add") parent.title = "Add " ~ Model.name;
+			}
 
-		if(PrototypedItem.fieldHas(field[0], "required")) required = true;
-	
-		string value = item.fieldAsString!(field[0]);
-		string cls;
+			auto tpl = compile_temple_file!"adminForm.emd";
 
-		if(index == 1) cls ~= "input-lg";
+			auto context = new TempleContext();
 
-		switch(field[1]) {
-			case "bool":
-				return " <input type='checkbox' class='"~cls~"' id='formElement"~index.to!string~"' value='true' name='" ~ field[0] ~ "' " ~ (value == "true" ? `checked`:``) ~ `>`;
+			static if(mode == "edit")
+				context.action = baseUrl~`/save/` ~ Descriptor.PrimaryField(item);
 
-			case "byte": case "short": case "int": case "long": case "cent": case "ubyte": case "ushort":
-			case "uint": case "ulong": case "ucent":
-				if(required) {				
-					return "<div class='input-group'>
-						               <input class='"~cls~" form-control "~cls~"' id='formElement"~index.to!string~"' type='number' name='" ~ field[0] ~ "' value='" ~ value ~ "' "~field[0]~" required>
-										     <span class='input-group-addon'>
-                                             <span class='glyphicon glyphicon-fire' aria-hidden='true'></span>
-                                       </span>
-						        </div>";
-					
-				} else {
-					return "<input class='"~cls~" form-control "~cls~"' id='formElement"~index.to!string~"' type='number' name='" ~ field[0] ~ "' value='" ~ value ~ "' "~field[0]~">";
+			static if(mode == "add") 
+				context.action = baseUrl~`/save/new`;
 
-				}
+			auto type = Descriptor.Type(item);
 
+			mixin(Descriptor.GenerateItemConditions!`context.fields = editFormFields!(SType, Descriptor.fields);`);
 
-			case "float": case "double": case "real":
-				if(required) {				
-					return "<div class='input-group'>
-						               <input class='"~cls~" form-control "~cls~"' id='formElement"~index.to!string~"' step='0.01' type='number' name='" ~ field[0] ~ "' value='" ~ value ~ "' required>
-						               <span class='input-group-addon'>
-                                             <span class='glyphicon glyphicon-fire' aria-hidden='true'></span>
-                                       </span>
-						        </div>";
-					
-				} else {
-					return "<input class='"~cls~" form-control "~cls~"' id='formElement"~index.to!string~"' step='0.01' type='number' name='" ~ field[0] ~ "' value='" ~ value ~ "'>";
-
-				}
-
-			default:
+			static if(mode == "edit") {
+				useBootstrapJsCDN;
 				
-				if(field[2] == "isEnum") {
-					string a = "<select id='formElement"~index.to!string~"' class='form-control "~cls~"' name='" ~ field[0] ~ "'>";
+				context.isGroup = true;
+				context.submitText = "Save";
 
-					import std.traits;
+				static if(Descriptor.itemTypeList.length > 1) {
+					string buttonList;
 
-					auto values = PrototypedItem.enumValues[field[0]];
-
-					foreach(v; values) {
-						a ~= "<option " ~ ( value == v ? `selected`:``) ~ ">"~v~"</option>";
+					buttonList = `<li class="divider"></li>`;
+					foreach(itemType; Descriptor.itemTypeList) {
+						if(itemType != item.itemType) {
+							buttonList ~= `
+								<li>
+									<a href="#">
+										<label for="save`~itemType.to!string~`">
+											<span class="glyphicon glyphicon-transfer" aria-hidden="true"></span> as ` ~ itemType.to!string ~ `
+										</label>
+									</a>
+									
+									<input style="display: none" id="save`~itemType.to!string~`" name="__save" value="` ~ itemType.to!string ~ `" type="submit"/>
+								</li>`;
+						}
 					}
 
-					a ~= "</select>";
+					context.buttonList = buttonList;
+				}
+			}
 
-					return a;
-				} else {
-					if(required) {				
-						return "<div class='input-group'>
-						               <input id='formElement"~index.to!string~"' class='form-control "~cls~"' name='" ~ field[0] ~ "' value='" ~ value ~ "' required/>
-						               <span class='input-group-addon'>
-                                             <span class='glyphicon glyphicon-fire' aria-hidden='true'></span>
-                                       </span>
-						        </div>";
+			static if(mode == "add") {
+				context.isGroup = false;
+				context.submitText = "Add";
+			}
 
+			return tpl.toString(context);
+		}
+				
+		/**
+		 * 
+		 */
+		string asAdminTable(PrototypedItem)(PrototypedItem[] items) {
+			string a;
+
+			//build the table header
+			string adminTableHeader(fields...)() 
+			{
+				static if(fields[0].length == 1 && fields[0][0] != Descriptor.primaryFieldName) 
+				{
+					return "<th>"~fields[0][0]~"</th>";
+				}
+				else static if (fields[0].length > 1) 
+				{
+					return adminTableHeader!(fields[0][0..$/2]) ~ adminTableHeader!(fields[0][$/2..$]);
+				} 
+				else 
+				{
+					return "";
+				}
+			}
+
+			//build the table line
+			string adminTableLine(string itemType)(PrototypedItem item) 
+			{
+				string previewLine(L...)() 
+				{
+					static if(L[0].length == 1 && (L[0][0] in Model.Descriptor.fieldList[itemType]) !is null && !Model.Descriptor.HasAttribute!(itemType, L[0][0], "primary")) {
+						auto view = Descriptor.GetView!(itemType, L[0][0]);
+
+						view.value = __traits(getMember, item, L[0][0]);
+
+						return `<td>` ~ view.asPreview ~ `</td>`;
+					} else static if (L[0].length > 1) {
+						return previewLine!(L[0][0..$/2]) ~ previewLine!(L[0][$/2..$]);
+					} else static if ( !Descriptor.HasAttribute!(itemType, L[0][0], "primary") ){
+						return `<td>-</td>`;
 					} else {
-						return "<input id='formElement"~index.to!string~"' class='form-control "~cls~"' name='" ~ field[0] ~ "' value='" ~ value ~ "'/>";
-				
+						return ``;
 					}
 				}
-		}
-	}
 
-	/**
-	 * 
-	 */
-	string editFormField(string[] field, const string primaryField, PrototypedItem)(PrototypedItem item, ulong index) {
-		string a;
-
-		if(field[0] == primaryField) { 
-			a ~= "<input type='hidden' name='" ~ field[0] ~ "' value='" ~ item.fieldAsString!(field[0]) ~ "' />";
-			
-		} else {
-			string cls;
-
-			if(index == 1) cls = "class='text-primary'";
-
-			a ~= `<div class="form-group">`;
-			a ~= "<label "~cls~" for='formElement"~index.to!string~"'>" ~ field[0] ~ "</label>";
-
-			string inputField = editFormFieldByAttribute!(field[0])(item, index);
-
-
-			//build the value based on the property type
-			if(inputField == "") {
-				inputField = editFormFieldByType!(field)(item, index);
+				return previewLine!(Model.Descriptor.fields);
 			}
 
-			a ~= inputField ~ `</div>`;
-		}
+			///create the code for selecting the right line type
+			string createLines() {
+				string code;
 
-		
-		return a;
-	}
+				foreach(type; Model.Descriptor.itemTypeList) {
+					code ~= "if(item.itemType.to!string == `" ~ type.to!string ~ "`) lines ~= adminTableLine!`" ~ type.to!string ~ "`(item);";
+				}
 
+				return code;
+			}
 
-	/// Private:
-	private string editFormFields(string[][] fields, string primaryField, PrototypedItem)(PrototypedItem item, ulong index = 0) {
+			useBootstrapCssCDN;
 
-		static if(fields.length > 1) {
-			return editFormFields!(fields[0..$/2], primaryField)(item, index) ~ editFormFields!(fields[$/2..$], primaryField)(item, index+fields.length/2);
-		} else {
-			return editFormField!(fields[0], primaryField)(item, index);
-		}
+			if(parent) parent.title = Model.name;
 
-	}
+			auto tpl = compile_temple_file!"adminTable.emd";
 
-	/**
-	 * 
-	 */
-	string asEditForm(PrototypedItem)(PrototypedItem item) {
-		string a;
+			string lines;
+			foreach(item; items) 
+			{
+				lines ~= "<tr>";
 
-		enum fields = PrototypedItem.fields;
-		enum primaryField = PrototypedItem.primaryField;
+				static if(__traits(hasMember, PrototypedItem, "itemType")) {
+					mixin(createLines());
+				} else {
+					lines ~= adminTableLine!""(item);
+				}
 
-		if(parent) {
-			parent.title = "Edit " ~ PrototypedItem.modelCls.name;
-		}
+				lines ~= "<td><a class='btn btn-default' href='" ~ baseUrl ~ "/edit/" ~ Descriptor.PrimaryField(item) ~ "'>Edit</a> "~
+					"<a class='btn btn-danger' href='" ~ baseUrl ~ "/delete/" ~ Descriptor.PrimaryField(item) ~ "'>Delete</a></td></tr>";
+			}
 
+			auto context = new TempleContext();
 
-		a = `<form action="`~baseUrl~`/save/` ~ item.fieldAsString!(primaryField[0]) ~ `" method="post">`;
-
-		a ~= editFormFields!(fields, primaryField[0])(item);
-
-		a ~= `<input class='btn btn-default' type="submit"/>`;
-		a ~= `</form>`;
-
-		a = `<div class="container"><div class="row"><div class="col-xs-12">` ~ a ~ `</div></div>`;
-
-		return a;
-	}
-
-	/**
-	 * 
-	 */
-	string asAddForm(PrototypedItem)(PrototypedItem item) {
-		string a;
-		
-		enum fields = PrototypedItem.fields;
-		enum primaryField = PrototypedItem.primaryField;
-		
-		if(parent) {
-			parent.title = "Add " ~ PrototypedItem.modelCls.name;
-		}
-
-		a = `<form action="`~baseUrl~`/save/new" method="post">`;
-		
-		a ~= editFormFields!(fields, primaryField[0])(item);
-		
-		a ~= `<input class='btn btn-default' type="submit"/>`;
-		a ~= `</form>`;
-		
-		a = `<div class="container"><div class="row"><div class="col-xs-12">` ~ a ~ `</div></div>`;
-		
-		return a;
-	}
-
-	/**
-	 * 
-	 */
-	string asAdminTable(PrototypedItem)(PrototypedItem[] items) {
-		enum fields = PrototypedItem.fields;
-		enum primaryField = PrototypedItem.primaryField;
-		
-		string a;
-
-		if(parent) {
-			parent.title = PrototypedItem.modelCls.name;
-		}
-
-		a  = "<table class='table table-striped'>" ~ adminTableHeader(fields, primaryField[0]) ~ "<tbody>";
-		
-		foreach(item; items) {
-			a ~= "<tr>";
+			static if(Descriptor.itemTypeList.length > 1) {
+				useBootstrapJsCDN;
+				context.isGroup = true;
+				context.button = `<a class='btn btn-default' href='` ~ baseUrl ~ `/add/`~Descriptor.itemTypeList[0].to!string~`'>Add `~Descriptor.itemTypeList[0].to!string~`</a>`;
+				
+				string buttonList;
+				foreach(i; 1..Descriptor.itemTypeList.length) {
+					string type = Descriptor.itemTypeList[i].to!string; 
 					
-			a ~= adminTableLine!(fields, primaryField[0])(item);
+					buttonList ~= `<li><a href='` ~ baseUrl ~ `/add/`~Descriptor.itemTypeList[i].to!string~`'>Add ` ~ Descriptor.itemTypeList[i].to!string ~ `</a></li>`;
+				}
 
-			a ~= "<td><a class='btn btn-default' href='" ~ baseUrl ~ "/edit/" ~ item.fieldAsString!(primaryField[0]) ~ "'>Edit</a> "~
-				     "<a class='btn btn-danger' href='" ~ baseUrl ~ "/delete/" ~ item.fieldAsString!(primaryField[0]) ~ "'>Delete</a></td></tr>";
-		}
-		
-		a ~= "</tbody></table>";
-		a ~= `<a class='btn btn-default' href='` ~ baseUrl ~ `/add'>Add</a>`;
-
-		a = `<div class="container"><div class="row"><div class="col-xs-12">` ~ a ~ `</div></div>`;
-
-		return a;
-	}
-
-	/// Private:
-	private string adminTableHeader(string[][] fields, string primaryField) {
-		string a = "<thead><tr>";
-		
-		foreach(field; fields) {
-			if(field[0] != primaryField) { 
-				a ~= "<th>" ~ field[0] ~ "</th>";
+				context.buttonList = buttonList;
+			} else {
+				context.isGroup = false;
+				context.button = `<a class='btn btn-default' href='` ~ baseUrl ~ `/add'>Add</a>`;
 			}
-		}
-		
-		return a ~ "<th></th></tr></thead>";
-	}
 
-	/// Private:
-	private string adminTableLine(string[][] fields, string primaryField, PrototypedItem)(PrototypedItem item) {
-		static if(fields.length > 1) {
-			return adminTableLine!(fields[0..$/2], primaryField)(item) ~ adminTableLine!(fields[$/2..$], primaryField)(item);
-		} else static if(fields[0][0] != primaryField) {
-			return "<td>" ~ item.fieldAsString!(fields[0][0]) ~ "</td>";
-		} else {
-			return "";
+			context.header = adminTableHeader!(Descriptor.fields);
+			context.lines = lines;
+			context.isEmpty = items.length == 0;
+
+			return tpl.toString(context);
 		}
 	}
+	
+	alias AdminView = AdminViewTpl;
 }
-

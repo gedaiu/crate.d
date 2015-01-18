@@ -9,41 +9,59 @@ module crated.tools;
 
 import std.conv;
 import std.typetuple;
+import std.traits;
 
+import vibe.d;
 
 /**
-	 * Find if type (T) is an enum.
-	 * Example:
-	 * --------------------------
-	 * enum BookCategory : string {
-	 *		Fiction = "Fiction",
-	 *		Nonfiction = "Nonfiction"
-	 * };
-	 *  
-	 * auto test = IsEnum!BookCategory;
-	 * assert(test.check == true);
-	 * --------------------------
-	 * 
-	 * Example:
-	 * --------------------------
-	 *  auto test = IsEnum!string;
-	 *  assert(test.check == false);
-	 * --------------------------
-	 */
-template IsEnum(T) if(is(T == enum)) {
+ * Find if type (T) is an enum.
+ * Example:
+ * --------------------------
+ * enum BookCategory : string {
+ *		Fiction = "Fiction",
+ *		Nonfiction = "Nonfiction"
+ * };
+ *  
+ * auto test = IsEnum!BookCategory;
+ * assert(test.check == true);
+ * --------------------------
+ * 
+ * Example:
+ * --------------------------
+ *  auto test = IsEnum!string;
+ *  assert(test.check == false);
+ * --------------------------
+ */
+template IsEnum(T) if(is(T == enum )) {
 	/**
-		 * is true if T is enum
-		 */
+	 * is true if T is enum
+	 */
 	enum bool check = true;
 } 
 
-template IsEnum(T) if(!is(T == enum)) {
+template IsEnum(T) if(!is(T == enum )) {
 	/**
-		 * is true if T is enum
-		 */
+	 * is false if T is const
+	 */
 	enum bool check = false;
 }
 
+/**
+ * Find if type (T) is const.
+ */
+template IsConst(T) if(is(T == const )) {
+	/**
+	 * is true if T is const
+	 */
+	enum bool check = true;
+} 
+
+template IsConst(T) if(!is(T == const )) {
+	/**
+	 * is false if T is not const
+	 */
+	enum bool check = false;
+}
 
 /**
  * Check if the method has a from string method.
@@ -76,8 +94,8 @@ template HasFromString(T) if(is(T == class) || is(T == struct)) {
 
 template HasFromString(T) if(!is(T == class) && !is(T == struct)) {
 	/**
-		 * is true if T has `from string` method
-		 */
+	 * is true if T has `from string` method
+	 */
 	enum bool check = false;
 }
 
@@ -99,12 +117,86 @@ template HasFromString(T) if(!is(T == class) && !is(T == struct)) {
  */
 template ItemProperty(item, string method) {
 	static if(__traits(hasMember, item, method)) {
-		alias ItemProperty = TypeTuple!(__traits(getMember, item, method));
+		static if(__traits(getProtection, mixin("item." ~ method)).stringof[1..$-1] == "public") {
+			alias ItemProperty = TypeTuple!(__traits(getMember, item, method));
+		} else {
+			alias ItemProperty = TypeTuple!();
+		}
+
 	} else {
 		alias ItemProperty = TypeTuple!();
 	}
 }
 
+/**
+ * Get all field attributes 
+ */
+template GetAttributes(string name, Prototype) {
+	
+	template GetFuncAttributes(TL...) {
+		
+		static if(TL.length == 1) {
+			alias GetFuncAttributes = TypeTuple!(__traits(getAttributes, TL[0]));
+		} else static if(TL.length > 1) {
+			alias GetFuncAttributes = TypeTuple!(GetFuncAttributes!(TL[0..$/2]), GetFuncAttributes!(TL[$/2..$]));
+		} else {
+			alias GetFuncAttributes = TypeTuple!();
+		}
+	}
+	
+	static if(is( FunctionTypeOf!(ItemProperty!(Prototype, name)) == function )) { 
+		
+		static if(__traits(getOverloads, Prototype, name).length == 1) {
+			alias GetAttributes = TypeTuple!(__traits(getAttributes, ItemProperty!(Prototype, name)));
+		} else {
+			alias GetAttributes = TypeTuple!(GetFuncAttributes!(TypeTuple!(__traits(getOverloads, Prototype, name))));
+		}
+		
+	} else {
+		alias GetAttributes = TypeTuple!(__traits(getAttributes, ItemProperty!(Prototype, name)));
+	}
+}
+
+template OriginalFieldType(alias F) {
+	static if(is( FunctionTypeOf!F == function )) 
+	{ 
+		
+		static if( is( ReturnType!(F) == void ) && arity!(F) == 1 ) 
+		{
+			alias OriginalFieldType = Unqual!(ParameterTypeTuple!F);
+		} 
+		else 
+		{
+			alias OriginalFieldType = Unqual!(ReturnType!F);
+		}
+		
+	} else {
+		alias OriginalFieldType = typeof(F);
+	}
+}
+
+template ArrayType(T : T[]) {
+	alias ArrayType = T;
+}
+
+template FieldType(alias F) {
+
+	alias FT = OriginalFieldType!F;
+
+	static if(!isSomeString!(FT) && isArray!(FT)) 
+	{
+
+		alias FieldType = ArrayType!(FT);
+	} 
+	else static if(isAssociativeArray!(FT)) 
+	{
+		alias FieldType = ValueType!(FT);
+	} 
+	else 
+	{
+		alias FieldType = Unqual!(FT);
+	}
+}
 
 /** 
  * Get all members that have ATTR attribute.
@@ -128,42 +220,79 @@ template ItemProperty(item, string method) {
  * 
  * --------------------
  */
-template getItemFields(alias ATTR, Prototype, bool addFields) {
-	
+template getItemFields(alias ATTR, Prototype) {
+
+	template isConstField(alias name) {
+
+		template CheckOverloads(TL...) {
+			static if(TL.length == 1) {
+				alias localIsConst = IsConst!(ReturnType!(TL[0]));
+				enum bool check = localIsConst.check;
+
+			} else static if(TL.length > 1) {
+				alias localIsConst = IsConst!(ReturnType!(TL[0]));
+				enum bool check = localIsConst.check || CheckOverloads!(TL[1..$]).check;
+
+			} else {
+				enum bool check = false;
+			}
+		}
+
+		static if(is( FunctionTypeOf!(ItemProperty!(Prototype, name)) == function )) {
+			enum bool check = CheckOverloads!(__traits(getOverloads, Prototype, name)).check;
+		} else { 
+			alias localIsConst = IsConst!(typeof(__traits(getMember, Prototype, name)));
+			enum bool check = localIsConst.check;
+		}
+	}
+
 	/**
-		 *  Get a general type
-		 */
-	string Type(string name)() {
-		
+	 *  Get a general type
+	 */
+	string Description(string name)() {
+
 		alias isEnum = IsEnum!(typeof(ItemProperty!(Prototype, name)));
-		
-		static if(isEnum.check) return "isEnum";
+		alias isConst = isConstField!name;
+
+		static if(isConst.check)        return "isConst";
+		else static if(isEnum.check && isTypeTuple!(__traits(getMember, Prototype, name))) return "isEnumListDeclaration"; 
+		else static if(isEnum.check)	return "isEnum"; 
+		else static if(!isSomeString!(typeof(ItemProperty!(Prototype, name))) && isArray!(typeof(ItemProperty!(Prototype, name)))) return "isArray";
+		else static if(isAssociativeArray!(typeof(ItemProperty!(Prototype, name)))) return "isAssociativeArray";
 		else static if(__traits(isIntegral, ItemProperty!(Prototype, name))) return "isIntegral";
 		else static if(__traits(isFloating, ItemProperty!(Prototype, name))) return "isFloating";
 		else static if( is(ItemProperty!(Prototype, name) == enum) )  return "isEnum";
 		else return "";
 	}
-	
+
+	template strOf(T) {
+		enum str = "object:" ~ T.stringof;
+
+		alias strOf = str;
+	}
+
+	template strOf(alias T) {
+		enum str = T;
+		
+		alias strOf = T;
+	}
+
 	/** 
 	 * Get all the metods that have ATTR attribute
 	 */
-	template ItemFields(FIELDS...) {	
+	template ItemFields(FIELDS...) {
+
 		static if (FIELDS.length > 1) {
 			alias ItemFields = TypeTuple!(
-				ItemFields!(FIELDS[0 .. $/2]),
-				ItemFields!(FIELDS[$/2 .. $])
+					ItemFields!(FIELDS[0 .. $/2]),
+					ItemFields!(FIELDS[$/2 .. $])
 				); 
-		} else static if (FIELDS.length == 1 && FIELDS[0] != "modelFields") {
-			static if(__traits(hasMember, Prototype, FIELDS[0])) {
+		} else static if (FIELDS.length == 1) {
 
-				static if(staticIndexOf!(ATTR, __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0]))) >= 0) {
-					
-					static if(addFields) {
-						alias ItemFields = TypeTuple!([FIELDS[0], __traits(getAttributes, ItemProperty!(Prototype, FIELDS[0])) ]);
-						
-					} else {
-						alias ItemFields = TypeTuple!([FIELDS[0], typeof(ItemProperty!(Prototype, FIELDS[0])).stringof[1..$-1], Type!(FIELDS[0]) ]);
-					}
+			static if(ItemProperty!(Prototype, FIELDS[0]).length == 1) {
+				static if(staticIndexOf!(ATTR, GetAttributes!(FIELDS[0], Prototype)) >= 0) {
+
+					alias ItemFields = TypeTuple!([FIELDS[0]: [ "attributes": [ staticMap!(strOf, GetAttributes!(FIELDS[0], Prototype)) ], "type": [ FieldType!(ItemProperty!(Prototype, FIELDS[0])).stringof ], "description": [ Description!(FIELDS[0]) ] ] ]);	
 				} else {
 					alias ItemFields = TypeTuple!();
 				}
@@ -174,18 +303,154 @@ template getItemFields(alias ATTR, Prototype, bool addFields) {
 		} else alias ItemFields = TypeTuple!();
 	}
 
-
-	alias list = ItemFields!(__traits(allMembers, Prototype));
+	mixin("enum list = [ " ~ Join!(ItemFields!(__traits(allMembers, Prototype))) ~ " ];");
 
 	/**
 	 * All the members that have ATTR attribute
 	 */
 	static if(list.length > 0) {
-		enum string[][] fields = [ list ];
-		alias getItemFields = fields;
+		alias getItemFields = list;
 	} else {
-		pragma(msg, Prototype, " has no ", ATTR , " attribute.");		
-		enum string[][] fields=[];
-		alias getItemFields = fields;
+		static assert(false, Prototype.stringof ~ " has no "~ ATTR ~" attribute.");
 	}
+}
+
+template EnumerateFieldList(Prototype) {
+	/** 
+	 * Get all the metods that have ATTR attribute
+	 */
+	template ItemFields(FIELDS...) {
+		
+		static if (FIELDS.length > 1) {
+			alias ItemFields = TypeTuple!(
+				ItemFields!(FIELDS[0 .. $/2]),
+				ItemFields!(FIELDS[$/2 .. $])
+				); 
+		} else static if (FIELDS.length == 1) {
+			
+			static if(ItemProperty!(Prototype, FIELDS[0]).length == 1 && !isTypeTuple!(__traits(getMember, Prototype, FIELDS[0])) && !__traits(hasMember, Object, FIELDS[0]) && FIELDS[0] != "__ctor") {
+				alias ItemFields = TypeTuple!(FIELDS[0]);		
+			} else {
+				alias ItemFields = TypeTuple!();
+			}
+			
+		} else alias ItemFields = TypeTuple!();
+	}
+
+	enum list = [ ItemFields!(__traits(allMembers, Prototype)) ];
+
+	alias EnumerateFieldList = list;
+}
+
+
+
+template Join(List...) {
+	
+	static if(List.length == 1) {
+		enum l = List[0].stringof[1..$-1];
+	} else static if(List.length > 1) {
+		enum l = List[0].stringof[1..$-1] ~ ", " ~ Join!(List[1..$]);
+	} else {
+		enum l = "";
+	}
+	
+	alias Join = l;
+}
+
+template FieldList(Prototype) {
+	enum string[][string][string] fields = getItemFields!("field", Prototype);
+
+	alias FieldList = fields;
+}
+
+
+template FindPrimary(Prototype, Fields...) {
+	
+	static if(Fields.length == 1) {
+		static if(ItemProperty!(Prototype, Fields[0]).length == 1) {
+			static if(staticIndexOf!("primary", GetAttributes!(Fields[0], Prototype)) >= 0) {
+				alias FindPrimary = TypeTuple!(__traits(getMember, Prototype, Fields[0]));
+			} else {
+				alias FindPrimary = TypeTuple!();
+			}
+		}
+	} else static if(Fields.length > 1) {
+		alias FindPrimary = TypeTuple!(FindPrimary!(Prototype, Fields[0..$/2]), FindPrimary!(Prototype, Fields[$/2..$]));
+	}
+}
+
+
+template PrimaryFieldType(Prototype) {
+	alias PrimaryFieldType = Unqual!(typeof(FindPrimary!(Prototype, __traits(allMembers, Prototype))));
+}
+
+
+template PrimaryFieldName(Prototype) {
+	enum string name = FindPrimary!(Prototype, __traits(allMembers, Prototype))[0].stringof;
+
+	alias PrimaryFieldName = name;
+}
+
+
+string[string] toDict(T)(T data, bool isFirst = true) {
+	string[string] dict;
+
+	import std.stdio;
+
+	static if(is(T == Json) || is(T == Bson)) {
+
+		if(data.type == T.Type.array) { 
+
+			foreach(i; 0..data.length) {
+				string[string] item = toDict(data[i], false);
+
+				string itemKey = i.to!string;
+				if(!isFirst) itemKey = "["~itemKey~"]";
+
+				foreach(itemSubkey, value; item) {
+
+					dict[ itemKey ~ itemSubkey ] = value;
+				}
+			}
+
+		} else if(data.type == T.Type.object) {
+
+			foreach(string key, val; data) {
+				string[string] item = toDict(val, false);
+
+				string itemKey = key;
+				if(!isFirst) itemKey = "["~itemKey~"]";
+
+				foreach(itemSubkey, value; item) {
+					dict[ itemKey ~ itemSubkey ] = value;
+				}
+			}
+
+		} else {
+			dict[""] = data.to!string;
+		}
+
+		return dict;
+	} else static if (__traits(isSame, TemplateOf!(T), vibe.utils.dictionarylist.DictionaryList)) {
+
+		foreach(string key, val; data) {
+			dict[key] = val;
+		}
+
+		return dict;
+	} else {
+		throw new Exception("Can not convert to dictionary type of " ~ T.stringof);
+	}
+}
+
+unittest {
+	Json data = Json.emptyObject;
+	data["otherdata"] = Json.emptyObject;
+	data["otherdata"]["a"] = Json.emptyArray;
+	data["otherdata"]["a"] ~= Json("test");
+
+	auto ret = toDict(data);
+
+	assert("otherdata[a][0]" in ret);
+	assert(ret["otherdata[a][0]"] == "test");
 }
