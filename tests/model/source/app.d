@@ -6,7 +6,6 @@
  */
 module app;
 
-import model;
 import std.stdio;
 
 void main()

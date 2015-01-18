@@ -4,7 +4,7 @@
  * License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.
  * Copyright: Public Domain
  */
-module source.fillFields;
+module fillFields;
 
 import vibe.d;
 import crated.model.calendar;
