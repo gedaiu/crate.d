@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{3947E667-4C90-4C3A-BEB9-7148D6FE0D7C}") = "crate.d", "crate.d.dproj", "{683475DD-F833-4E0C-94A5-92A616126E08}"
 EndProject
-Project("{3947E667-4C90-4C3A-BEB9-7148D6FE0D7C}") = "crModelTests", "tests\crSimpleList\crModelTests.dproj", "{10C3C7CF-A7F0-483A-B9DA-7E3F16F4B3CB}"
-EndProject
 Project("{3947E667-4C90-4C3A-BEB9-7148D6FE0D7C}") = "webBookstore", "examples\webBookstore\webBookstore.dproj", "{DB4CDBD0-F649-4863-B185-350E7C013528}"
 EndProject
 Project("{3947E667-4C90-4C3A-BEB9-7148D6FE0D7C}") = "documentationViewer", "examples\documentationViewer\documentationViewer.dproj", "{178B4A05-610D-43CD-812E-CFA9C76C59E2}"
 EndProject
 Project("{3947E667-4C90-4C3A-BEB9-7148D6FE0D7C}") = "webCalendar", "examples\webCalendar\webCalendar.dproj", "{FE25D782-0E4F-4EBC-AA97-98207C93FD3F}"
+EndProject
+Project("{3947E667-4C90-4C3A-BEB9-7148D6FE0D7C}") = "model", "tests\model\model.dproj", "{CF0ACE90-0BC9-4909-AAC7-D920E4BF77B1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,12 +18,6 @@ Global
 		Unittest|Any CPU = Unittest|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{10C3C7CF-A7F0-483A-B9DA-7E3F16F4B3CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{10C3C7CF-A7F0-483A-B9DA-7E3F16F4B3CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{10C3C7CF-A7F0-483A-B9DA-7E3F16F4B3CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{10C3C7CF-A7F0-483A-B9DA-7E3F16F4B3CB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{10C3C7CF-A7F0-483A-B9DA-7E3F16F4B3CB}.Unittest|Any CPU.ActiveCfg = Unittest|Any CPU
-		{10C3C7CF-A7F0-483A-B9DA-7E3F16F4B3CB}.Unittest|Any CPU.Build.0 = Unittest|Any CPU
 		{178B4A05-610D-43CD-812E-CFA9C76C59E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{178B4A05-610D-43CD-812E-CFA9C76C59E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{178B4A05-610D-43CD-812E-CFA9C76C59E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -36,6 +30,12 @@ Global
 		{683475DD-F833-4E0C-94A5-92A616126E08}.Release|Any CPU.Build.0 = Release|Any CPU
 		{683475DD-F833-4E0C-94A5-92A616126E08}.Unittest|Any CPU.ActiveCfg = Unittest|Any CPU
 		{683475DD-F833-4E0C-94A5-92A616126E08}.Unittest|Any CPU.Build.0 = Unittest|Any CPU
+		{CF0ACE90-0BC9-4909-AAC7-D920E4BF77B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF0ACE90-0BC9-4909-AAC7-D920E4BF77B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF0ACE90-0BC9-4909-AAC7-D920E4BF77B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF0ACE90-0BC9-4909-AAC7-D920E4BF77B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF0ACE90-0BC9-4909-AAC7-D920E4BF77B1}.Unittest|Any CPU.ActiveCfg = Unittest|Any CPU
+		{CF0ACE90-0BC9-4909-AAC7-D920E4BF77B1}.Unittest|Any CPU.Build.0 = Unittest|Any CPU
 		{DB4CDBD0-F649-4863-B185-350E7C013528}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DB4CDBD0-F649-4863-B185-350E7C013528}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB4CDBD0-F649-4863-B185-350E7C013528}.Release|Any CPU.ActiveCfg = Release|Any CPU

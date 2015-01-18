@@ -37,6 +37,9 @@ class Book {
 	@("field") 
 	bool inStock;
 
+	@("field")
+	string[string] metadata;
+
 	this() {};
 }
 
@@ -52,6 +55,8 @@ class BookDescriptor : ModelDescriptor!Book {
 		if("price" in data) myBook.price = data["price"].to!double;
 		if("color" in data) myBook.color = data["color"];
 		if("inStock" in data) myBook.inStock = data["inStock"].to!bool;
+
+		myBook.metadata = data.extractArray!("metadata", typeof(myBook.metadata));
 
 		return myBook;
 	}
@@ -82,6 +87,10 @@ class OtherProducts {
 
 	@("field") 
 	bool inStock;
+	
+	@("field")
+	string[][string] otherdata;
+
 
 	this() {}
 }
@@ -95,7 +104,9 @@ class OtherProductsDescriptor : ModelDescriptor!OtherProducts {
 		if("category" in data) myOther.category = data["category"].to!(OtherProducts.OtherProductsCategory);
 		if("price" in data) myOther.price = data["price"].to!double;
 		if("inStock" in data) myOther.inStock = data["inStock"].to!bool;
-		
+
+		myOther.otherdata = data.extractArray!("otherdata", typeof(myOther.otherdata));
+
 		return myOther;
 	}
 }
@@ -113,9 +124,6 @@ shared static this()
 {	
 	//setup the database connection string
 	crated.model.mongo.dbAddress = "127.0.0.1";
-
-	//init the data	
-
 
 	auto dataManager = new Controller!DataManagerController;
 

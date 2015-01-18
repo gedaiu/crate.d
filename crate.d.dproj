@@ -79,9 +79,11 @@
     <None Include="source\crated\view\tpl\adminTable.emd" />
     <None Include="source\crated\view\tpl\adminForm.emd" />
     <None Include="source\crated\view\tpl\adminRuleView.emd" />
-    <None Include="assets\arrayViewAsForm.css" />
     <None Include="assets\arrayViewAsForm.js" />
     <None Include="assets\calendarRuleViewAsForm.css" />
+    <None Include="assets\associativeArrayViewAsForm.js" />
+    <None Include="assets\arrayViewForm.css" />
+    <None Include="assets\arrayForm.js" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="source\crated\" />

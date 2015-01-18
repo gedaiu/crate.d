@@ -392,29 +392,42 @@ template PrimaryFieldName(Prototype) {
 }
 
 
-string[string] toDict(T)(T data) {
+string[string] toDict(T)(T data, bool isFirst = true) {
 	string[string] dict;
+
+	import std.stdio;
 
 	static if(is(T == Json) || is(T == Bson)) {
 
-		foreach(string key, T val; data) {
+		if(data.type == T.Type.array) { 
 
-			if(data[key].type == T.Type.array) { 
+			foreach(i; 0..data.length) {
+				string[string] item = toDict(data[i], false);
 
-				foreach(i; 0..data[key].length) {
-					string[string] item = toDict(val[i]);
+				string itemKey = i.to!string;
+				if(!isFirst) itemKey = "["~itemKey~"]";
 
-					string itemKey = key ~ "[" ~ i.to!string ~ "]";
+				foreach(itemSubkey, value; item) {
 
-					foreach(itemSubkey, value; item) {
-						dict[ itemKey ~ "["~itemSubkey~"]" ] = value;
-					}
+					dict[ itemKey ~ itemSubkey ] = value;
 				}
-			} else if(data[key].type == T.Type.object) {
-				assert(false, "not implemented");
-			} else {
-				dict[key] = val.to!string;
 			}
+
+		} else if(data.type == T.Type.object) {
+
+			foreach(string key, val; data) {
+				string[string] item = toDict(val, false);
+
+				string itemKey = key;
+				if(!isFirst) itemKey = "["~itemKey~"]";
+
+				foreach(itemSubkey, value; item) {
+					dict[ itemKey ~ itemSubkey ] = value;
+				}
+			}
+
+		} else {
+			dict[""] = data.to!string;
 		}
 
 		return dict;
@@ -428,4 +441,16 @@ string[string] toDict(T)(T data) {
 	} else {
 		throw new Exception("Can not convert to dictionary type of " ~ T.stringof);
 	}
+}
+
+unittest {
+	Json data = Json.emptyObject;
+	data["otherdata"] = Json.emptyObject;
+	data["otherdata"]["a"] = Json.emptyArray;
+	data["otherdata"]["a"] ~= Json("test");
+
+	auto ret = toDict(data);
+
+	assert("otherdata[a][0]" in ret);
+	assert(ret["otherdata[a][0]"] == "test");
 }

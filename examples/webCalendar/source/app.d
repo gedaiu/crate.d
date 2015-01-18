@@ -88,7 +88,7 @@ class EventDescriptor : BaseEventDescriptor {
 		}
 
 		if(type == "Repetable") {
-			auto stringRules = data.extractAssocArray!"rules";
+			auto stringRules = data.extractArray!("rules", string[string][]);
 
 			CalendarRule[] rules;
 			foreach(i; 0..stringRules.length)

@@ -3,15 +3,9 @@
 	"description": "A crate.d web example",
 	"copyright": "Copyright © 2014, Szabo Bogdan",
 	"authors": ["Szabo Bogdan"],
-	"dependencies": {
-		"temple": "~master",
-		"vibe-d": "~master"
+		"dependencies": {
+		"crate-d": {"version": ">=0.1.0", "path": "../../"}
 	},
 
-	"dflags": ["-J./source"],
-	"versions": ["UseVibe", "VibeDefaultMain"],
-
-	"sourcePaths": [ "../../source" ],
-
-	"stringImportPaths": ["../../source/crated/view/tpl"],
+	"versions": ["VibeDefaultMain"]
 }

@@ -1,0 +1,145 @@
+﻿.arrayViewForm .sample {
+	display: none;
+}
+
+.arrayViewForm {
+	margin-bottom: 80px;
+}
+
+.arrayViewForm > ol {
+	margin: 0;
+	padding: 0;
+}
+
+.arrayViewForm > ol > li {
+	padding: 20px 63px 20px 15px;
+	background: rgba(230,230,230,0.3);
+	border-bottom: 1px solid #fff;
+	font-size: 20px;
+	line-height: 0;
+	position: relative;
+	vertical-align: top;
+	line-height: 30px;
+}
+
+.arrayViewForm > ol > li > * {
+	line-height: 1.5em;
+}
+
+.arrayViewForm > .footer {
+	margin-top: 10px;
+	text-align: center;
+}
+
+.arrayViewForm > ol > li > div {
+	font-size: 14px;
+	line-height: 1.5em;
+}
+
+.arrayViewForm > ol > li > div > .tools {
+	text-align: right;
+}
+
+.arrayViewForm > ol > li > .head {
+	display: inline;
+}
+
+.arrayViewForm > ol > li > .head .btn-add {
+	left: calc( 50% - 19px );
+	top: -17px;
+	color: #5cb85c;
+}
+ 
+.arrayViewForm > ol > li > .head .btn-remove {
+	right: 15px;
+	background: #fafafa;
+	border: 1px solid #fff;
+	color: #d9534f;
+}
+
+.arrayViewForm > ol > li > .head .btn-add,
+.arrayViewForm > ol > li > .head .btn-remove {
+	position: absolute;
+	background: #fafafa;
+	border: 1px solid #fff;
+}
+
+.arrayViewForm > ol > li > .head .btn-add:hover,
+.arrayViewForm > ol > li > .head .btn-remove:hover {
+	background: #fff;
+}
+
+.arrayViewForm > .message {
+	display: none;
+	text-align: center;
+}
+
+.arrayViewForm.empty > .message {
+	display: block;
+}
+
+.arrayViewForm > .footer > .btn-add > .glyphicon {
+	display: none;
+}
+
+
+
+
+/* nested lists */
+.arrayViewForm .arrayViewForm {
+	margin-bottom: 0;
+	border-right: 1px solid rgba(40,40,40, 0.2);
+}
+
+.arrayViewForm .arrayViewForm > .message {
+	display: none;
+}
+
+.arrayViewForm .arrayViewForm > .footer {
+	text-align: left;
+	margin: 0;
+}
+
+.arrayViewForm .arrayViewForm > .footer > .btn-add > .glyphicon {
+	display: inline-block;
+}
+
+.arrayViewForm .arrayViewForm > .footer > .btn-add > .text {
+	display: none;
+}
+
+.arrayViewForm .arrayViewForm > ol > li { 
+	background-color: transparent;
+	padding-top: 0;
+	padding-left: 50px;
+	border-bottom: 0;
+}
+
+.arrayViewForm .arrayViewForm > ol > li > .head .btn-add {
+	left: 0;
+	top: 0;
+	color: #5cb85c;
+}
+
+
+
+/* AA Form*/
+.associativeArrayViewAsForm ol {
+	list-style: none;
+}
+
+.associativeArrayViewAsForm > ol > li > .key,
+.associativeArrayViewAsForm > ol > li > .value {
+	display: inline-block;
+	vertical-align: top;
+}
+
+.associativeArrayViewAsForm > ol > li > .key {
+	width: calc(35% - 11px);
+	margin-right: 8px;
+}
+
+.associativeArrayViewAsForm > ol > li > .value {
+	width: calc(65% - 11px);
+	margin-left: 8px;
+}

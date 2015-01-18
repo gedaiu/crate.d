@@ -191,20 +191,20 @@ struct ListView {
  * 
  */
 struct ArrayView(T) if(is(T == struct)) {
-
+	
 	alias ItemType = typeof(T.value);
-
+	
 	ItemType[] _value;
-
+	
 	string[string] attributes;
-
+	
 	BaseView container;
-
-
+	
+	
 	@property ItemType[] value() {
 		return _value;
 	}
-
+	
 	@property void value(T)(T[] items) {
 		static if( is(T == ItemType) ) {
 			//just set the values
@@ -214,7 +214,7 @@ struct ArrayView(T) if(is(T == struct)) {
 			if(items.length < _value.length) {
 				_value = _value[0..items.length];
 			}
-
+			
 			foreach(i;0..items.length) {
 				if(i < value.length) {
 					_value[i] = items[i];
@@ -224,6 +224,90 @@ struct ArrayView(T) if(is(T == struct)) {
 			}
 		}
 	}
+	
+	/**
+	 * Allows to access attributes using dot sintax
+	 */
+	@property const(string) opDispatch(string prop)() const { 
+		if(prop in attributes) return attributes[prop]; 
+		
+		return "";
+	}
+	
+	/// ditto
+	@property ref string opDispatch(string prop)() { 
+		if(prop !in attributes) attributes[prop] = ""; 
+		
+		return attributes[prop]; 
+	}
+	
+	/**
+	 * Create fields for an HTML form
+	 */
+	string asForm(bool isRequired = false) {
+		string id = opDispatch!"id";
+		string cls = opDispatch!"cls";
+		string name = opDispatch!"name";
+		
+		T sample;
+
+		container.useJqueryCDN;
+		container.uses("arrayForm.js");
+		container.uses("arrayViewAsForm.js");
+		container.uses("arrayViewForm.css");
+
+		string a = "<div class='arrayViewForm arrayViewAsForm'><div class='message well well-sm' role='alert'>This is an empty list. By pressing the button below, you will start adding items.</div><ol id='"~id~"' data-name='"~name~"'>";
+
+		int i = 0;
+
+		string header = `<div class="head"><button class="btn btn-add btn-success"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button><button class="btn btn-remove btn-danger"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button></div>`;
+
+		sample.name = name ~ "[_index_]";
+		sample.cls = cls;
+
+		foreach(v; value) {
+			sample.value = v;
+			
+			a ~= `<li>` ~ header ~ sample.asForm(isRequired) ~ "</li>";
+			i++;
+		}
+
+		a ~= `</ol>`;
+
+		sample.name = name ~ "[_index_]";
+		a ~= `<template class="sample">
+				` ~ header ~ sample.asForm(isRequired) ~ `
+			  </template>`;
+
+		a ~= `<div class="footer"><button class="btn btn-add btn-success"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span><span class="text">Add item</span></button></div></div>`;
+		
+		return a;
+	}
+	
+	/**
+	 * Returns a string that is easy to understand for the user
+	 */
+	string asPreview() {
+		if(value.length == 0) return "-";
+		if(value.length == 1) return "1 item";
+		
+		return value.length.to!string ~ " items";
+	}
+}
+
+
+/**
+ * 
+ */
+struct AssociativeArrayView(T, K) if(is(T == struct) && is(K == struct)) {
+	
+	alias ItemType = typeof(T.value);
+
+	ItemType[string] value;
+	
+	string[string] attributes;
+	
+	BaseView container;
 
 	/**
 	 * Allows to access attributes using dot sintax
@@ -240,7 +324,7 @@ struct ArrayView(T) if(is(T == struct)) {
 		
 		return attributes[prop]; 
 	}
-
+	
 	/**
 	 * Create fields for an HTML form
 	 */
@@ -250,46 +334,53 @@ struct ArrayView(T) if(is(T == struct)) {
 		string name = opDispatch!"name";
 
 		T sample;
-
+		K keySample;
+		
 		container.useJqueryCDN;
-		container.uses("arrayViewAsForm.js");
-		container.uses("arrayViewAsForm.css");
-
-		string a = "<div class='arrayViewAsForm'><div class='message well well-sm' role='alert'>This is an empty list. By pressing the button below, you will start adding items.</div><ol id='"~id~"' data-name='"~name~"'>";
-
+		container.uses("arrayForm.js");
+		container.uses("associativeArrayViewAsForm.js");
+		container.uses("arrayViewForm.css");
+		
+		string a = "<div class='arrayViewForm associativeArrayViewAsForm'><div class='message well well-sm' role='alert'>This is an empty list. By pressing the button below, you will start adding items.</div><ol id='"~id~"' data-name='"~name~"'>";
+		
 		int i = 0;
-
-		string header = `<button class="btn btn-add btn-success"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button><button class="btn btn-remove btn-danger"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button>`;
-
+		
+		string header = `<div class="head"><button class="btn btn-add btn-success"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button><button class="btn btn-remove btn-danger"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span></button></div>`;
+		
 		sample.name = name ~ "[_index_]";
 		sample.cls = cls;
+		keySample.cls = cls ~ " arrayKeyField";
 
-		foreach(v; value) {
+		sample.container = container;
+		keySample.container = container;
+		
+		foreach(k, v; value) {
 			sample.value = v;
-
-			a ~= `<li>` ~ header ~ sample.asForm(isRequired) ~ "</li>";
+			keySample.value = k;
+			
+			a ~= `<li>` ~ header ~ `<div class="key">`~keySample.asForm(false)~`</div>:<div class="value">` ~ sample.asForm(isRequired) ~ "</div></li>";
 			i++;
 		}
-
+		
 		a ~= `</ol>`;
 
 		sample.name = name ~ "[_index_]";
-		a ~= `<template class="sample">
-				` ~ header ~ sample.asForm(isRequired) ~ `
+		a ~= `<template class="sample"> 
+				`~ header ~ `<div class="key">`~keySample.asForm(false)~`</div>:<div class="value">` ~ sample.asForm(isRequired) ~ `
 			  </template>`;
-
-		a ~= `<div class="footer"><button class="btn btn-add btn-success">Add item</button></div></div>`;
 		
+		a ~= `<div class="footer"><button class="btn btn-add btn-success"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span><span class="text">Add item</span></button></div></div>`;
+
 		return a;
 	}
-
+	
 	/**
 	 * Returns a string that is easy to understand for the user
 	 */
 	string asPreview() {
 		if(value.length == 0) return "-";
 		if(value.length == 1) return "1 item";
-
+		
 		return value.length.to!string ~ " items";
 	}
 }

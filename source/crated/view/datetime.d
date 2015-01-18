@@ -215,8 +215,8 @@ struct CalendarRuleView {
 			context.saturday = value.saturday ? "checked":"";
 			context.sunday = value.sunday ? "checked":"";
 
-			context.startTime = value.endTime.toISOExtString;
-			context.endTime = value.startTime.toISOExtString;
+			context.startTime = value.startTime.toISOExtString;
+			context.endTime = value.endTime.toISOExtString;
 			context.repeatAfterWeeks = value.repeatAfterWeeks.to!string;
 		}
 

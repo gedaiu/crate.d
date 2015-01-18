@@ -152,7 +152,7 @@ template AdminController(string baseUrl, Model, ContainerCls = BaseView) {
 			if(Model.Descriptor.primaryFieldName in req.form && req.form[Model.Descriptor.primaryFieldName] != "") {
 				throw new CratedControllerException("Can not add items with default primary key");
 			}
-			
+
 			auto item = Model.CreateItem(req.form);
 			Model.save(item);
 		}

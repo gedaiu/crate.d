@@ -14,6 +14,7 @@ public import std.conv;
 
 import std.traits;
 import vibe.d;
+import std.stdio; //todo: remove this
 
 /**
  * Mongo connection String URI.

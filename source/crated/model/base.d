@@ -122,65 +122,57 @@ class ModelDescriptor(PrototypeCls, List...)
 	}
 
 	///Get the prototype of an array type field
-	template FindPrototypeTypeFor(alias name) {
+	template FindPrototypeTypeFor(ItemType, alias name) {
 
-		alias Type = typeof(__traits(getMember, Prototype, name));
+		alias Type = typeof(__traits(getMember, ItemType, name));
 
 		static if(!isSomeString!Type && isArray!Type) {
 
-			alias fieldPrototype = FieldByAttribute!("Prototype", __traits(getOverloads, Prototype, name));
+			alias fieldPrototype = FieldByAttribute!("Prototype", __traits(getOverloads, ItemType, name));
 
 			static if(fieldPrototype.length == 0) {
-				alias FindPrototypeTypeFor = ArrayType!(typeof(__traits(getMember, Prototype, name)));
+				alias FindPrototypeTypeFor = ArrayType!(typeof(__traits(getMember, ItemType, name)));
 			} else {
 				alias FindPrototypeTypeFor = fieldPrototype[0];
 			}
 		} else {
-			alias FindPrototypeTypeFor = typeof(__traits(getMember, Prototype, name));
+			alias FindPrototypeTypeFor = typeof(__traits(getMember, ItemType, name));
 		}
 	}
 
 	template FindViewTypeFor(string ItemType, string name) {
-
+		
 		alias CLS = FindCls!(ItemType, List);
 		alias originalType = OriginalFieldType!(__traits(getMember, CLS, name));
-		alias fieldType = FieldType!(__traits(getMember, CLS, name));
-		//TODO: Rename attributeType
 
-		alias attributeType = FieldByAttribute!("View", __traits(getOverloads, CLS, name));
+		alias FindViewTypeFor = FindView!(originalType);
 
-		static if(attributeType.length > 0) 
-		{
-			alias View = attributeType[0];
-		} 
-		else static if (is(fieldType == SysTime)) 
-		{
-			alias View = SysTimeView;
+		template FindView(type) {
+
+			static if(isAssociativeArray!(type)) {
+				alias View = AssociativeArrayView!(FindView!(ValueType!type), TypeView!(KeyType!type));
+
+			} else static if(!isSomeString!(type) && isArray!(type)) {
+				alias View = ArrayView!(FindView!(ArrayType!type));
+
+			} else {
+
+				alias viewAttribute = FieldByAttribute!("View", __traits(getOverloads, CLS, name));
+
+				static if(viewAttribute.length > 0) 
+					alias View = viewAttribute[0];
+
+				else static if (is(type == SysTime)) 
+					alias View = SysTimeView;
+				
+				else static if (is(type == Duration)) 
+					alias View = DurationView;
+
+				else alias View = TypeView!type;
+			}
+		
+			alias FindView = View;
 		}
-		else static if (is(fieldType == Duration)) 
-		{
-			alias View = DurationView;
-		} 
-		else 
-		{
-			alias View = TypeView!fieldType;
-		}
-
-		//check if we have arrays
-		static if(!isSomeString!(originalType) && isArray!(originalType)) 
-		{
-			alias FindViewTypeFor = ArrayView!View;
-		} 
-		else static if(isAssociativeArray!(originalType)) 
-		{
-			//TODO: 
-			static assert(false, "AssociativeArray to be implemented");
-		} 
-		else 
-		{
-			alias FindViewTypeFor = View;
-		}
-
 	}
 
 	mixin template CreateViewList(FIELDS...) {
@@ -263,7 +255,7 @@ class ModelDescriptor(PrototypeCls, List...)
 				a ~= "
 			            if(type == `" ~ List[i].to!string ~ "`) {
 							 enum string SType = `" ~ List[i].to!string ~ "`;
-							"~code~"
+							" ~ code ~ "
 						}\n" ~ GenerateItemConditions!(code, i+1);
 			}
 			
@@ -500,6 +492,71 @@ class ModelDescriptor(PrototypeCls, List...)
 			return id;
 		}
 
+		T ConvertField(T, P, U)(U value) {
+
+			static if(isBasicType!U) {
+				alias isEnum = IsEnum!U;
+				
+				static if(isEnum.check) {
+					return T(value.to!string);
+				} else { 
+					return T(value);
+				}
+				
+			} else static if (is(U == string)) {
+				return T(value);
+				
+			} else static if (is(U == SysTime)) {
+				static if( is(T == Bson) ) {
+					return T(BsonDate(value));
+				} else {
+					return T(value.toISOExtString);
+				}
+			} else static if (is(U == Duration)) {
+				return T(value.total!"hnsecs");
+
+			} else static if ( is(U == TimeOfDay)) {
+				return T(value.toISOExtString);
+			} else static if(!isSomeString!U && isArray!U) {
+				T[] array;
+				
+				foreach(i; 0..value.length ) {
+					T listItem;
+					
+					listItem = ConvertField!(T, P)(value[i]);
+					
+					array ~= [ listItem ];
+				}
+				
+				return T(array);
+			} else static if(isAssociativeArray!U) {
+				
+				T obj = T.emptyObject;
+				
+				foreach(key, item; value) {
+					auto listItem = T.emptyObject;
+					
+					obj[key] = ConvertField!(T, P)(item);
+				}
+				
+				return obj;
+				
+			} else if( is(U == class) || is(U == struct) ) {
+				T data = T.emptyObject;
+
+				enum fullName = fullyQualifiedName!U;
+				enum pos = fullName.lastIndexOf(".")+1;
+				enum name = fullName[pos..$];
+
+				FillFields!(T, U, [__traits(allMembers, P)])(data, value);
+
+				return data;
+
+			} else {
+				return T(value.to!string);
+			} 
+		}
+
 		///Private:
 		void FillFields(T, U, FIELDS...)(ref T data, U item) {
 			import std.traits;
@@ -517,42 +574,9 @@ class ModelDescriptor(PrototypeCls, List...)
 
 				} else {
 					static if( !isTypeTuple!(__traits(getMember, item, FIELDS[0][0])) ) {
+						alias P = FindPrototypeTypeFor!(U, FIELDS[0][0]);
 
-						static if(!isSomeString!CurrentType && isArray!CurrentType) {
-							T[] array;
-
-							foreach(i; 0..__traits(getMember, item, FIELDS[0][0]).length ) {
-								auto listItem = T.emptyObject;
-
-								alias ListType = FindPrototypeTypeFor!(FIELDS[0][0]);
-
-								FillFields!(T, ListType, [__traits(allMembers, ListType)] )(listItem, __traits(getMember, item, FIELDS[0][0])[i]);
-
-								array ~= [ listItem ];
-							}
-
-							data[FIELDS[0][0]] = array;
-						} else static if(isBasicType!CurrentType) {
-							alias isEnum = IsEnum!CurrentType;
-							
-							static if(isEnum.check) {
-								data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]).to!string;
-							} else { 
-								data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]);
-							}
-						} else static if (is(CurrentType == string)) {
-							data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]);
-						} else static if (is(CurrentType == SysTime)) {
-							static if( is(T == Bson) ) {
-								data[FIELDS[0][0]] = BsonDate(__traits(getMember, item, FIELDS[0][0]));
-							} else {
-								data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]).toISOExtString;
-							}
-						} else static if (is(CurrentType == Duration)) {
-							data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]).total!"hnsecs";
-						} else {
-							data[FIELDS[0][0]] =  __traits(getMember, item, FIELDS[0][0]).to!string;
-						}
+						data[FIELDS[0][0]] = ConvertField!(T, P)(__traits(getMember, item, FIELDS[0][0])); 
 					}
 				}
 
@@ -563,8 +587,6 @@ class ModelDescriptor(PrototypeCls, List...)
 		}
 	}
 }
-
-
 
 template AbstractModel(ModelDescriptor) {
 
@@ -658,7 +680,6 @@ template AbstractModel(ModelDescriptor) {
 
 	alias AbstractModel = Model;
 }
-
 
 /**
  * Create a crated Model. A model is responsable with manipulating Items. It save, delete and query the 
@@ -995,21 +1016,64 @@ mixin template ModelHelper(Model) {
 	}
 }
 
-string[] extractArray(string keyName)(string[string] data) {
-	string[] array;
-	
+Type extractArray(string keyName, Type)(string[string] data) {
+	Type array;
+
+	template GetDeph( T ) {
+
+		static if( isAssociativeArray!T ) {
+			enum cnt = 1 + GetDeph!( ValueType!T );
+		} else static if(!isSomeString!(T) && isArray!(T)) {
+			enum cnt = 1 + GetDeph!(ArrayType!T);
+		} else {
+			enum cnt = 0;
+		}
+
+		alias GetDeph = cnt;
+	}
+
+	void item(T)(ref T data, string[] keyList, string value) {
+
+		string[] list;
+		if(keyList.length > 1) list = keyList[1..$];
+
+		static if( isAssociativeArray!T ) {
+			if(keyList[0] !in data) {
+				ValueType!T tmp;
+				data[ keyList[0] ] = tmp;
+			}
+
+			item!( ValueType!T )(data[keyList[0]], list, value);
+
+		} else static if(!isSomeString!(T) && isArray!(T)) {
+			auto index = keyList[0].to!ulong;
+
+			if(data.length <= index) data.length = index + 1;
+
+			item!( ArrayType!T )(data[ index ], list, value);
+
+		} else {
+			data = value;
+		}
+	}
+
 	enum baseString = keyName ~ "[";
-	
+	enum ArrayTypeDeph = GetDeph!Type;
+
 	foreach(key, value; data) {
 		if(key.indexOf(baseString) == 0) {
-			auto pos1 = key.indexOf("[")+1;
-			auto pos2 = key.indexOf("]");
-			auto index = key[pos1..pos2].to!int;
+			auto keyList = key.split("[");
+			keyList = keyList[1..$];
 
-			if(array.length < index+1)
-				array.length = index+1;
+			foreach(i;0..keyList.length) {
 
-			array[index] = value;
+				assert(keyList[i][keyList[i].length - 1] == ']');
+				keyList[i] = keyList[i][0..$-1];
+			}
+
+			if(keyList.length == ArrayTypeDeph) {
+				item!Type(array, keyList, value);
+			}
 		}
 	}
 	
@@ -1017,11 +1081,22 @@ string[] extractArray(string keyName)(string[string] data) {
 }
 
 unittest {
+	//no item to split
+	string[string] data;
+	data["key"] = "test1";
+	
+	auto array = extractArray!("key", string[])(data);
+	
+	assert(array.length == 0);
+}
+
+unittest {
+	//split array
 	string[string] data;
 	data["key[0]"] = "test1";
 	data["key[1]"] = "test2";
 	
-	auto array = extractArray!"key"(data);
+	auto array = extractArray!("key", string[])(data);
 	
 	assert(array.length == 2);
 	assert(array[0] == "test1");
@@ -1029,78 +1104,50 @@ unittest {
 }
 
 unittest {
+	//split assoc array
 	string[string] data;
-	data["key"] = "test1";
+	data["item[key1]"] = "test1";
+	data["item[key2]"] = "test2";
 	
-	auto array = extractArray!"key"(data);
+	auto array = extractArray!("item", string[string])(data);
 	
-	assert(array.length == 0);
+	assert(array.length == 2);
+	assert(array["key1"] == "test1");
+	assert(array["key2"] == "test2");
 }
 
-string[string][] extractAssocArray(string keyName)(string[string] data) {
-	string[string][] array;
+
+unittest {
+	//split assoc array
+	string[string] data;
+	data["item[key1][0]"] = "test10";
+	data["item[key2][0]"] = "test20";
+	data["item[key2][1]"] = "test21";
 	
-	enum baseString = keyName ~ "[";
+	auto array = extractArray!("item", string[][string])(data);
 	
-	foreach(key, value; data) {
-		if(key.indexOf(baseString) == 0) {
-			auto pos1 = key.indexOf("[")+1;
-			auto pos2 = key.indexOf("]");
-			auto index = key[pos1..pos2].to!int;
-
-			key = key[pos2+1..$];
-			pos1 = key.indexOf("[")+1;
-			pos2 = key.indexOf("]");
-			auto pos3 = key.lastIndexOf("]");
-
-			if(pos1 > -1 && pos2 > pos1) {
-				string assocKey;
-
-				if(pos3 == pos2) { 
-					assocKey = key[pos1..pos2];
-				} else {
-					assocKey = key;
-				}
-
-				if(array.length < index+1)
-					array.length = index+1;
-
-				array[index][assocKey] = value;
-			}
-		}
-	}
-
-	return array;
+	//checks
+	assert(array.length == 2);
+	assert(array["key1"].length == 1);
+	assert(array["key2"].length == 2);
+	
+	assert(array["key1"][0] == "test10");
+	
+	assert(array["key2"][0] == "test20");
+	assert(array["key2"][1] == "test21");
+	
 }
 
 unittest {
 	string[string] data;
+	data["item[1][key1][0]"] = "test";
+	auto array = extractArray!("item", string[][string][])(data);
 	
-	data["key[0][field]"] = "value";
+	//checks
+	assert(array.length == 2);
+	assert(array[1].length == 1);
+	assert(array[1]["key1"].length == 1);
 	
-	auto array = extractAssocArray!"key"(data);
+	assert(array[1]["key1"][0] == "test");
 	
-	assert(array.length == 1);
-	assert(array[0]["field"] == "value");
-}
-
-unittest {
-	string[string] data;
-	
-	data["key[0][field][other]"] = "value";
-	
-	auto array = extractAssocArray!"key"(data);
-	
-	assert(array.length == 1);
-	assert(array[0]["[field][other]"] == "value");
-}
-
-unittest {
-	string[string] data;
-
-	data["key[0]"] = "value";
-	
-	auto array = extractAssocArray!"key"(data);
-	
-	assert(array.length == 0);
 }

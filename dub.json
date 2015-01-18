@@ -5,7 +5,7 @@
 	"license": "MIT",
 	"authors": ["Szabo Bogdan"],
 	"dependencies": {
-		"temple": "~master",
+		"temple": ">=0.7.3",
 		"vibe-d": ">=0.7.21"
 	},
 
@@ -18,24 +18,5 @@
 		}
 	],
 
-	"configurations": [
-		{
-			"name": "lib",
-			"targetType": "library"
-		},
-
-		{
-			"name": "unittest",
-			"dependencies": {},
-			"targetType": "executable",
-			"mainSourceFile": "source/crate.d",
-			"versions": [
-				"VibeCustomMain", "cratedUnittest"
-			],
-		}
-	],
-
-	"stringImportPaths": ["source/crated/view/tpl"],
-
-	"versions": ["VibeCustomMain"]
+	"stringImportPaths": ["source/crated/view/tpl"]
 }
