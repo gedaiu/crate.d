@@ -235,7 +235,7 @@ class ModelDescriptor(PrototypeCls, List...)
 	{
 		private string generateConditions(string code)(int i = 0) {
 			string a;
-
+			
 			if(i < List.length/2) {
 				a ~= "
 			            if(type == List["~i.to!string~"].to!string) {
@@ -244,7 +244,7 @@ class ModelDescriptor(PrototypeCls, List...)
 							"~code~"
 						}\n" ~ generateConditions!code(i+1);
 			}
-
+			
 			return a;
 		}
 
@@ -262,17 +262,36 @@ class ModelDescriptor(PrototypeCls, List...)
 			return a;
 		}
 
+		static private string generateSetters() {
+			string a;
+			
+			foreach(string field; fields) {
+				a ~= "if(field == `" ~ field ~ "`) item." ~ field ~ " = value;";
+			}
+			
+			return a;
+		}
+
 		///
 		Prototype CreateItem(string type, string[string] data) {
 
+			Prototype item;
+
 			if(type == "") {
 				alias ClsType = List[$/2];
-				return new ClsType;
+				item = new ClsType;
 			}
 
-			mixin(generateConditions!"return new ClsType;");
+			mixin(generateConditions!"item = new ClsType;");
 
-			throw new CratedModelException("CreateItem Can't create item of type `"~type~"`");
+			if(item is null)
+				throw new CratedModelException("CreateItem Can't create item of type `"~type~"`");
+
+			foreach(string field, string value; data) {
+				mixin(generateSetters);
+			}
+
+			return item;
 		}
 
 		///
