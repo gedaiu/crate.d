@@ -58,5 +58,6 @@
     <Compile Include="source\tests\events.d" />
     <Compile Include="source\tests\model.d" />
     <Compile Include="source\fillFields.d" />
+    <Compile Include="source\prototypes\testAutoFillItem.d" />
   </ItemGroup>
 </Project>
