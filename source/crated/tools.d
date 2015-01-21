@@ -291,8 +291,14 @@ template getItemFields(alias ATTR, Prototype) {
 
 			static if(ItemProperty!(Prototype, FIELDS[0]).length == 1) {
 				static if(staticIndexOf!(ATTR, GetAttributes!(FIELDS[0], Prototype)) >= 0) {
+					alias Type = FieldType!(ItemProperty!(Prototype, FIELDS[0]));
 
-					alias ItemFields = TypeTuple!([FIELDS[0]: [ "attributes": [ staticMap!(strOf, GetAttributes!(FIELDS[0], Prototype)) ], "type": [ FieldType!(ItemProperty!(Prototype, FIELDS[0])).stringof ], "description": [ Description!(FIELDS[0]) ] ] ]);	
+					static if(isBasicType!Type)
+						enum isBasicType = true.stringof;
+					else 
+						enum isBasicType = false.stringof;
+
+					alias ItemFields = TypeTuple!([FIELDS[0]: [ "attributes": [ staticMap!(strOf, GetAttributes!(FIELDS[0], Prototype)) ], "type": [ Type.stringof, isBasicType ], "description": [ Description!(FIELDS[0]) ] ] ]);	
 				} else {
 					alias ItemFields = TypeTuple!();
 				}

@@ -262,14 +262,47 @@ class ModelDescriptor(PrototypeCls, List...)
 			return a;
 		}
 
-		static private string generateSetters() {
+		static private string generateSetters(string type)() {
 			string a;
-			
-			foreach(string field; fields) {
-				a ~= "if(field == `" ~ field ~ "`) item." ~ field ~ " = value;";
+
+			if(type in fieldList) { 
+				foreach(string field; fields) {
+					if(field in fieldList[type]) {
+						string fieldType = fieldList[type][field]["type"][0];
+						string fieldDescription = fieldList[type][field]["description"][0];
+						string isBasicType = fieldList[type][field]["type"][1];
+
+						if( fieldType == "string" && fieldDescription == "" ) {
+							//is a string field
+							a ~= "if(field == `" ~ field ~ "` && field in data) item." ~ field ~ " = data[field];";
+
+						} else if (isBasicType == "true" && 
+										(fieldDescription != "isArray" && fieldDescription == "isAssociativeArray")) {
+							//is a basic type field
+							a ~= "if(field == `" ~ field ~ "` && field in data) item." ~ field ~ " = data[field].to!"~fieldType~";";
+						} else if ((fieldType == "string" || isBasicType == "true") && 
+									(fieldDescription == "isArray" || fieldDescription == "isAssociativeArray")) {
+							//is array of basic types
+							a ~= "if(field == `" ~ field ~ "`) {
+									   
+									   item." ~ field ~ " = extractArray!(`"~field~"`, typeof(item." ~ field ~ ") )(data);
+							}";
+						}
+
+					}
+				}
 			}
 			
 			return a;
+		}
+
+		protected T FillBasicFields(string type, T)(T item, string[string] data) {
+
+			foreach(string field; fields) {
+				mixin(generateSetters!type);
+			}
+
+			return item;
 		}
 
 		///
@@ -279,17 +312,13 @@ class ModelDescriptor(PrototypeCls, List...)
 
 			if(type == "") {
 				alias ClsType = List[$/2];
-				item = new ClsType;
+				item = FillBasicFields!""(new ClsType, data);
 			}
 
-			mixin(generateConditions!"item = new ClsType;");
+			mixin(generateConditions!"item = FillBasicFields!SType(new ClsType, data);");
 
 			if(item is null)
 				throw new CratedModelException("CreateItem Can't create item of type `"~type~"`");
-
-			foreach(string field, string value; data) {
-				mixin(generateSetters);
-			}
 
 			return item;
 		}
