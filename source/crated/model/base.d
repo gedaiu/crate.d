@@ -235,7 +235,7 @@ class ModelDescriptor(PrototypeCls, List...)
 	{
 		private string generateConditions(string code)(int i = 0) {
 			string a;
-
+			
 			if(i < List.length/2) {
 				a ~= "
 			            if(type == List["~i.to!string~"].to!string) {
@@ -244,7 +244,7 @@ class ModelDescriptor(PrototypeCls, List...)
 							"~code~"
 						}\n" ~ generateConditions!code(i+1);
 			}
-
+			
 			return a;
 		}
 
@@ -262,17 +262,65 @@ class ModelDescriptor(PrototypeCls, List...)
 			return a;
 		}
 
+		static private string generateSetters(string type)() {
+			string a;
+
+			if(type in fieldList) { 
+				foreach(string field; fields) {
+					if(field in fieldList[type]) {
+						string fieldType = fieldList[type][field]["type"][0];
+						string fieldDescription = fieldList[type][field]["description"][0];
+						string isBasicType = fieldList[type][field]["type"][1];
+
+						if( fieldType == "string" && fieldDescription == "" ) {
+							//is a string field
+							a ~= "if(field == `" ~ field ~ "` && field in data) item." ~ field ~ " = data[field];";
+
+						} else if (isBasicType == "true" && 
+										(fieldDescription != "isArray" && fieldDescription == "isAssociativeArray")) {
+							//is a basic type field
+							a ~= "if(field == `" ~ field ~ "` && field in data) item." ~ field ~ " = data[field].to!"~fieldType~";";
+						} else if ((fieldType == "string" || isBasicType == "true") && 
+									(fieldDescription == "isArray" || fieldDescription == "isAssociativeArray")) {
+							//is array of basic types
+							a ~= "if(field == `" ~ field ~ "`) {
+									   
+									   item." ~ field ~ " = extractArray!(`"~field~"`, typeof(item." ~ field ~ ") )(data);
+							}";
+						}
+
+					}
+				}
+			}
+			
+			return a;
+		}
+
+		protected T FillBasicFields(string type, T)(T item, string[string] data) {
+
+			foreach(string field; fields) {
+				mixin(generateSetters!type);
+			}
+
+			return item;
+		}
+
 		///
 		Prototype CreateItem(string type, string[string] data) {
 
+			Prototype item;
+
 			if(type == "") {
 				alias ClsType = List[$/2];
-				return new ClsType;
+				item = FillBasicFields!""(new ClsType, data);
 			}
 
-			mixin(generateConditions!"return new ClsType;");
+			mixin(generateConditions!"item = FillBasicFields!SType(new ClsType, data);");
 
-			throw new CratedModelException("CreateItem Can't create item of type `"~type~"`");
+			if(item is null)
+				throw new CratedModelException("CreateItem Can't create item of type `"~type~"`");
+
+			return item;
 		}
 
 		///
