@@ -16,7 +16,7 @@ import crated.model.calendar;
 
 
 ///Descriptor tests
-mixin template ModelDescriptorTest(Model) {
+mixin template EventsDescriptorTest(Model) {
 
 	alias Descriptor = Model.Descriptor;
 
@@ -73,6 +73,5 @@ mixin template ModelDescriptorTest(Model) {
 		assert(Descriptor.GetDescription(item, "itemType") == "isConst");
 		assert(Descriptor.GetDescription(item, "category") == "isEnum");
 	}
-
 }
 

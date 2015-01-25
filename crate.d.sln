@@ -5,8 +5,6 @@ Project("{3947E667-4C90-4C3A-BEB9-7148D6FE0D7C}") = "crate.d", "crate.d.dproj", 
 EndProject
 Project("{3947E667-4C90-4C3A-BEB9-7148D6FE0D7C}") = "webBookstore", "examples\webBookstore\webBookstore.dproj", "{DB4CDBD0-F649-4863-B185-350E7C013528}"
 EndProject
-Project("{3947E667-4C90-4C3A-BEB9-7148D6FE0D7C}") = "documentationViewer", "examples\documentationViewer\documentationViewer.dproj", "{178B4A05-610D-43CD-812E-CFA9C76C59E2}"
-EndProject
 Project("{3947E667-4C90-4C3A-BEB9-7148D6FE0D7C}") = "webCalendar", "examples\webCalendar\webCalendar.dproj", "{FE25D782-0E4F-4EBC-AA97-98207C93FD3F}"
 EndProject
 Project("{3947E667-4C90-4C3A-BEB9-7148D6FE0D7C}") = "model", "tests\model\model.dproj", "{CF0ACE90-0BC9-4909-AAC7-D920E4BF77B1}"
@@ -18,12 +16,6 @@ Global
 		Unittest|Any CPU = Unittest|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{178B4A05-610D-43CD-812E-CFA9C76C59E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{178B4A05-610D-43CD-812E-CFA9C76C59E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{178B4A05-610D-43CD-812E-CFA9C76C59E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{178B4A05-610D-43CD-812E-CFA9C76C59E2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{178B4A05-610D-43CD-812E-CFA9C76C59E2}.Unittest|Any CPU.ActiveCfg = Unittest|Any CPU
-		{178B4A05-610D-43CD-812E-CFA9C76C59E2}.Unittest|Any CPU.Build.0 = Unittest|Any CPU
 		{683475DD-F833-4E0C-94A5-92A616126E08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{683475DD-F833-4E0C-94A5-92A616126E08}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{683475DD-F833-4E0C-94A5-92A616126E08}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -1,10 +1,10 @@
-﻿/**
- * A model that use mongo db database to save the data.
- * 
+﻿/** 
  * Authors: Szabo Bogdan <szabobogdan@yahoo.com>
  * Date: November 3, 2014
  * License: Subject to the terms of the MIT license, as written in the included LICENSE.txt file.
  * Copyright: Public Domain
+ * 
+ * A model that use mongo db database to save the data.
  */
 module crated.model.mongo;
 
@@ -39,23 +39,6 @@ shared static string dbAddress;
  *  - string CollectionName - the collection where the items will be stored
  *  - string modelName - the model name used in various situations to identify the model type
  * 
- * Here is an example of how you can use a Mongo model:
- * 
- * Example:
- * ---------------
- * class BookPrototype {
- * 
- * 	@("field", "primary")
- * 	string _id;
- * 	
- * 	@("field", "required") 
- * 	string name = "unknown";
- * 	
- * 	@("field", "required") 
- * 	string author = "unknown";
- * }
- * 
- * //create the mongo model
  * alias BookModel = MongoModel!(BookPrototype, "test.books", "Books");
  * ---------------
  */
@@ -243,7 +226,7 @@ template MongoModel(alias ModelDescriptor, string collectionName, string modelNa
 				static if( is(T == string[string])) { 
 					string[string] dataAsString = data;
 				} else {
-					string[string] dataAsString = toDict(data);
+					string[string] dataAsString = toStringDictionary(data);
 				}
 
 				auto itm = ModelDescriptor.CreateItem(type, dataAsString);

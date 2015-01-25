@@ -13,6 +13,7 @@ import crated.view.datetime;
 import std.exception;
 import std.datetime;
 import std.conv;
+import std.string;
 
 
 enum EventType {
@@ -61,6 +62,26 @@ abstract class CalendarEvent {
 
 	@property 
 	void rules(CalendarRule[] someRules);
+}
+
+struct Reservation {
+
+	@("field")
+	string name;
+
+	@("field")
+	Interval!SysTime interval;
+}
+
+/**
+ * Represents a resource as a group of an event and an array of reserverd dates
+ */
+abstract class Resource {
+	@("field")
+	CalendarEvent time;
+
+	@("field")
+	Reservation[] reserved;
 }
 
 /**
@@ -799,4 +820,149 @@ unittest {
 	assert(chain.events[0].endDate >= now + dur!"hours"(1)   && chain.events[0].endDate <= now2 + dur!"hours"(1));
 	assert(chain.events[1].startDate >= now + dur!"hours"(1) && chain.events[1].startDate <= now2 + dur!"hours"(1));
 	assert(chain.events[1].endDate >= now + dur!"hours"(2)   && chain.events[1].endDate <= now2 + dur!"hours"(2));
+}
+
+
+/// Transforms time string to TimeOfDay struct
+TimeOfDay getTimeOfDay(string data) {
+	int h = 0;
+	int m = 0;
+	int s = 0;
+	
+	auto splitedData = data.split(":");
+
+	if(splitedData.length > 0) h = splitedData[0].to!int;
+	if(splitedData.length > 1) m = splitedData[1].to!int;
+	if(splitedData.length > 2) s = splitedData[2].to!int;
+	
+	return TimeOfDay(h, m, s);
+}
+
+unittest {
+	string val = "1:2:3";
+	
+	auto t = getTimeOfDay(val);
+
+	assert(t.hour == 1);
+	assert(t.minute == 2);
+	assert(t.second == 3);
+}
+
+unittest {
+	string val = "1:2";
+	
+	auto t = getTimeOfDay(val);
+	
+	assert(t.hour == 1);
+	assert(t.minute == 2);
+	assert(t.second == 0);
+}
+
+
+/// Get values from a dictionary and converts them to a Duration
+static Duration durationFromDictionary(string key)(string[string] data) {
+	
+	auto components = data.extractArray!(key, string[string]);
+	auto d = dur!"seconds"(0);
+	
+	if("hours" in components) d += dur!"hours"(components["hours"].to!int);
+	if("minutes" in components) d += dur!"minutes"(components["minutes"].to!int);
+	if("seconds" in components) d += dur!"seconds"(components["seconds"].to!int);
+	if("days" in components) d += dur!"days"(components["days"].to!int);
+	if("weeks" in components) d += dur!"weeks"(components["weeks"].to!int);
+	
+	return d;
+}
+
+unittest {
+	string[string] data;
+
+	data["data[hours]"] = "1";
+	data["data[minutes]"] = "2";
+	data["data[seconds]"] = "3";
+	data["data[days]"] = "4";
+	data["data[weeks]"] = "5";
+
+	auto d = durationFromDictionary!"data"(data);
+
+	auto fullSplitStruct = d.split();
+	assert(fullSplitStruct.hours == 1);
+	assert(fullSplitStruct.minutes == 2);
+	assert(fullSplitStruct.seconds == 3);
+	assert(fullSplitStruct.days == 4);
+	assert(fullSplitStruct.weeks == 5);
+	assert(fullSplitStruct.msecs == 0);
+	assert(fullSplitStruct.usecs == 0);
+	assert(fullSplitStruct.hnsecs == 0);
+}
+
+
+/// Fill the Event Prototype fields
+void setDefaultEventFields(T)(ref T item, string type, string[string] data) {
+	//todo: test this function
+	if("startDate" in data) item.startDate = SysTime.fromISOExtString(data["startDate"]);
+	
+	if(type == "Basic" || type == "Repetable") {
+		if("endDate" in data) item.endDate = SysTime.fromISOExtString(data["endDate"]);
+	}
+	
+	if(type == "AutoPostpone") {
+		
+		if("duration" in data) item.duration = dur!"hnsecs"(data["duration"].to!long);
+		else item.duration = durationFromDictionary!"duration"(data);
+		
+		if("postpone" in data) item.postpone = dur!"hnsecs"(data["postpone"].to!long);
+		else item.postpone = durationFromDictionary!"postpone"(data);
+		
+		if("boundary" in data) item.boundary = dur!"hnsecs"(data["boundary"].to!long);
+		else item.boundary = durationFromDictionary!"boundary"(data);
+	}
+
+	
+	if(type == "Repetable") {
+		auto stringRules = data.extractArray!("rules", string[string][]);
+		
+		CalendarRule[] rules;
+		foreach(i; 0..stringRules.length)
+			rules ~= createRule(stringRules[i]);
+		
+		item.rules = rules;
+	}
+}
+
+/// Create rule from dictionary
+CalendarRule createRule(string[string] data) {
+	//todo: test this function
+
+	CalendarRule rule =  new CalendarRule;
+	
+	if("monday" in data && ( data["monday"] == "true" ) ) 
+		rule.monday = true;
+	
+	if("tuesday" in data && ( data["tuesday"] == "true" ) ) 
+		rule.tuesday = true;
+	
+	if("wednesday" in data && ( data["wednesday"] == "true" ) ) 
+		rule.wednesday = true;
+	
+	if("thursday" in data && ( data["thursday"] == "true" ) ) 
+		rule.thursday = true;
+	
+	if("friday" in data && ( data["friday"] == "true" ) ) 
+		rule.friday = true;
+	
+	if("saturday" in data && ( data["saturday"] == "true" ) ) 
+		rule.saturday = true;
+	
+	if("sunday" in data && ( data["sunday"] == "true" ) ) 
+		rule.sunday = true;
+	
+	if("repeatAfterWeeks" in data && data["repeatAfterWeeks"] != "") {
+		rule.repeatAfterWeeks = data["repeatAfterWeeks"].to!int;
+	}
+	
+	if("startTime" in data) rule.startTime = getTimeOfDay(data["startTime"]); 
+	if("endTime" in data) rule.endTime = getTimeOfDay(data["endTime"]);
+	
+	return rule;
 }

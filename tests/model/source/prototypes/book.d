@@ -19,7 +19,6 @@ class Book {
 	this() {}
 }
 
-
 class BookDescriptor : ModelDescriptor!Book {
 	static Book CreateItem(string type, string[string] data) {
 		auto myBook = new Book;

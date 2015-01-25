@@ -398,7 +398,7 @@ template PrimaryFieldName(Prototype) {
 }
 
 
-string[string] toDict(T)(T data, bool isFirst = true) {
+string[string] toStringDictionary(T)(T data, bool isFirst = true) {
 	string[string] dict;
 
 	import std.stdio;
@@ -408,7 +408,7 @@ string[string] toDict(T)(T data, bool isFirst = true) {
 		if(data.type == T.Type.array) { 
 
 			foreach(i; 0..data.length) {
-				string[string] item = toDict(data[i], false);
+				string[string] item = toStringDictionary(data[i], false);
 
 				string itemKey = i.to!string;
 				if(!isFirst) itemKey = "["~itemKey~"]";
@@ -422,7 +422,7 @@ string[string] toDict(T)(T data, bool isFirst = true) {
 		} else if(data.type == T.Type.object) {
 
 			foreach(string key, val; data) {
-				string[string] item = toDict(val, false);
+				string[string] item = toStringDictionary(val, false);
 
 				string itemKey = key;
 				if(!isFirst) itemKey = "["~itemKey~"]";
@@ -455,8 +455,63 @@ unittest {
 	data["otherdata"]["a"] = Json.emptyArray;
 	data["otherdata"]["a"] ~= Json("test");
 
-	auto ret = toDict(data);
+	auto ret = toStringDictionary(data);
 
 	assert("otherdata[a][0]" in ret);
 	assert(ret["otherdata[a][0]"] == "test");
+}
+
+///Tells if a value of a Class or Struct member can be get without passing any parameter.
+template CanGetValue(string fieldName, Type) {
+	static if(fieldName != "__ctor" &&
+				__traits(getProtection, __traits(getMember, Type, fieldName)) == "public" &&
+				!__traits(hasMember, Object, fieldName) && 
+				!isTypeTuple!(__traits(getMember, Type, fieldName) )) {
+
+		enum result = IsTypeMember!(fieldName, Type) || CanGetMethodValue!(fieldName, Type);
+
+	} else {
+		enum result = false;
+	}
+
+	alias CanGetValue = result;
+}
+
+///Tells if a member is Type not a function
+template IsTypeMember(string fieldName, Type) {
+	static if ( is(FunctionTypeOf!(__traits(getMember, Type, fieldName)) == function) ) {
+		enum result = false;
+	} else {
+		enum result = true;
+	}
+
+	alias IsTypeMember = result;
+}
+
+///Tells if a member is a function that return value is not void and it takes no parameters
+template CanGetMethodValue(string fieldName, Type) {
+
+	template OverloadCanGetMethodValue(alias i, L...) {
+
+		static if(L.length <= i) {
+			enum result = false;
+		} else static if ( is(FunctionTypeOf!(L[i]) == function) ) {
+			
+			static if( is(ReturnType!(L[i]) == void) ) {
+				enum result = OverloadCanGetMethodValue!(i+1, L);
+			} else static if( (ParameterTypeTuple!(L[i])).length > 0 ) {
+				enum result = OverloadCanGetMethodValue!(i+1, L);
+			} else static if ( __traits(getProtection, L[i]) == "public" ) {
+				enum result = true;
+			}
+			
+		} else {
+			enum result = OverloadCanGetMethodValue!(i+1, L);
+		}
+
+		alias OverloadCanGetMethodValue = result;
+	}
+
+
+	alias CanGetMethodValue = OverloadCanGetMethodValue!(0, __traits(getOverloads, Type, fieldName));
 }

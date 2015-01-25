@@ -23,10 +23,7 @@ unittest {
 
 //Test the event model descriptor
 alias EventsModel = MongoModel!(EventDescriptor, "test.calendar", "Calendar");
-mixin ModelDescriptorTest!EventsModel;
-
 mixin EventsTest!EventsModel;
-
 
 //Test the book prototype using the default model
 alias BookModel = Model!BookDescriptor;
