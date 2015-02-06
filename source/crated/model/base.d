@@ -519,6 +519,7 @@ class ModelDescriptor(PrototypeCls, List...)
 		
 		///
 		string GetType(string type, string field) {
+			writeln(type, " ", field);
 			return fieldList[type][field]["type"][0];
 		}
 

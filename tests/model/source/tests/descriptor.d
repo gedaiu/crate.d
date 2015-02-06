@@ -23,7 +23,7 @@ mixin template EventsDescriptorTest(Model) {
 	unittest {
 		auto item1 = Model.CreateItem!"Basic";
 		auto item2 = Model.CreateItem!"AutoPostpone";
-		
+
 		assert(!Descriptor.HasField(item1, "duration"));
 		assert(Descriptor.HasField(item2, "duration"));
 	}
@@ -31,7 +31,7 @@ mixin template EventsDescriptorTest(Model) {
 	unittest {
 		auto item1 = Model.CreateItem!"Basic";
 		auto item2 = Model.CreateItem!"AutoPostpone";
-		
+
 		assert(Descriptor.HasAttribute(item1, "name", "required"));
 		assert(Descriptor.HasAttribute(item1, "name", "test"));
 		assert(!Descriptor.HasAttribute(item1, "name", "___"));
@@ -47,19 +47,19 @@ mixin template EventsDescriptorTest(Model) {
 
 	unittest {
 		auto item = Model.CreateItem!"Basic";
-		
+
 		item._id = "ID1";
 		assert(Descriptor.PrimaryField(item) == "ID1");
-		
+
 		Descriptor.PrimaryField(item) = "ID2";
 		assert(item._id == "ID2");
 	}
 
 	unittest {
 		auto item = Model.CreateItem!"Basic";
-		
+
 		assert(Descriptor.GetType(item, "_id") == "string");
-		assert(Descriptor.GetType(item, "startDate") == "SysTime");
+		assert(Descriptor.GetType(item, "begin") == "SysTime");
 	}
 
 	unittest {

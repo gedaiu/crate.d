@@ -34,25 +34,9 @@ class EventDescriptor : BaseEventDescriptor {
 	}
 }
 
-class LocalResource : Resource {
-	@("field", "primary")
-	string _id;
-	
-	@("field", "required") 
-	string name;
-
-}
-
-alias BaseResourceDescriptor = ModelDescriptor!LocalResource;
-
-class ResourceDescriptor : BaseResourceDescriptor {
-
-}
-
 alias CalendarModel = MongoModel!(EventDescriptor, "test.calendar", "Calendar");
-alias ResourceModel = MongoModel!(ResourceDescriptor, "test.resources", "Resources");
 
-alias DataManagerController = DataManager!("/admin", CalendarModel, ResourceModel);
+alias DataManagerController = DataManager!("/admin", CalendarModel);
 
 /**
  *  Vibe.d init
